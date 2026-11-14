@@ -46,7 +46,10 @@ with hw.Session(mode=A.mode, kp=A.kp, kd=A.kd, effort=A.effort, effort_scale=A.e
         s.ramp_to(home, 0.8)
     except KeyboardInterrupt:
         print("\ninterrupted: disabling"); tp = None
+    except RuntimeError as e:
+        print(f"\n{e}"); tp = None
     S = s.states
+print("hand switched off: confirmed" if getattr(s, "off_confirmed", False) else "!!! hand switched off: NOT CONFIRMED, run scripts/hand_off.py")
 np.savez_compressed(log, t_cmd=tn, cmd=cmd.astype(np.float32), t_play=tp if tp else np.nan,
                     t_state=np.array([x[0] for x in S]), q=np.array([x[1] for x in S], np.float32), dq=np.array([x[2] for x in S], np.float32), effort=np.array([x[3] for x in S], np.float32))
 print("log:", log)

@@ -32,6 +32,7 @@ U_BASE = pc.key_y(76) / pc.PITCH + BASE["dy"] / pc.PITCH         # mount positio
 OFF = np.array([-1.0, 0.0, 1.0, 2.0, 3.0])                         # finger rest position vs mount, white keys
 PRE, POST, VMAX = 1.5, 1.0, 20.0
 T_DOWN, T_UP, T_MOVE, FAST, LIFT_RAD = 0.03, 0.03, 0.08, 0.25, 0.3
+START_HOVER = False                                                # --start-hover: fingers wait at their hover pose, not curled up in the transit pose
 WRIST_KP, WRIST_KV, KNOT_DT = 20000.0, 320.0, 0.2
 SD0 = np.array([0.02, 0.03, 0.08, 0.06, 0.05]); LO = np.array([-0.06, -0.08, -0.3, -0.25, -0.2]); HI = -LO
 WSD0 = np.array([0.004, 0.003]); WLO = np.array([-0.02, -0.01]); WHI = -WLO
@@ -222,10 +223,11 @@ class Plan:
         def prs(i):
             h = kf[i]["hover"]; a = float(np.clip(np.exp(P[i, 2]), 0.7, 1.6)); q = h + a * (kf[i]["press"] - h); q[1] += P[i, 3]; q[0] += P[i, 4]; return q
         def trn(i): q = kf[i]["transit"].copy(); q[1] += P[i, 3]; return q          # IK pose 18-30 mm above the black keys
-        wl = [(0.0, trn(idx[0]))]                       # start lifted, descend before the first stroke (speed-limited)
+        q_start = hov(idx[0]) if (START_HOVER and not self.wrist) else trn(idx[0])
+        wl = [(0.0, q_start)]                           # start lifted, descend before the first stroke (speed-limited)
         t_first = self.on[idx[0]] - self.lead[f] + P[idx[0], 0]
-        d_desc = max(T_UP, (math.pi / 2) * float(np.max(np.abs(hov(idx[0]) - trn(idx[0])))) / VMAX)
-        wl.append((max(0.3, t_first - 0.05 - d_desc), trn(idx[0]))); wl.append((wl[-1][0] + d_desc, hov(idx[0])))
+        d_desc = max(T_UP, (math.pi / 2) * float(np.max(np.abs(hov(idx[0]) - q_start))) / VMAX)
+        wl.append((max(0.3, t_first - 0.05 - d_desc), q_start)); wl.append((wl[-1][0] + d_desc, hov(idx[0])))
         def add(t, q):
             t0, q0 = wl[-1]; t = max(t, t0 + (math.pi / 2) * float(np.max(np.abs(q - q0))) / VMAX); wl.append((t, q))
         for k, i in enumerate(idx):
@@ -359,8 +361,14 @@ def main():
     ap.add_argument("--from-npz", default=None, help="re-export a finished run: reuse its lead, P, WK (no CEM)")
     ap.add_argument("--press-x", default=None, help="contact point per finger, m from the key hinge: thumb,index,middle,ring,pinky (front edge = 0.15; default 0.115 for all)")
     ap.add_argument("--real-limits", action="store_true", help="use the joint stops measured on the real hand (pc.REAL_LIMITS)")
+    ap.add_argument("--stroke", type=float, default=None, help="time of one key stroke, down or up, in s (default 0.03 = as fast as the joints allow; 0.09 = gentle)")
+    ap.add_argument("--start-hover", action="store_true", help="fixed wrist: fingers wait at their hover pose from the start, instead of curled up until their first note")
+    ap.add_argument("--recal-lead", action="store_true", help="with --from-npz: fit the per-finger command lead again (needed after changing --stroke)")
+    ap.add_argument("--warm", action="store_true", help="with --from-npz: run the CEM again, starting from that plan")
     ap.add_argument("--seed", type=int, default=0); A = ap.parse_args()
-    global LIMITS
+    global LIMITS, T_DOWN, T_UP, START_HOVER
+    if A.stroke: T_DOWN = T_UP = A.stroke
+    START_HOVER = A.start_hover
     if A.real_limits: LIMITS = pc.REAL_LIMITS
     if A.press_x: PRESS_X_F.update({f: float(v) for f, v in enumerate(A.press_x.split(","))})
     if A.mount: x, z, th, dy = (float(v) for v in A.mount.split(",")); BASE.update(x=x, z=z, theta=th, dy=dy)
@@ -398,7 +406,7 @@ def main():
     w_init([TRAIN_PLANTS[0]], plan, keys, default_q)
     Zr = np.load(A.from_npz) if A.from_npz else None
     if Zr is not None: lead = list(Zr["lead"]); P = Zr["P"].copy(); WK = Zr["WK"].copy(); say("re-export: lead, P, WK from", A.from_npz)
-    for it in range(0 if Zr is not None else 3):
+    for it in range(3 if (Zr is None or A.recal_lead) else 0):
         plan.lead = np.asarray(lead, float)
         (tq, Fq, evq), _ = w_roll((0, w_state(0, P, WK, 0.0), plan.T, P, WK, True))
         s = pc.score([dict(t=te - PRE, pitch=keys[k]) for te, k in evq], notes, tol=0.15 if it < 2 else 0.05)
@@ -417,7 +425,7 @@ def main():
         T0 = plan.on.min() - 0.05; S = T0 - 0.25
         states = pool.starmap(w_state, [(p, P, WK, S) for p in range(K)])
         sd_note = np.tile(SD0, (nN, 1)); win = 0; t_cem = time.time()
-        while Zr is None and T0 < plan.on.max() + 0.01:
+        while (Zr is None or A.warm) and T0 < plan.on.max() + 0.01:
             opt = np.nonzero((plan.on >= T0) & (plan.on < T0 + A.commit))[0]
             kn = np.nonzero((plan.knots >= T0 - 0.3) & (plan.knots < T0 + A.commit))[0] if moving else np.zeros(0, int)
             E = min(T0 + A.commit + 0.35, plan.T)
@@ -466,7 +474,7 @@ def main():
                             mount=np.array([BASE["x"], BASE["dy"], BASE["z"], BASE["theta"]]), approach="front", rev="hand2_2", wrist=A.wrist,
                             home_hover=C[0, :20], notes=np.array([[n["on"], n["off"], n["pitch"]] for n in notes]), pre_roll=PRE, tempo=1.0,
                             fing=np.array([[n["pitch"], f] for n, f in zip(notes, fing)]), title=title,
-                            press_x=np.array([PRESS_X_F.get(f, pc.PRESS_X) for f in range(5)]), real_limits=bool(LIMITS), **calib)
+                            press_x=np.array([PRESS_X_F.get(f, pc.PRESS_X) for f in range(5)]), real_limits=bool(LIMITS), stroke_s=T_DOWN, start_hover=START_HOVER, **calib)
         pc.write_scene(os.path.join(A.out, "scene.xml"), scene_xml(5.0, range(21, 109), moving))
         write_notes(os.path.join(A.out, "target.mid"), [dict(on=n["on"] + PRE, off=n["off"] + PRE, pitch=n["pitch"], vel=70) for n in notes])
         write_notes(os.path.join(A.out, "sim_played.mid"), [dict(on=e["t"] + PRE, off=e["t"] + PRE + 0.2, pitch=e["pitch"], vel=70) for e in det_nom])

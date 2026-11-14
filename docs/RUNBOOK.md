@@ -1,6 +1,6 @@
 # Runbook: from the first motion to the full piece
 
-**Status, 14 Nov 2026, night: the hand has moved, in the air only.** First-motion test, then Ode to Joy at half and full speed, at 0.5 A and 1.0 A. Nothing has touched a piano yet: the key check and everything over the keys are still untested.
+**Status, 15 Nov 2026, early morning: the hand has moved, in the air only.** First-motion test, then Ode to Joy at half and full speed, at 0.5 A and 1.0 A; last, the level-mount plan with gentle strokes, twice at full speed and 1.0 A. Nothing has touched a piano yet: the key check and everything over the keys are still untested.
 
 Before you start: [RDK_X5_SETUP.md](RDK_X5_SETUP.md) is done and `./wq hand python scripts/hand_info.py` shows 20 of 20 joints.
 
@@ -22,7 +22,8 @@ Commands are written for the RDK X5. With a native install (Mac, Linux laptop) d
 - The joints go limp when disabled: the hand drops onto the keys. Nothing can break at our forces, but keep fingers and cables out from under it.
 - Every script ramps from the current pose to its start pose over 2 seconds.
 - Current limit: scripts default to 0.8 A (MIT mode). Wuji suggests 0.5 A for first tests and 1.5 A for gentle holding. Start with `--effort 0.5`.
-- If the cable or the program drops out, the hand stops its motors and reports a fault. It does not resume by itself.
+- **If the network cable drops out, the hand does NOT switch off: it keeps holding its last pose** (seen on 15 Nov, firmware 3.0.0; the link dropped for 2 seconds). The scripts now stop after 0.5 s without data, reconnect, switch the hand off and print `hand switched off: confirmed`. If you are not sure the hand is off: `python scripts/hand_off.py`. Last resort: the hand's power plug.
+- Seat the network cable firmly at both ends and keep it away from the moving fingers.
 - Never plug or unplug the power or network cable while the hand is powered.
 - There is no hardware emergency stop on this hand. Software stop only; the wall plug is the last resort.
 - **The first time you enable the hand, and the first run of every new plan: in the air, fingers free.** We do not know yet what the hand does at the moment it is enabled.
@@ -34,20 +35,20 @@ Commands are written for the RDK X5. With a native install (Mac, Linux laptop) d
 
 ## Ode to Joy on the tripod: the short path
 
-`plans/ode_level_s0` is the plan for the real hand: five keys C5 to G5, one finger each, hand **level**, mount as in step 2. (`plans/ode_fixed` is the first version for the old, tilted mount: do not use it on the piano.)
+`plans/ode_level_stroke90_s0` is the plan for the real hand: five keys C5 to G5, one finger each, hand **level**, mount as in step 2, each key stroke takes 90 ms. (`plans/ode_level_s0` is the same plan with strokes as fast as the joints allow: it looks jerky on the real hand. `plans/ode_fixed` is the first version for the old, tilted mount: do not use it on the piano.)
 
 ```bash
 # hand in the AIR, fingers free
 ./wq hand python scripts/hand_info.py                                                           # reads only, never moves
 ./wq hand python scripts/sysid_step.py plans/baseline_k265_gain5/theme_q_1khz.npz --effort 0.5  # step 1: stiffness G
 ./wq hand python scripts/hand_hello.py                                                          # first motion: one finger, 9 degrees
-./wq hand python scripts/play_on_hand.py plans/ode_level_s0/theme_q_1khz.npz --tempo 0.5 --effort 0.5   # whole piece in the air
+./wq hand python scripts/play_on_hand.py plans/ode_level_stroke90_s0/theme_q_1khz.npz --tempo 0.5 --effort 0.5   # whole piece in the air
 
 # hand on the tripod over the keys (step 2), strap attached
-./wq hand python scripts/calibrate_keys.py plans/ode_level_s0/theme_q_1khz.npz --manual --effort 0.5    # each finger presses its key slowly
-./wq hand python scripts/play_on_hand.py plans/ode_level_s0/theme_q_1khz.npz --tempo 0.5 --fingers index --effort 0.5
-./wq hand python scripts/play_on_hand.py plans/ode_level_s0/theme_q_1khz.npz --tempo 0.5 --effort 1.0
-./wq hand python scripts/play_on_hand.py plans/ode_level_s0/theme_q_1khz.npz --effort 1.0
+./wq hand python scripts/calibrate_keys.py plans/ode_level_stroke90_s0/theme_q_1khz.npz --manual --effort 0.5    # each finger presses its key slowly
+./wq hand python scripts/play_on_hand.py plans/ode_level_stroke90_s0/theme_q_1khz.npz --tempo 0.5 --fingers index --effort 0.5
+./wq hand python scripts/play_on_hand.py plans/ode_level_stroke90_s0/theme_q_1khz.npz --tempo 0.5 --effort 1.0
+./wq hand python scripts/play_on_hand.py plans/ode_level_stroke90_s0/theme_q_1khz.npz --effort 1.0
 ```
 
 - Wrong key in the slow key check: move the tripod sideways. Note sounds very early or not at all: raise or lower the tripod. Aim for a note at 0.8 to 1.2 on every finger. This plan cannot take the depth numbers in software.
@@ -153,8 +154,10 @@ On a laptop or Henry's machine, not on the RDK X5 (its small processor would nee
 
 # Ode to Joy on the level mount (replace the four numbers with your measured ones):
 ./wq sim python scripts/sbto_piano.py --piece ode --wrist fixed --gain G --real-limits \
-    --mount 0.27,0.06,0,0.0 --press-x 0.135,0.115,0.115,0.115,0.125 --out out/ode_hw --workers 8
+    --mount 0.27,0.06,0,0.0 --press-x 0.135,0.115,0.115,0.115,0.125 --stroke 0.09 --start-hover --out out/ode_hw --workers 8
 ```
+
+`--stroke 0.09` makes each key stroke take 90 ms instead of about 35 ms; `--start-hover` lets the fingers wait above their keys instead of curled up. Without them the plan plays the same notes in simulation but looks jerky on the real hand.
 
 `--mount` is `x,z,pitch,dy` with the same meaning as in step 3. 15 to 30 minutes. Then copy `out/sbto_hw` to the robot computer (commit it under `plans/`, or `rsync`) and play it as in step 5.
 
@@ -167,6 +170,8 @@ On a laptop or Henry's machine, not on the RDK X5 (its small processor would nee
 | `enable timeout` | a joint reports an error | `./wq hand python scripts/hand_info.py`; Wuji troubleshooting page |
 | `this plan moves the wrist (needs an arm)` | you picked `plans/furelise_plan` or `plans/k265_human` | use `plans/k265_fixed`, or add `--fingers-only` to see the fingers alone |
 | `command faster than 35 rad/s: refusing` | a damaged or hand-edited plan | regenerate it |
+| `!!! THE HAND IS STILL SWITCHED ON` | the connection dropped and did not come back | check the network cable, then `python scripts/hand_off.py`; or unplug the hand's power |
+| `no joint states from the hand for 0.5 s` | the network link dropped during the run | reseat the cable at both ends; the script switches the hand off by itself |
 | many "skipped" frames | robot computer too busy | close other programs; do not optimise on it while playing |
 | notes too quiet or missing at the right key | not deep enough | step 4 again; or raise the hand's stiffness |
 | wrong neighbouring keys | sideways error | move the hand, then step 4 |
@@ -178,7 +183,7 @@ On a laptop or Henry's machine, not on the RDK X5 (its small processor would nee
 |---|---|
 | Real servo stiffness | decides whether fast notes play at all (step 1). First data, in the air: 82 % of each stroke at full speed with kp 3 and 1.0 A; a higher kp is untested |
 | Real joint stops | two are known (thumb sideways 0.44 rad, index sideways about 0.6 rad; `REAL_LIMITS` in `piano_core.py`); the others are still the model's |
-| Command timing on the RDK X5 | about 12 % of the 1 kHz commands go out late; effect on the music unknown |
+| Command timing on the RDK X5 | 12 to 16 % of the 1 kHz commands go out late; effect on the music unknown |
 | Real key weight and where the piano triggers the note | the model uses a generic key; real sensors usually fire before the key bottom, which helps |
 | Bracket stiffness | any sway is a height error |
 | Position mode behaviour | untested; MIT mode is the default |

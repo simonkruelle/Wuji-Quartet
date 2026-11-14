@@ -218,16 +218,62 @@ class Session:
             if i >= n: break
             if i > k: late += i - k
             self.send(cmd[i]); sent += 1; k = i + 1
+            if sent % 100 == 0 and self.states and time.monotonic() - self.states[-1][0] > 0.5:
+                raise RuntimeError("no joint states from the hand for 0.5 s: connection lost, stopping")
             if on_tick: on_tick(i)
             w = t0 + k / rate - time.monotonic()
             if w > 0: time.sleep(w)
         return t0, dict(sent=sent, skipped=late)
+
+    def _enabled_count(self, hand, wait=0.4):
+        """How many joints report 'switched on'. None if the hand does not answer."""
+        try: sub = hand.joint_diagnostics().subscribe()
+        except Exception: return None
+        frame = None; t_ = time.monotonic()
+        try:
+            while time.monotonic() - t_ < wait + 1.0:
+                x = sub.recv()
+                if x is not None: frame = x; continue
+                if frame is not None and time.monotonic() - t_ > wait: break
+                time.sleep(0.01)
+        except Exception: frame = None
+        finally:
+            try: sub.close()
+            except Exception: pass
+        if frame is None or not len(frame.joints): return None
+        return sum(1 for e in frame.joints if e.status_word.ext_state == 2)
+
+    def _switch_off(self, tries=20):
+        """Motors off, confirmed by the hand. If the connection dropped, the first try does not arrive and the hand keeps
+        holding its last pose (seen on 15 Nov, firmware 3.0.0): reconnect and repeat until the hand confirms."""
+        try: self.hand.disable()
+        except Exception: pass
+        if self.dry or self.manager is None: return True
+        n = self._enabled_count(self.hand)
+        if n == 0: return True
+        print(f"switch-off not confirmed ({'no answer from the hand' if n is None else str(n) + ' joints still on'}): reconnecting to switch it off ...", flush=True)
+        for k in range(tries):
+            time.sleep(1.0)
+            try:
+                try: self.manager.disconnect_all()
+                except Exception: pass
+                hands = [d for d in self.manager.scan() if d.device_type == self.sdk.DeviceType.WujiHand2 and (not self.sn or d.sn == self.sn)]
+                if not hands: continue
+                self.hand = self.manager.connect(sn=hands[0].sn, device_name="piano")
+                self.hand.disable(); n = self._enabled_count(self.hand)
+                if n == 0: print(f"hand switched off after reconnecting (try {k + 1})", flush=True); return True
+            except Exception: pass
+        print("\n!!! THE HAND IS STILL SWITCHED ON and holds its last pose: the connection is gone.\n"
+              "!!! Check the network cable, then run scripts/hand_off.py, or unplug the hand's power.\n", flush=True)
+        return False
 
     def close(self):
         self._stop.set()
         for f in (lambda: self.hand.disable(), lambda: self.pub.close(), lambda: self._sub.close()):
             try: f()
             except Exception: pass
+        try: self.off_confirmed = self._switch_off()
+        except BaseException: self.off_confirmed = False; print("\n!!! switch-off was interrupted: check that the hand is off (scripts/hand_off.py)\n", flush=True)
         for f in self.restore:
             try: f()
             except Exception as e: print("restore failed:", e)
