@@ -227,7 +227,7 @@ For the real setup, with measured stiffness `G` and mount:
 
 | Flag | Meaning | Default |
 |---|---|---|
-| `--piece` | `k265` or `furelise` | `k265` |
+| `--piece` | `k265`, `furelise`, `ode`, or a path to any `.mid` file with a single-line melody | `k265` |
 | `--wrist` | `fixed`, `human` (follow the pianist; K.265 only) or `plan` (hand positions planned from the notes) | `fixed` |
 | `--gain` | servo stiffness, as a multiple of the model's default | 5 |
 | `--mount` | `x,z,pitch,dy`: metres in front of the key hinge line, metres above the white keys, degrees, metres sideways from E5 | `0.22,0.10,25,-0.0235` |
@@ -251,6 +251,7 @@ Two facts that save an hour: the hand has the fixed address **192.168.1.111** (r
 | Folder | Piece | Wrist | Notes hit in sim | Plays on the hand alone |
 |---|---|---|:--:|:--:|
 | [`plans/k265_fixed`](plans/k265_fixed) | K.265 theme | fixed | 76 / 80, 1 wrong | **yes, try this first** |
+| [`plans/ode_fixed`](plans/ode_fixed) | Ode to Joy, 62 notes | fixed, five keys C5 to G5 | 61 / 62, 0 wrong | **yes: simplest piece, [duet notes](assets/ode_to_joy/README.md)** |
 | [`plans/baseline_k265_gain5`](plans/baseline_k265_gain5) | K.265 theme | fixed, not optimised | 72 / 80, 0 wrong | yes; used by the stiffness and calibration steps |
 | [`plans/furelise_plan`](plans/furelise_plan) | Für Elise opening | planned, 27 shifts | 82 / 86, 8 wrong | no, needs an arm |
 | [`plans/k265_human`](plans/k265_human) | K.265 theme | follows the pianist | 75 / 80, 4 wrong | no, needs an arm |
@@ -289,11 +290,13 @@ Wuji-Quartet/
 │   ├── <a href="scripts/sweep_mount.py">sweep_mount.py</a>      mount search (108 mounts) · <a href="scripts/score_midi.py">score_midi.py</a> recorded MIDI vs plan
 │   └── <a href="scripts/run_sbto_all.sh">run_sbto_all.sh</a>     the three reference runs in a row
 ├── <a href="plans/">plans/</a>                  finished plans (see above)
+├── <a href="hardware/">hardware/</a>               printable tripod bracket for the hand (STL + the script that makes it)
 ├── <a href="results/">results/</a>                mount sweeps, front and back approach
 ├── <a href="assets/">assets/</a>
 │   ├── wuji-description/   Hand 2.1 and 2.2: MuJoCo model, URDF, right-hand meshes, flange drawings
 │   ├── furelise/15/        K.265 MIDI and the pianist's wrist path
-│   └── fur_elise_beethoven/   Für Elise MIDI
+│   ├── fur_elise_beethoven/   Für Elise MIDI
+│   └── ode_to_joy/         Ode to Joy MIDI, left-hand chords for a duet
 └── <a href="docs/">docs/</a>                   <a href="docs/RDK_X5_SETUP.md">RDK_X5_SETUP.md</a> · <a href="docs/RUNBOOK.md">RUNBOOK.md</a> · pictures (<a href="docs/make_figures.py">make_figures.py</a>) · media/
 </pre>
 
@@ -303,7 +306,7 @@ Wuji-Quartet/
 |---|---|
 | Right hand only | the scene builder refuses a left hand; left-hand meshes are not in this repo |
 | Melody only | one hand, one note at a time; the left-hand part is not played |
-| Two pieces | `load_piece` in `sbto_piano.py` knows `k265` and `furelise`; a new piece is a few lines there |
+| Fixed wrist reaches seven white keys | B4 to A5, no black keys; anything wider needs `--wrist plan` (a moving wrist, so an arm) |
 | Moving wrist is an ideal arm | three stiff sliding axes stand in for the arm; no real arm model |
 | Für Elise "wrong" notes | about half of the 8 are the right key, 50 to 70 ms off |
 | K.265 ending | the last three-note turn (100 ms per note) never plays |
