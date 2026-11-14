@@ -24,7 +24,7 @@ The plan is optimised in simulation on five slightly different pianos at once, s
 |:--:|:--:|:--:|:--:|
 | Mozart K.265 theme, hand alone | Für Elise opening, moving wrist | timing of 90 % of the notes it hits | to optimise one piece on 10 CPU cores |
 
-> **Everything on this page is simulation.** Nothing has run on the real hand yet. The hardware scripts are tested against a fake hand only.
+> **The numbers on this page are simulation.** On 14 Nov the real hand played Ode to Joy **in the air** (half and full speed, 0.5 A and 1.0 A). Nothing has touched a piano yet. What we measured is in [docs/RUNBOOK.md](docs/RUNBOOK.md).
 
 ## Watch it play
 
@@ -46,9 +46,9 @@ Click a clip for the video with sound. The sound is synthesised from the keys th
 </table>
 
 <p align="center">
-  <a href="docs/media/ode_fixed.mp4"><img src="docs/media/ode_fixed.gif" width="640" alt="Simulated hand playing Ode to Joy with a fixed wrist"></a>
+  <a href="docs/media/ode_level.mp4"><img src="docs/media/ode_level.gif" width="640" alt="Simulated hand playing Ode to Joy with a fixed, level wrist"></a>
   <br>
-  <strong>Ode to Joy</strong>: five keys, one finger each, the hand never moves. <strong>61 / 62</strong> notes, 0 wrong. The piece for the first test on the tripod.
+  <strong>Ode to Joy</strong>: five keys, one finger each, the hand never moves. <strong>62 / 62</strong> notes, 0 wrong, on all ten test setups. Level hand, wrist further back, fingers nearly straight. The piece for the first test on the tripod.
 </p>
 
 Third clip, K.265 with the wrist following a human pianist: [docs/media/k265_human.mp4](docs/media/k265_human.mp4) (75 / 80).
@@ -65,7 +65,7 @@ The optimiser is sampling-based trajectory optimisation in the style of SBTO: it
 
 <table>
   <tr>
-    <td width="50%"><img src="docs/setup.png" alt="Mount: flange 10 cm above the white keys, 7 cm in front of the keys, 25 degrees down"></td>
+    <td width="50%"><img src="docs/setup.png" alt="Mount: flange 6 cm above the white keys, 12 cm in front of the keys, level"></td>
     <td width="50%"><img src="docs/fingering.png" alt="Fingering: thumb B4 C5, index D5, middle E5, ring F5, pinky G5 A5"></td>
   </tr>
 </table>
@@ -76,7 +76,8 @@ Notes hit, before and after optimisation. "Setups" vary servo stiffness and moun
 
 | Piece | Wrist | Our best guess of the setup | 5 training setups | 5 unseen setups | Wrong notes |
 |---|---|:--:|:--:|:--:|:--:|
-| Ode to Joy, 62 notes | fixed | 62 → **61** | 0 to 62 → 30 to 62 | 11 to 62 → 28 to 62 | 0 |
+| Ode to Joy, 62 notes, level mount | fixed | 0 → **62** | 0 to 62 → 62 | 0 to 33 → 62 | 0 |
+| Ode to Joy, 62 notes, first mount | fixed | 62 → **61** | 0 to 62 → 30 to 62 | 11 to 62 → 28 to 62 | 0 |
 | K.265 theme, 80 notes | fixed | 69 → **76** | 4 to 69 → 47 to 76 | 14 to 65 → 40 to 74 | 1 |
 | Für Elise opening, 86 notes | planned from the notes | 72 → **82** | 47 to 75 → 81 to 83 | 5 to 69 → 60 to 83 | 8 |
 | K.265 theme, 80 notes | follows a human pianist | 58 → **75** | 38 to 62 → 70 to 75 | 13 to 60 → 56 to 74 | 4 |
@@ -153,7 +154,7 @@ The optimiser runs on CPU cores today, not on the GPU. Henry's machine helps thr
 1. Is there a digital piano or keyboard with **full-size keys**? 88 keys are not needed: K.265 uses B4 to A5, Für Elise C4 to E6.
 2. Does it have **USB-MIDI** (a square "USB to host" socket)? Without it we score by ear.
 3. Can we keep it at our table all weekend?
-4. Can we clamp a bracket to its stand or to the table? The hand must sit rigidly 10 cm above the keys.
+4. Can we clamp a bracket to its stand or to the table? The hand must sit rigidly 6 cm above the keys and 12 cm in front of them.
 5. Model name, so we can look up key travel and key weight.
 6. If it is an acoustic piano instead: heavier keys, no MIDI. Possible, but tell us early.
 
@@ -257,8 +258,9 @@ Two facts that save an hour: the hand has the fixed address **192.168.1.111** (r
 
 | Folder | Piece | Wrist | Notes hit in sim | Plays on the hand alone |
 |---|---|---|:--:|:--:|
-| [`plans/k265_fixed`](plans/k265_fixed) | K.265 theme | fixed | 76 / 80, 1 wrong | **yes, try this first** |
-| [`plans/ode_fixed`](plans/ode_fixed) | Ode to Joy, 62 notes | fixed, five keys C5 to G5 | 61 / 62, 0 wrong | **yes: simplest piece, [duet notes](assets/ode_to_joy/README.md)** |
+| [`plans/ode_level_s0`](plans/ode_level_s0) | Ode to Joy, 62 notes | fixed and level, five keys C5 to G5 | 62 / 62, 0 wrong | **yes, try this first; [duet notes](assets/ode_to_joy/README.md)** |
+| [`plans/k265_fixed`](plans/k265_fixed) | K.265 theme | fixed, first mount | 76 / 80, 1 wrong | not yet: on the real hand the thumb cannot reach from this mount |
+| [`plans/ode_fixed`](plans/ode_fixed) | Ode to Joy, 62 notes | fixed, first mount | 61 / 62, 0 wrong | in the air only (played 14 Nov); same thumb problem |
 | [`plans/baseline_k265_gain5`](plans/baseline_k265_gain5) | K.265 theme | fixed, not optimised | 72 / 80, 0 wrong | yes; used by the stiffness and calibration steps |
 | [`plans/furelise_plan`](plans/furelise_plan) | Für Elise opening | planned, 27 shifts | 82 / 86, 8 wrong | no, needs an arm |
 | [`plans/k265_human`](plans/k265_human) | K.265 theme | follows the pianist | 75 / 80, 4 wrong | no, needs an arm |

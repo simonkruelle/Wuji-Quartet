@@ -1,0 +1,267 @@
+{
+ "piece": "ode",
+ "title": "Beethoven Ode to Joy",
+ "wrist": "fixed",
+ "wrist_info": {},
+ "notes": 62,
+ "lead_ms": [
+  120.0,
+  120.0,
+  120.0,
+  120.0,
+  120.0
+ ],
+ "fingers": {
+  "thumb": 13,
+  "index": 16,
+  "middle": 18,
+  "ring": 8,
+  "pinky": 7
+ },
+ "dr": "wide",
+ "train_plants": [
+  {
+   "gain": 5.0
+  },
+  {
+   "gain": 2.5,
+   "dz": 0.002
+  },
+  {
+   "gain": 10.0,
+   "dz": -0.002
+  },
+  {
+   "gain": 5.0,
+   "dy": 0.002,
+   "dth": 1.5
+  },
+  {
+   "gain": 4.0,
+   "dy": -0.002,
+   "dth": -1.5
+  }
+ ],
+ "test_plants": [
+  {
+   "gain": 3.5,
+   "dz": -0.001,
+   "dy": 0.001
+  },
+  {
+   "gain": 7.0,
+   "dz": 0.001,
+   "dy": -0.001,
+   "dth": -1.0
+  },
+  {
+   "gain": 5.0,
+   "dz": 0.002,
+   "dy": -0.002
+  },
+  {
+   "gain": 3.0
+  },
+  {
+   "gain": 6.0,
+   "dth": 1.0,
+   "dz": -0.0015
+  }
+ ],
+ "baseline_train": [
+  {
+   "matched": 0,
+   "wrong": 0,
+   "f1": 0.0,
+   "timing_ms": {
+    "median": 0.0,
+    "p90_abs": 0.0
+   }
+  },
+  {
+   "matched": 0,
+   "wrong": 0,
+   "f1": 0.0,
+   "timing_ms": {
+    "median": 0.0,
+    "p90_abs": 0.0
+   }
+  },
+  {
+   "matched": 62,
+   "wrong": 0,
+   "f1": 1.0,
+   "timing_ms": {
+    "median": -41.20749999999917,
+    "p90_abs": 46.175500000000795
+   }
+  },
+  {
+   "matched": 29,
+   "wrong": 33,
+   "f1": 0.468,
+   "timing_ms": {
+    "median": -40.65000000000296,
+    "p90_abs": 44.46300000000001
+   }
+  },
+  {
+   "matched": 0,
+   "wrong": 0,
+   "f1": 0.0,
+   "timing_ms": {
+    "median": 0.0,
+    "p90_abs": 0.0
+   }
+  }
+ ],
+ "baseline_test": [
+  {
+   "matched": 33,
+   "wrong": 0,
+   "f1": 0.695,
+   "timing_ms": {
+    "median": -11.755000000000848,
+    "p90_abs": 13.989999999999725
+   }
+  },
+  {
+   "matched": 0,
+   "wrong": 0,
+   "f1": 0.0,
+   "timing_ms": {
+    "median": 0.0,
+    "p90_abs": 0.0
+   }
+  },
+  {
+   "matched": 0,
+   "wrong": 0,
+   "f1": 0.0,
+   "timing_ms": {
+    "median": 0.0,
+    "p90_abs": 0.0
+   }
+  },
+  {
+   "matched": 0,
+   "wrong": 0,
+   "f1": 0.0,
+   "timing_ms": {
+    "median": 0.0,
+    "p90_abs": 0.0
+   }
+  },
+  {
+   "matched": 28,
+   "wrong": 34,
+   "f1": 0.452,
+   "timing_ms": {
+    "median": -45.64125000000274,
+    "p90_abs": 48.633249999996764
+   }
+  }
+ ],
+ "cem_train": [
+  {
+   "matched": 62,
+   "wrong": 0,
+   "f1": 1.0,
+   "timing_ms": {
+    "median": -3.2025000000022175,
+    "p90_abs": 12.50449999999632
+   }
+  },
+  {
+   "matched": 62,
+   "wrong": 0,
+   "f1": 1.0,
+   "timing_ms": {
+    "median": 15.5675000000004,
+    "p90_abs": 19.802500000001455
+   }
+  },
+  {
+   "matched": 62,
+   "wrong": 0,
+   "f1": 1.0,
+   "timing_ms": {
+    "median": -18.652500000000405,
+    "p90_abs": 30.457499999997136
+   }
+  },
+  {
+   "matched": 62,
+   "wrong": 0,
+   "f1": 1.0,
+   "timing_ms": {
+    "median": -14.987500000000598,
+    "p90_abs": 25.282999999999898
+   }
+  },
+  {
+   "matched": 62,
+   "wrong": 0,
+   "f1": 1.0,
+   "timing_ms": {
+    "median": 15.5675000000004,
+    "p90_abs": 22.25300000000132
+   }
+  }
+ ],
+ "cem_test": [
+  {
+   "matched": 62,
+   "wrong": 0,
+   "f1": 1.0,
+   "timing_ms": {
+    "median": -1.9799999999996487,
+    "p90_abs": 12.370749999996361
+   }
+  },
+  {
+   "matched": 62,
+   "wrong": 0,
+   "f1": 1.0,
+   "timing_ms": {
+    "median": 4.899999999999238,
+    "p90_abs": 9.808000000008121
+   }
+  },
+  {
+   "matched": 62,
+   "wrong": 0,
+   "f1": 1.0,
+   "timing_ms": {
+    "median": 3.0124999999996405,
+    "p90_abs": 7.799500000001203
+   }
+  },
+  {
+   "matched": 62,
+   "wrong": 0,
+   "f1": 1.0,
+   "timing_ms": {
+    "median": 4.242499999998373,
+    "p90_abs": 9.268999999999394
+   }
+  },
+  {
+   "matched": 62,
+   "wrong": 0,
+   "f1": 1.0,
+   "timing_ms": {
+    "median": -18.867499999998927,
+    "p90_abs": 29.467500000002644
+   }
+  }
+ ],
+ "cem": {
+  "samples": 48,
+  "elites": 8,
+  "iters": 6,
+  "commit_s": 0.5,
+  "windows": 70
+ },
+ "wall_s": 1041
+}

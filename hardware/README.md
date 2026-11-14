@@ -19,8 +19,8 @@ An L-bracket that bolts Wuji's adapter flange to a camera tripod. **Not test-fit
 1. Press the four M6 nuts into the hex pockets on the back of the upright plate, and the 1/4" nut into the pocket in the foot.
 2. Bolt the flange to the plain face: M6 screws from the hand side, through the slots.
 3. Screw the foot onto the tripod plate from below.
-4. Set height with the tripod's column, pitch (25° down) with the tripod head, sideways by moving the tripod.
+4. Set height with the tripod's column, pitch (level, 0°) with the tripod head and a spirit level, sideways by moving the tripod.
 
-**Aim for** flange centre 10 cm above the white keys, 7 cm in front of the key fronts, fingertips 25° down. In simulation the plan tolerates a hand that sits a little too high or too flat much better than one that sits too low or too steep. When unsure, err high and flat, then run the key calibration (`docs/RUNBOOK.md`, step 4).
+**Aim for** flange centre 6 cm above the white keys, 12 cm in front of the key fronts, above the middle of E5, hand level (new mount since 14 Nov, see [RUNBOOK](../docs/RUNBOOK.md)). The sentences below were written for the first, tilted mount. In simulation the plan tolerates a hand that sits a little too high or too flat much better than one that sits too low or too steep. When unsure, err high and flat, then run the key calibration (`docs/RUNBOOK.md`, step 4).
 
 Change any dimension in [`tripod_mount.py`](tripod_mount.py) (`pip install trimesh manifold3d shapely mapbox-earcut`, then `python hardware/tripod_mount.py`).

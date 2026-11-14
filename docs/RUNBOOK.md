@@ -1,6 +1,6 @@
 # Runbook: from the first motion to the full piece
 
-**Status, 14 Nov 2026: nothing here has run on a real hand.** Every script passes its dry run against a fake hand (a 30 ms lag model). Expect to fix things on the first real run.
+**Status, 14 Nov 2026, night: the hand has moved, in the air only.** First-motion test, then Ode to Joy at half and full speed, at 0.5 A and 1.0 A. Nothing has touched a piano yet: the key check and everything over the keys are still untested.
 
 Before you start: [RDK_X5_SETUP.md](RDK_X5_SETUP.md) is done and `./wq hand python scripts/hand_info.py` shows 20 of 20 joints.
 
@@ -34,23 +34,26 @@ Commands are written for the RDK X5. With a native install (Mac, Linux laptop) d
 
 ## Ode to Joy on the tripod: the short path
 
-`plans/ode_fixed` uses the same mount and the same five keys (C5 to G5, one finger each) as the baseline plan. So:
+`plans/ode_level_s0` is the plan for the real hand: five keys C5 to G5, one finger each, hand **level**, mount as in step 2. (`plans/ode_fixed` is the first version for the old, tilted mount: do not use it on the piano.)
 
 ```bash
 # hand in the AIR, fingers free
 ./wq hand python scripts/hand_info.py                                                           # reads only, never moves
 ./wq hand python scripts/sysid_step.py plans/baseline_k265_gain5/theme_q_1khz.npz --effort 0.5  # step 1: stiffness G
-./wq hand python scripts/play_on_hand.py plans/ode_fixed/theme_q_1khz.npz --tempo 0.5 --effort 0.5   # whole piece in the air
+./wq hand python scripts/hand_hello.py                                                          # first motion: one finger, 9 degrees
+./wq hand python scripts/play_on_hand.py plans/ode_level_s0/theme_q_1khz.npz --tempo 0.5 --effort 0.5   # whole piece in the air
 
 # hand on the tripod over the keys (step 2), strap attached
-./wq hand python scripts/calibrate_keys.py plans/ode_fixed/theme_q_1khz.npz --manual --effort 0.5    # each finger presses its key slowly
-./wq hand python scripts/play_on_hand.py plans/ode_fixed/theme_q_1khz.npz --tempo 0.5 --fingers index --effort 0.5
-./wq hand python scripts/play_on_hand.py plans/ode_fixed/theme_q_1khz.npz --tempo 0.5 --effort 0.5
-./wq hand python scripts/play_on_hand.py plans/ode_fixed/theme_q_1khz.npz
+./wq hand python scripts/calibrate_keys.py plans/ode_level_s0/theme_q_1khz.npz --manual --effort 0.5    # each finger presses its key slowly
+./wq hand python scripts/play_on_hand.py plans/ode_level_s0/theme_q_1khz.npz --tempo 0.5 --fingers index --effort 0.5
+./wq hand python scripts/play_on_hand.py plans/ode_level_s0/theme_q_1khz.npz --tempo 0.5 --effort 1.0
+./wq hand python scripts/play_on_hand.py plans/ode_level_s0/theme_q_1khz.npz --effort 1.0
 ```
 
 - Wrong key in the slow key check: move the tripod sideways. Note sounds very early or not at all: raise or lower the tripod. Aim for a note at 0.8 to 1.2 on every finger. This plan cannot take the depth numbers in software.
 - After each run the script prints, per finger, how far it was from its command and how much current it drew. A finger "at the limit" most of the time is pushing against something: stop and look.
+- Current limit: **1.5 A is the hard limit** and the scripts refuse more. Measured in the air: at 0.5 A the fingers complete 70 % of each stroke at full speed, at 1.0 A 82 %. Use 0.5 A for anything new, 1.0 A to play.
+- On the RDK X5 without Docker: `cd ~/Wuji-Quartet && ~/wq-venv/bin/python scripts/...` instead of `./wq hand python scripts/...`.
 - Then send Simon G and the four measured mount numbers: a plan for your exact setup takes 15 minutes (step 6 with `--piece ode`).
 
 ## 0 · Dry run
@@ -79,19 +82,23 @@ It prints `best match: gain xG`. Call that number **G**.
 
 ## 2 · Mount and measure
 
-<img src="setup.png" width="760" alt="Mount: flange 10 cm above the white keys, 7 cm in front of the keys, fingertips 25 degrees down">
+<img src="setup.png" width="760" alt="Mount: flange 6 cm above the white keys, 12 cm in front of the keys, level">
+
+Old mount on top, new one below: [wrist_now_vs_new.png](wrist_now_vs_new.png).
 
 | Target | Value | Tolerance before notes are lost |
 |---|---|---|
 | Approach | from the player's side, right hand, thumb toward the bass | |
-| Flange centre above the white key tops | 10 cm | about ±2 mm |
-| Flange centre in front of the white key fronts | 7 cm | |
-| Sideways | above D5 | ±3 mm gives wrong keys |
-| Pitch, fingertips down | 25° | ±3° breaks the plan |
+| Flange centre above the white key tops | 6 cm | ±2 mm is inside what the plan was trained on |
+| Flange centre in front of the white key fronts | 12 cm | the thumb lands 15 mm behind the key front: do not go further back |
+| Sideways | flange centre above the middle of E5 | ±2 mm trained |
+| Pitch | level (0°): use a spirit level on the back of the hand | ±1.5° trained |
 
 The bracket must be rigid and adjustable in height and pitch. Clamp it to the table or the stand, not to the keyboard's lid. Flange drawings and STEP files: `assets/wuji-description/hand2/hand2_2/attachment/`.
 
-Measure what you actually built, in millimetres and degrees. You need four numbers: height, distance in front of the key fronts, pitch, sideways offset from D5.
+Measure what you actually built, in millimetres and degrees. You need four numbers: height, distance in front of the key fronts, pitch, sideways offset from E5.
+
+This mount is for Ode to Joy. The K.265 plans (`plans/k265_fixed`, `plans/baseline_k265_gain5`) were made for the first mount (10 cm up, 7 cm in front, over D5, 25° down). On the real hand the thumb's sideways joint stops earlier than in the model, so from that mount the thumb cannot reach its keys: those plans need re-planning before they go on a piano.
 
 ## 3 · Plan for our mount
 
@@ -143,6 +150,10 @@ On a laptop or Henry's machine, not on the RDK X5 (its small processor would nee
 ```bash
 ./wq sim python scripts/sbto_piano.py --piece k265 --wrist fixed --gain G \
     --mount 0.22,0.10,25,-0.0235 --out out/sbto_hw --workers 8
+
+# Ode to Joy on the level mount (replace the four numbers with your measured ones):
+./wq sim python scripts/sbto_piano.py --piece ode --wrist fixed --gain G --real-limits \
+    --mount 0.27,0.06,0,0.0 --press-x 0.135,0.115,0.115,0.115,0.125 --out out/ode_hw --workers 8
 ```
 
 `--mount` is `x,z,pitch,dy` with the same meaning as in step 3. 15 to 30 minutes. Then copy `out/sbto_hw` to the robot computer (commit it under `plans/`, or `rsync`) and play it as in step 5.
@@ -165,7 +176,9 @@ On a laptop or Henry's machine, not on the RDK X5 (its small processor would nee
 
 | Unknown | Why it matters |
 |---|---|
-| Real servo stiffness | decides whether fast notes play at all (step 1) |
+| Real servo stiffness | decides whether fast notes play at all (step 1). First data, in the air: 82 % of each stroke at full speed with kp 3 and 1.0 A; a higher kp is untested |
+| Real joint stops | two are known (thumb sideways 0.44 rad, index sideways about 0.6 rad; `REAL_LIMITS` in `piano_core.py`); the others are still the model's |
+| Command timing on the RDK X5 | about 12 % of the 1 kHz commands go out late; effect on the music unknown |
 | Real key weight and where the piano triggers the note | the model uses a generic key; real sensors usually fire before the key bottom, which helps |
 | Bracket stiffness | any sway is a height error |
 | Position mode behaviour | untested; MIT mode is the default |

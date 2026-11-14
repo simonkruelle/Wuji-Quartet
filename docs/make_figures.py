@@ -143,27 +143,28 @@ def hand():
 
 def setup():
     w, h = 1400, 700
-    m, d, down, Z = playing_scene(w, h, fovy=0.30, ortho=True)
+    m, d, down, Z = playing_scene(w, h, t_music=0.25, plan="ode_level_s0", fovy=0.30, ortho=True)
     mx, mdy, mz, th = [float(v) for v in Z["mount"]]; y = pc.key_y(76) + mdy                # flange centre (x, y, z), pitch
-    cam = camera([0.105, y, 0.052], 3.0, 90, 0)                                                # looking along the keyboard, player on the right
+    cam = camera([0.155, y, 0.052], 3.0, 90, 0)                                                # looking along the keyboard, player on the right
     im = render(m, d, cam, w, h); dr = ImageDraw.Draw(im, "RGBA"); P = lambda p: project(cam, m, w, h, p)
     f, small, big = font("Medium", 24), font("Regular", 20), font("Light", 26)
     fl, kf = P([mx, y, mz]), P([0.15, y, 0.0])
     dr.ellipse((fl[0] - 8, fl[1] - 8, fl[0] + 8, fl[1] + 8), fill=GOLD + (255,), outline=INK + (255,), width=2)
     xr = mx + 0.045
     dr.line((*P([0.15, y, 0.0]), *P([xr + 0.012, y, 0.0])), fill=IVORY + (120,), width=1); dr.line((*fl, *P([xr + 0.012, y, mz])), fill=IVORY + (120,), width=1)
-    dim(dr, P([xr, y, 0.0]), P([xr, y, mz]), f"{mz*100:.0f} cm above the white keys", f, off=(150, 0))
+    dim(dr, P([xr, y, 0.0]), P([xr, y, mz]), f"{mz*100:.0f} cm above the keys", f, off=(125, 0))
     zt = mz + 0.045
     dr.line((*kf, *P([0.15, y, zt + 0.008])), fill=IVORY + (120,), width=1); dr.line((*fl, *P([mx, y, zt + 0.008])), fill=IVORY + (120,), width=1)
     dim(dr, P([0.15, y, zt]), P([mx, y, zt]), f"{(mx-0.15)*100:.0f} cm in front of the keys", f, off=(0, -30))
     # pitch: horizontal reference and hand axis from the flange
     L = 0.075; a0 = P([mx - L, y, mz]); a1 = P([mx - L * math.cos(math.radians(th)), y, mz - L * math.sin(math.radians(th))])
     dr.line((*fl, *a0), fill=GOLD + (255,), width=2); dr.line((*fl, *a1), fill=GOLD + (255,), width=2)
-    pill(dr, tuple(P([mx - 0.118, y, mz - 0.016])), f"{th:.0f}° down", f, fill=GOLD)
+    pill(dr, tuple(P([mx - 0.118, y, mz - 0.016])), "level" if abs(th) < 0.5 else f"{th:.0f}° down", f, fill=GOLD)
     c = P([pc.PRESS_X, y, 0.0]); dr.line((c[0], c[1] + 6, c[0], c[1] + 150), fill=IVORY + (200,), width=2)
-    pill(dr, (c[0], c[1] + 166), f"fingertips land {(0.15-pc.PRESS_X)*1000:.0f} mm behind the key front", f)
+    px = Z["press_x"] if "press_x" in Z.files else [pc.PRESS_X]
+    pill(dr, (c[0], c[1] + 166), f"fingertips land {(0.15-max(px))*1000:.0f} to {(0.15-min(px))*1000:.0f} mm behind the key front", f)
     pill(dr, tuple(fl + np.array([0, -34])), "flange centre", small, fill=GOLD)
-    dr.text((40, 34), "Where the hand is mounted", font=big, fill=IVORY + (255,)); dr.text((40, 72), "side view  ·  best of 108 mounts tried in simulation", font=small, fill=MUTED + (255,))
+    dr.text((40, 34), "Where the hand is mounted", font=big, fill=IVORY + (255,)); dr.text((40, 72), "side view  ·  Ode to Joy, five keys C5 to G5  ·  chosen for straight fingers", font=small, fill=MUTED + (255,))
     dr.text((w - 40, h - 44), "player's side  →", font=small, fill=MUTED + (255,), anchor="rm"); dr.text((40, h - 44), "←  fallboard", font=small, fill=MUTED + (255,), anchor="lm")
     im.save(os.path.join(HERE, "setup.png")); print("setup.png", im.size, "mount", mx, mdy, mz, th)
 
