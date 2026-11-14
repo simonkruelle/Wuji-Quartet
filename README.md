@@ -113,7 +113,7 @@ The optimiser runs on CPU cores today, not on the GPU. Henry's machine helps thr
 | | Milestone | Done when |
 |:--:|---|---|
 | M1 | Everyone can run the code | `./wq check` passes on every machine |
-| M2 | Robot computer ready | RDK X5 boots, Docker runs, `hand_info.py` shows 20 of 20 joints ([guide](docs/RDK_X5_SETUP.md)) |
+| M2 | Robot computer ready | RDK X5 boots, `sudo bash scripts/rdk_setup.sh` passes, `hand_info.py` shows 20 of 20 joints ([guide](docs/RDK_X5_SETUP.md), all from a Mac terminal) |
 | M3 | Hand moves in the air | stiffness measured ([runbook](docs/RUNBOOK.md) step 1). **Biggest open risk** |
 | M4 | Hand over the piano | bracket built, mount measured |
 | M5 | First correct note | key calibration done |
@@ -241,7 +241,7 @@ New runs land in `out/` (not tracked). Move a run to `plans/` to share it.
 
 ## On the real hand
 
-1. **[docs/RDK_X5_SETUP.md](docs/RDK_X5_SETUP.md)**: board out of the box, Docker, network, hand answers.
+1. **[docs/RDK_X5_SETUP.md](docs/RDK_X5_SETUP.md)**: board out of the box, Docker, network, hand answers. All from a Mac terminal, no screen on the board.
 2. **[docs/RUNBOOK.md](docs/RUNBOOK.md)**: stiffness test, mount, key calibration, play.
 
 Two facts that save an hour: the hand has the fixed address **192.168.1.111** (right) or **.110** (left) and no DHCP, and the RDK X5 ships on **192.168.127.10**. They cannot see each other until `bash scripts/hand_net.sh` has run.
@@ -284,6 +284,7 @@ Wuji-Quartet/
 │   ├── <a href="scripts/play_on_hand.py">play_on_hand.py</a>     1 kHz playback on the hand, MIDI capture and score, --dry-run
 │   ├── <a href="scripts/sysid_step.py">sysid_step.py</a> · <a href="scripts/calibrate_keys.py">calibrate_keys.py</a>   real stiffness · right key and depth
 │   ├── <a href="scripts/hand_info.py">hand_info.py</a> · <a href="scripts/hand_net.sh">hand_net.sh</a>     read-only hand check · network to the hand
+│   ├── <a href="scripts/rdk_setup.sh">rdk_setup.sh</a>        one-time setup of the RDK X5: Docker with the fixes its kernel needs
 │   ├── <a href="scripts/wuji_hw.py">wuji_hw.py</a>          SDK session, fake hand, raw MIDI input
 │   ├── <a href="scripts/sweep_mount.py">sweep_mount.py</a>      mount search (108 mounts) · <a href="scripts/score_midi.py">score_midi.py</a> recorded MIDI vs plan
 │   └── <a href="scripts/run_sbto_all.sh">run_sbto_all.sh</a>     the three reference runs in a row

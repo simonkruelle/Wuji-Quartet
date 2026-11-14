@@ -10,11 +10,15 @@
 # examples
 #   ./wq sim  python scripts/sbto_piano.py --piece k265 --wrist fixed --out out/sbto_k265_fixed --workers 8
 #   ./wq hand python scripts/play_on_hand.py plans/k265_fixed/theme_q_1khz.npz --tempo 0.5 --fingers index --effort 0.5
-set -euo pipefail
+set -eo pipefail      # no -u: macOS ships bash 3.2, where an empty array would count as unset
 cd "$(dirname "$0")"
 IMG="${WQ_IMAGE:-wuji-quartet:local}"
 run=(docker run --rm -v "$PWD":/work -w /work -u "$(id -u):$(id -g)" -e HOME=/home/wq)
 if [ -t 0 ] && [ -t 1 ]; then run+=(-it); fi
+# Linux: always the host's network. Nothing here needs an isolated one, and boards like the RDK X5 lack kernel parts
+# of Docker's bridge network. (On macOS, Docker Desktop keeps its default.)
+net=(); if [ "$(uname -s)" = "Linux" ]; then net=(--network host); fi
+run+=("${net[@]}")
 if [ -n "${MUJOCO_GL:-}" ]; then run+=(-e "MUJOCO_GL=$MUJOCO_GL" -e "PYOPENGL_PLATFORM=$MUJOCO_GL"); fi
 
 hand_args() {
@@ -25,7 +29,7 @@ hand_args() {
   fi
   mkdir -p "$HOME/.wuji"
   # host network: the SDK finds the hand by UDP broadcast on 192.168.1.x (Wuji's own Docker guide does the same)
-  run+=(--network host --cap-add SYS_NICE --ulimit rtprio=99 -v "$HOME/.wuji":/home/wq/.wuji)
+  run+=(--cap-add SYS_NICE --ulimit rtprio=99 -v "$HOME/.wuji":/home/wq/.wuji)
   # USB-MIDI keyboard: ALSA devices (char major 116), also when plugged in after the container started
   if [ -d /dev/snd ]; then
     run+=(-v /dev/snd:/dev/snd --device-cgroup-rule 'c 116:* rmw')
@@ -35,7 +39,7 @@ hand_args() {
 
 cmd="${1:-help}"; [ $# -gt 0 ] && shift
 case "$cmd" in
-  build)      exec docker build -t "$IMG" "$@" . ;;
+  build)      exec docker build "${net[@]}" -t "$IMG" "$@" . ;;
   sim)        exec "${run[@]}" "$IMG" "$@" ;;
   shell)      exec "${run[@]}" "$IMG" bash ;;
   hand)       hand_args; exec "${run[@]}" "$IMG" "$@" ;;
