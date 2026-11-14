@@ -2,7 +2,7 @@
 plus a FakeHand with first-order joint lag so every script runs with --dry-run and no hardware.
 
 Joint order = SDK flat-20 = MJCF actuator order (thumb 0-3, index 4-7, middle 8-11, ring 12-15, pinky 16-19)."""
-import math, os, threading, time
+import math, os, threading, time, signal
 import numpy as np
 
 os.environ.setdefault("WUJI_TELEMETRY_DISABLE", "1")
@@ -100,6 +100,9 @@ class _FakeCmd:
 
 
 # ------------------------------------------------------------------ connection
+def _interrupt(*_): raise KeyboardInterrupt
+
+
 def check_effort_limit(read_back, want):
     """The current limit is what keeps a stalled finger harmless: refuse to enable if the hand reports a higher one than we set."""
     try: got = np.array([np.nan if v is None else float(v) for v in np.atleast_1d(np.asarray(read_back, dtype=object))])
@@ -131,13 +134,19 @@ class Session:
             self.nid2i = wuji_sdk.WujiHand2.nid_to_joint_index
         online = int(self.hand.online_joints_count().get())
         if online != JOINTS: self.close(); raise SystemExit(f"{online}/20 joints online, refusing to move")
-        self._configure(); self.hand.enable(); self._wait_enabled()
-        self.pub = self.hand.joint_command().publish()
+        for sig in ("SIGHUP", "SIGTERM"):      # a dropped SSH session or a kill must still disable the hand
+            try: signal.signal(getattr(signal, sig), _interrupt)
+            except Exception: pass
+        self._configure()
+        # read the pose first, then enable while already commanding that pose: the hand must not move at the moment of enabling
         self._sub = self.hand.joint_states().subscribe()
         self._reader = threading.Thread(target=self._read_loop, daemon=True); self._reader.start()
         t_ = time.monotonic()
         while self.latest() is None and time.monotonic() - t_ < 2.0: time.sleep(0.01)
-        if self.latest() is None: self.close(); raise SystemExit("no joint_states within 2 s")
+        if self.latest() is None or np.isnan(self.latest()).any(): self.close(); raise SystemExit("no complete joint_states within 2 s")
+        self.q_before = self.latest(); self.pub = self.hand.joint_command().publish()
+        try: self.send(self.q_before); self.hand.enable(); self._wait_enabled(); self.send(self.q_before)
+        except BaseException: self.close(); raise      # anything going wrong while switching on (Ctrl-C included) ends with the hand disabled
         return self
 
     def _configure(self):
@@ -162,7 +171,8 @@ class Session:
         sub = self.hand.joint_diagnostics().subscribe(); deadline = time.monotonic() + timeout; seen = en = 0
         try:
             while time.monotonic() < deadline:
-                time.sleep(0.2); frame = None
+                t_ = time.monotonic(); frame = None
+                while time.monotonic() - t_ < 0.2: self.send(self.q_before); time.sleep(0.002)      # keep holding the pose while the joints switch on
                 while (x := sub.recv()) is not None: frame = x
                 if frame is None: continue
                 seen = len(frame.joints); en = sum(1 for e in frame.joints if e.status_word.ext_state == 2)
