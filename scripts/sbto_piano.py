@@ -16,6 +16,8 @@ usage:
   python scripts/sbto_piano.py --piece k265 --wrist fixed --out out/sbto_k265_fixed
   python scripts/sbto_piano.py --piece k265 --wrist human --out out/sbto_k265_human
   python scripts/sbto_piano.py --piece furelise --wrist plan --out out/sbto_furelise
+  python scripts/sbto_piano.py --piece ode --wrist fixed --out out/sbto_ode_fixed          # five-finger position, no stretch
+  python scripts/sbto_piano.py --piece my_recording.mid --wrist plan --out out/sbto_mine   # any single-line melody
 """
 import argparse, json, math, os, pickle, sys, time
 import numpy as np, mujoco
@@ -69,7 +71,13 @@ def load_piece(name, t_end=None):
     elif name == "furelise":
         n = [x for x in read_notes(os.path.join(HERE, "assets/fur_elise_beethoven/fur_elise.mid")) if x["track"] == 1 and x["on"] < (t_end or 25.3)]
         title = "Beethoven Für Elise, opening"
-    else: raise SystemExit(f"unknown piece {name}")
+    elif name == "ode":
+        n = read_notes(os.path.join(HERE, "assets/ode_to_joy/ode_to_joy.mid")); title = "Beethoven Ode to Joy"
+        if t_end: n = [x for x in n if x["on"] < t_end]
+    elif name.endswith((".mid", ".midi")):       # any melody: one note at a time; --t-end cuts it
+        n = sorted(read_notes(name), key=lambda x: x["on"]); title = os.path.splitext(os.path.basename(name))[0]
+        if t_end: n = [x for x in n if x["on"] < n[0]["on"] + t_end]
+    else: raise SystemExit(f"unknown piece {name}: use k265, furelise, ode or a path to a .mid file")
     t0 = n[0]["on"]
     return [dict(on=x["on"] - t0, off=x["off"] - t0, pitch=x["pitch"]) for x in n], title, t0
 
