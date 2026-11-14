@@ -1,0 +1,14 @@
+saints_D: 32 notes, 31.1 s, wrist fixed {}; fingers used {'thumb': 8, 'index': 3, 'middle': 10, 'ring': 5, 'pinky': 6}
+IK keyframes: 5 distinct strokes in 5 s; keys G4..E6
+start parameters: lead and per-finger medians from plans/ode_level_stroke90_s0/theme_q_1khz.npz
+lead iter 0: lead ms [144, 141, 141, 135, 140] -> nominal F1 1.000 (32/32, 0 wrong)
+lead iter 1: lead ms [142, 141, 143, 135, 130] -> nominal F1 1.000 (32/32, 0 wrong)
+lead iter 2: lead ms [142, 141, 143, 135, 130] -> nominal F1 1.000 (32/32, 0 wrong)
+DR set wide: [{'gain': 5.0}, {'gain': 2.5, 'dz': 0.002}, {'gain': 10.0, 'dz': -0.002}, {'gain': 5.0, 'dy': 0.002, 'dth': 1.5}, {'gain': 4.0, 'dy': -0.002, 'dth': -1.5}]
+baseline (no CEM) train plants: ['9/32 w8', '6/32 w0', '32/32 w0', '32/32 w0', '0/32 w0']  test: ['22/32 w0', '0/32 w0', '6/32 w0', '9/32 w0', '32/32 w0']
+start (before CEM) train plants: ['32/32 w0', '32/32 w0', '32/32 w0', '32/32 w0', '32/32 w0']  test: ['32/32 w0', '32/32 w0', '32/32 w0', '32/32 w0', '32/32 w0']
+CEM done in 0 s
+CEM train plants: ['32/32 w0', '32/32 w0', '32/32 w0', '32/32 w0', '32/32 w0']  test: ['32/32 w0', '32/32 w0', '32/32 w0', '32/32 w0', '32/32 w0']
+nominal missed: []
+nominal wrong: []
+total 17 s -> out/saints_dmajor_bpm120_s0

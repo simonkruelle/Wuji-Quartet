@@ -1,0 +1,267 @@
+{
+ "piece": "assets/melodies/jingle_D.mid",
+ "title": "jingle_D",
+ "wrist": "fixed",
+ "wrist_info": {},
+ "notes": 51,
+ "lead_ms": [
+  141.6,
+  141.1,
+  143.3,
+  135.2,
+  129.6
+ ],
+ "fingers": {
+  "thumb": 3,
+  "index": 6,
+  "middle": 26,
+  "ring": 11,
+  "pinky": 5
+ },
+ "dr": "wide",
+ "train_plants": [
+  {
+   "gain": 5.0
+  },
+  {
+   "gain": 2.5,
+   "dz": 0.002
+  },
+  {
+   "gain": 10.0,
+   "dz": -0.002
+  },
+  {
+   "gain": 5.0,
+   "dy": 0.002,
+   "dth": 1.5
+  },
+  {
+   "gain": 4.0,
+   "dy": -0.002,
+   "dth": -1.5
+  }
+ ],
+ "test_plants": [
+  {
+   "gain": 3.5,
+   "dz": -0.001,
+   "dy": 0.001
+  },
+  {
+   "gain": 7.0,
+   "dz": 0.001,
+   "dy": -0.001,
+   "dth": -1.0
+  },
+  {
+   "gain": 5.0,
+   "dz": 0.002,
+   "dy": -0.002
+  },
+  {
+   "gain": 3.0
+  },
+  {
+   "gain": 6.0,
+   "dth": 1.0,
+   "dz": -0.0015
+  }
+ ],
+ "baseline_train": [
+  {
+   "matched": 11,
+   "wrong": 3,
+   "f1": 0.338,
+   "timing_ms": {
+    "median": -6.000000000000227,
+    "p90_abs": 18.000000000000682
+   }
+  },
+  {
+   "matched": 4,
+   "wrong": 0,
+   "f1": 0.145,
+   "timing_ms": {
+    "median": 24.00000000000091,
+    "p90_abs": 24.00000000000091
+   }
+  },
+  {
+   "matched": 51,
+   "wrong": 0,
+   "f1": 1.0,
+   "timing_ms": {
+    "median": -33.99999999999981,
+    "p90_abs": 43.99999999999871
+   }
+  },
+  {
+   "matched": 51,
+   "wrong": 0,
+   "f1": 1.0,
+   "timing_ms": {
+    "median": -39.99999999999915,
+    "p90_abs": 43.99999999999871
+   }
+  },
+  {
+   "matched": 0,
+   "wrong": 0,
+   "f1": 0.0,
+   "timing_ms": {
+    "median": 0.0,
+    "p90_abs": 0.0
+   }
+  }
+ ],
+ "baseline_test": [
+  {
+   "matched": 25,
+   "wrong": 0,
+   "f1": 0.658,
+   "timing_ms": {
+    "median": -7.999999999999119,
+    "p90_abs": 19.999999999999574
+   }
+  },
+  {
+   "matched": 0,
+   "wrong": 0,
+   "f1": 0.0,
+   "timing_ms": {
+    "median": 0.0,
+    "p90_abs": 0.0
+   }
+  },
+  {
+   "matched": 5,
+   "wrong": 0,
+   "f1": 0.179,
+   "timing_ms": {
+    "median": 18.000000000000682,
+    "p90_abs": 20.399999999999352
+   }
+  },
+  {
+   "matched": 11,
+   "wrong": 0,
+   "f1": 0.355,
+   "timing_ms": {
+    "median": 3.999999999997783,
+    "p90_abs": 8.000000000000007
+   }
+  },
+  {
+   "matched": 51,
+   "wrong": 0,
+   "f1": 1.0,
+   "timing_ms": {
+    "median": -44.00000000000004,
+    "p90_abs": 46.00000000000026
+   }
+  }
+ ],
+ "cem_train": [
+  {
+   "matched": 51,
+   "wrong": 0,
+   "f1": 1.0,
+   "timing_ms": {
+    "median": 0.0,
+    "p90_abs": 1.7763568394002505e-12
+   }
+  },
+  {
+   "matched": 51,
+   "wrong": 0,
+   "f1": 1.0,
+   "timing_ms": {
+    "median": 20.00000000000135,
+    "p90_abs": 22.00000000000024
+   }
+  },
+  {
+   "matched": 51,
+   "wrong": 0,
+   "f1": 1.0,
+   "timing_ms": {
+    "median": -13.999999999999346,
+    "p90_abs": 16.000000000000014
+   }
+  },
+  {
+   "matched": 51,
+   "wrong": 0,
+   "f1": 1.0,
+   "timing_ms": {
+    "median": -12.00000000000001,
+    "p90_abs": 13.999999999999346
+   }
+  },
+  {
+   "matched": 51,
+   "wrong": 0,
+   "f1": 1.0,
+   "timing_ms": {
+    "median": 21.999999999998465,
+    "p90_abs": 25.9999999999998
+   }
+  }
+ ],
+ "cem_test": [
+  {
+   "matched": 51,
+   "wrong": 0,
+   "f1": 1.0,
+   "timing_ms": {
+    "median": 2.000000000000668,
+    "p90_abs": 4.000000000001336
+   }
+  },
+  {
+   "matched": 51,
+   "wrong": 0,
+   "f1": 1.0,
+   "timing_ms": {
+    "median": 12.00000000000001,
+    "p90_abs": 12.000000000000455
+   }
+  },
+  {
+   "matched": 51,
+   "wrong": 0,
+   "f1": 1.0,
+   "timing_ms": {
+    "median": 6.000000000000227,
+    "p90_abs": 9.999999999999787
+   }
+  },
+  {
+   "matched": 51,
+   "wrong": 0,
+   "f1": 1.0,
+   "timing_ms": {
+    "median": 9.99999999999801,
+    "p90_abs": 10.000000000001563
+   }
+  },
+  {
+   "matched": 51,
+   "wrong": 0,
+   "f1": 1.0,
+   "timing_ms": {
+    "median": -13.999999999999346,
+    "p90_abs": 16.00000000000179
+   }
+  }
+ ],
+ "cem": {
+  "samples": 48,
+  "elites": 8,
+  "iters": 6,
+  "commit_s": 0.5,
+  "windows": 0
+ },
+ "wall_s": 17
+}

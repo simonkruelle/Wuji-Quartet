@@ -168,6 +168,17 @@ Another melody on the same five keys (C5 to G5) needs no new optimisation: it ta
 
 Leave out `--no-cem` to optimise from that start (15 minutes).
 
+**With a black key (D major: D E F♯ G A, the middle finger plays F♯).** The hand stays level and 6 cm above the keys, but moves **3 cm to the right and 1 cm closer**: flange centre 11 cm in front of the key fronts, 3 cm right of the middle of E5. From 12 cm the middle finger is 3 mm short of the black key. Plans for this position: `plans/saints_dmajor_bpm120_s0`, `plans/ode_dmajor_bpm108_s0`, `plans/jingle_dmajor_bpm120_s0`. To make another one:
+
+```bash
+./wq sim python scripts/make_melody.py saints --key D
+./wq sim python scripts/sbto_piano.py --piece assets/melodies/saints_D.mid --wrist fixed --real-limits --five 74,76,78,79,81 \
+    --mount 0.26,0.06,0,0.030 --press-x 0.135,0.115,0.12,0.115,0.115 --stroke 0.09 --start-hover \
+    --init-from plans/ode_level_stroke90_s0/theme_q_1khz.npz --no-cem --out out/saints_D --workers 8
+```
+
+A new five-key position needs its own mount: `python scripts/sweep_pose.py --keys 74,76,78,79,81` searches one (5 minutes).
+
 `--stroke 0.09` makes each key stroke take 90 ms instead of about 35 ms; `--start-hover` lets the fingers wait above their keys instead of curled up. Without them the plan plays the same notes in simulation but looks jerky on the real hand.
 
 `--mount` is `x,z,pitch,dy` with the same meaning as in step 3. 15 to 30 minutes. Then copy `out/sbto_hw` to the robot computer (commit it under `plans/`, or `rsync`) and play it as in step 5.

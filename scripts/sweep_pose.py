@@ -11,6 +11,7 @@ sys.path.insert(0, os.path.dirname(os.path.abspath(__file__)))
 import mujoco, piano_core as pc
 HERE = os.path.dirname(os.path.dirname(os.path.abspath(__file__))); WUJI = os.path.join(HERE, "assets/wuji-description")
 PX = [0.115, 0.125, 0.135, 0.143]            # contact point, m from the key hinge (front edge = 0.150)
+PX_BLACK = [0.110, 0.115, 0.120]             # black key: the keyframer moves the contact 40 mm toward the hinge -> 20, 15, 10 mm behind the black key's front edge
 NOM = np.array([0.35, 0.0, 0.6, 0.3])        # relaxed finger: base bend, sideways, middle joint, tip joint
 
 def evaluate(c):
@@ -23,7 +24,7 @@ def evaluate(c):
     best = {}
     for f in range(5):
         cand = []
-        for px in PX:
+        for px in (PX_BLACK if pc.is_black(keys[f]) else PX):
             k = kfr.keyframes([(f, keys[f])], press_x=px)[(f, keys[f])]; sl = slice(4 * f, 4 * f + 4)
             mar = min(float(np.min(np.minimum(k[n] - lo[sl], hi[sl] - k[n]))) for n in ("hover", "lift", "press", "transit"))
             dev = float(np.linalg.norm((k["press"] - NOM) * [1, 2, 1, 1])) if f else 0.0

@@ -367,6 +367,7 @@ def main():
     ap.add_argument("--warm", action="store_true", help="with --from-npz: run the CEM again, starting from that plan")
     ap.add_argument("--init-from", default=None, help="a finished plan for the same mount (another piece): start from its lead and its per-finger median stroke parameters")
     ap.add_argument("--no-cem", action="store_true", help="export the start parameters as they are (seconds, not minutes)")
+    ap.add_argument("--five", default=None, help="fixed wrist: the five keys under thumb..pinky as MIDI numbers, e.g. 74,76,78,79,81 for D E F# G A (default: C5 D5 E5 F5 G5, thumb also B4, pinky also A5)")
     ap.add_argument("--seed", type=int, default=0); A = ap.parse_args()
     global LIMITS, T_DOWN, T_UP, START_HOVER
     if A.stroke: T_DOWN = T_UP = A.stroke
@@ -385,7 +386,8 @@ def main():
     notes, title, t0 = load_piece(A.piece, A.t_end); moving = A.wrist != "fixed"
     if A.wrist == "fixed":
         FIX = {71: 0, 72: 0, 74: 1, 76: 2, 77: 3, 79: 4, 81: 4}
-        if any(n["pitch"] not in FIX for n in notes): raise SystemExit("fixed wrist covers B4..A5 only; use --wrist human or plan")
+        if A.five: FIX = {int(k): f for f, k in enumerate(A.five.split(","))}; assert len(FIX) == 5, "--five takes five different keys"
+        if any(n["pitch"] not in FIX for n in notes): raise SystemExit(f"this fixed wrist covers the keys {sorted(FIX)} only; use --five, or --wrist human or plan")
         fing = [FIX[n["pitch"]] for n in notes]; u_note = [U_BASE] * len(notes); wtu = None; winfo = {}
     else:
         un, winfo = human_wrist_u(notes, t0) if A.wrist == "human" else planned_wrist_u(notes)
@@ -400,6 +402,7 @@ def main():
     # idle fingers: hover pose of a neighbour's key would collide; use the hover of their home key at the base mount
     if any(f not in fing for f in range(5)):
         kfr = pc.Keyframer(scene_xml(5.0, keys, False)); home = {0: 72, 1: 74, 2: 76, 3: 77, 4: 79}
+        if A.five: home = {f: int(k) for f, k in enumerate(A.five.split(","))}
         for f in range(5):
             if f not in fing: default_q[4 * f:4 * f + 4] = kfr.keyframes([(f, home[f])], press_x=PRESS_X_F.get(f, pc.PRESS_X))[(f, home[f])]["hover"]
     lead = [0.06] * 5
