@@ -7,7 +7,7 @@ An L-bracket that bolts Wuji's adapter flange to a camera tripod. **Not test-fit
 | | |
 |---|---|
 | File | [`tripod_mount.stl`](tripod_mount.stl), 72 × 68 × 75 mm, about 70 g of PLA |
-| Print | on its side (an L lying flat), 4 walls, 40 % infill, no supports needed for the pockets |
+| Print | standing on its foot, as in the picture; 4 walls, 40 % infill, no supports |
 | Screws | 4 × M6 × 16 socket-head screws + 4 × M6 nuts (flange), 1 × 1/4"-20 nut (tripod) |
 | Hand axis | 44 mm above the tripod plate |
 
