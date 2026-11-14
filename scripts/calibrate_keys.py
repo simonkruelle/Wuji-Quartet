@@ -13,7 +13,12 @@ ap = argparse.ArgumentParser(); ap.add_argument("plan"); ap.add_argument("--midi
 ap.add_argument("--fingers", default="thumb,index,middle,ring,pinky"); ap.add_argument("--alpha-max", type=float, default=1.6); ap.add_argument("--speed", type=float, default=0.25, help="alpha per second")
 ap.add_argument("--margin", type=float, default=0.15, help="alpha past the first sound; 0.15 ~ 3 mm deeper. Sim: 0.3 deeper starts hitting neighbour keys"); ap.add_argument("--effort", type=float, default=0.6); ap.add_argument("--kp", type=float, default=3.0); ap.add_argument("--kd", type=float, default=0.05)
 ap.add_argument("--mode", default="mit", choices=["mit", "position"]); ap.add_argument("--dry-run", action="store_true"); A = ap.parse_args()
-Z = np.load(A.plan); assert "kf_pairs" in Z.files, "plan made before calibration support: re-run make_theme.py"
+Z = np.load(A.plan)
+if "kf_pairs" not in Z.files:      # plans from sbto_piano.py carry no per-key poses: use the baseline plan if it has the same mount
+    B = os.path.join(os.path.dirname(os.path.dirname(os.path.abspath(__file__))), "plans/baseline_k265_gain5/theme_q_1khz.npz"); ZB = np.load(B)
+    if "mount" not in Z.files or not np.allclose(Z["mount"], ZB["mount"]) or str(Z["rev"]) != str(ZB["rev"]):
+        raise SystemExit("this plan has no key poses and a different mount than plans/baseline_k265_gain5: run make_theme.py with your mount and calibrate on that plan")
+    print("key poses taken from plans/baseline_k265_gain5 (same mount, same five home keys)"); Z = ZB
 home_key = dict((int(f), int(m)) for f, m in Z["home"]); kf = {(int(f), int(m)): (h, p) for (f, m), h, p in zip(Z["kf_pairs"], Z["kf_hover"], Z["kf_press"])}
 NAMES = ["thumb", "index", "middle", "ring", "pinky"]; home = np.asarray(Z["home_hover"], float)
 midi = hw.MidiIn(A.midi_dev) if A.midi_dev else None

@@ -50,6 +50,16 @@ with hw.Session(mode=A.mode, kp=A.kp, kd=A.kd, effort=A.effort, effort_scale=A.e
 np.savez_compressed(log, t_cmd=tn, cmd=cmd.astype(np.float32), t_play=tp if tp else np.nan,
                     t_state=np.array([x[0] for x in S]), q=np.array([x[1] for x in S], np.float32), dq=np.array([x[2] for x in S], np.float32), effort=np.array([x[3] for x in S], np.float32))
 print("log:", log)
+try:        # what the hand did: how far each finger was from its command, and how hard it pushed
+    if tp and len(S) > 100:
+        ts = np.array([x[0] for x in S]); qm = np.array([x[1] for x in S]); em = np.abs(np.array([x[3] for x in S]))
+        k = np.round((ts - tp) * 1000).astype(int); ok = (k >= 0) & (k < len(cmd)); err = np.abs(qm[ok] - np.clip(cmd[k[ok]], hw.LO, hw.HI))
+        for f, name in enumerate(["thumb", "index", "middle", "ring", "pinky"]):
+            sl = slice(4 * f, 4 * f + 4); e = em[ok][:, sl]
+            print(f"  {name:6s} furthest from command {np.degrees(np.nanmax(err[:, sl])):5.1f} deg, peak current {np.nanmax(e):.2f} A, "
+                  f"at the limit {np.nanmean(e >= 0.95 * A.effort) * 100:4.1f} % of the time" if A.mode == "mit" else
+                  f"  {name:6s} furthest from command {np.degrees(np.nanmax(err[:, sl])):5.1f} deg, peak effort {np.nanmax(e):.2f}")
+except Exception as ex: print("summary failed:", ex)
 if midi and tp:
     ev = [dict(t=e["t"] - tp - (pre - t0 if t0 < pre else 0) / A.tempo, pitch=e["pitch"]) for e in midi.note_ons()]; midi.close()
     write_notes(log.replace(".npz", ".mid"), [dict(on=e["t"] + 1, off=e["t"] + 1.2, pitch=e["pitch"]) for e in ev])

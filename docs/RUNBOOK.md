@@ -25,6 +25,33 @@ Commands are written for the RDK X5. With a native install (Mac, Linux laptop) d
 - If the cable or the program drops out, the hand stops its motors and reports a fault. It does not resume by itself.
 - Never plug or unplug the power or network cable while the hand is powered.
 - There is no hardware emergency stop on this hand. Software stop only; the wall plug is the last resort.
+- **The first time you enable the hand, and the first run of every new plan: in the air, fingers free.** We do not know yet what the hand does at the moment it is enabled.
+- **Tie the hand to something solid** (a strap from the flange to the stand or the table). The printed bracket and the tripod are the weakest parts here: a fall is the likeliest way to damage the hand, not the fingers pressing keys.
+- Use only the included 12 V adapter. Stay in MIT mode until it works: Position mode has no low current limit and is untested.
+- The script reads the current limit back from the hand and refuses to enable if it is higher than the one you asked for.
+- Firmware update: hand lying flat, nothing else running, never cut power during the update.
+- Feel the back of the hand after each run. If it is hot, pause.
+
+## Ode to Joy on the tripod: the short path
+
+`plans/ode_fixed` uses the same mount and the same five keys (C5 to G5, one finger each) as the baseline plan. So:
+
+```bash
+# hand in the AIR, fingers free
+./wq hand python scripts/hand_info.py                                                           # reads only, never moves
+./wq hand python scripts/sysid_step.py plans/baseline_k265_gain5/theme_q_1khz.npz --effort 0.5  # step 1: stiffness G
+./wq hand python scripts/play_on_hand.py plans/ode_fixed/theme_q_1khz.npz --tempo 0.5 --effort 0.5   # whole piece in the air
+
+# hand on the tripod over the keys (step 2), strap attached
+./wq hand python scripts/calibrate_keys.py plans/ode_fixed/theme_q_1khz.npz --manual --effort 0.5    # each finger presses its key slowly
+./wq hand python scripts/play_on_hand.py plans/ode_fixed/theme_q_1khz.npz --tempo 0.5 --fingers index --effort 0.5
+./wq hand python scripts/play_on_hand.py plans/ode_fixed/theme_q_1khz.npz --tempo 0.5 --effort 0.5
+./wq hand python scripts/play_on_hand.py plans/ode_fixed/theme_q_1khz.npz
+```
+
+- Wrong key in the slow key check: move the tripod sideways. Note sounds very early or not at all: raise or lower the tripod. Aim for a note at 0.8 to 1.2 on every finger. This plan cannot take the depth numbers in software.
+- After each run the script prints, per finger, how far it was from its command and how much current it drew. A finger "at the limit" most of the time is pushing against something: stop and look.
+- Then send Simon G and the four measured mount numbers: a plan for your exact setup takes 15 minutes (step 6 with `--piece ode`).
 
 ## 0 · Dry run
 

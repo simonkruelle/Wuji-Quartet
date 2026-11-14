@@ -100,6 +100,15 @@ class _FakeCmd:
 
 
 # ------------------------------------------------------------------ connection
+def check_effort_limit(read_back, want):
+    """The current limit is what keeps a stalled finger harmless: refuse to enable if the hand reports a higher one than we set."""
+    try: got = np.array([np.nan if v is None else float(v) for v in np.atleast_1d(np.asarray(read_back, dtype=object))])
+    except Exception: got = np.array([np.nan])
+    if np.isnan(got).all(): print("  WARNING: could not read the current limit back; watch the first motion closely"); return
+    print(f"  current limit read back: {np.nanmin(got):.2f} to {np.nanmax(got):.2f} A")
+    if np.nanmax(got) > want + 0.05: raise SystemExit(f"hand reports a current limit of {np.nanmax(got):.2f} A, we asked for {want} A: refusing to enable")
+
+
 class Session:
     """with Session(mode="mit"|"position", ...) as s: s.ramp_to(q); s.stream(cmd); ... Always disables on exit."""
     def __init__(self, mode="mit", kp=3.0, kd=0.05, effort=0.8, effort_scale=0.8, cutoff=40.0, dry_run=False, sn=None, log_states=True):
@@ -147,6 +156,7 @@ class Session:
             h.control_mode().set(M.Mit)
             h.effort_limit().set(self.effort); h.mit_params().set((self.kp, self.kd))
             print(f"MIT mode: kp {self.kp} kd {self.kd}, effort limit {self.effort} A")
+            check_effort_limit(h.effort_limit().get(), self.effort)
 
     def _wait_enabled(self, timeout=5.0):
         sub = self.hand.joint_diagnostics().subscribe(); deadline = time.monotonic() + timeout; seen = en = 0
