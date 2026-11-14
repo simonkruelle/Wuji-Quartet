@@ -1,0 +1,267 @@
+{
+ "piece": "assets/duets/korobeiniki_right.mid",
+ "title": "korobeiniki_right",
+ "wrist": "fixed",
+ "wrist_info": {},
+ "notes": 78,
+ "lead_ms": [
+  143.6,
+  141.1,
+  141.3,
+  135.2,
+  131.6
+ ],
+ "fingers": {
+  "thumb": 16,
+  "index": 12,
+  "middle": 25,
+  "ring": 12,
+  "pinky": 13
+ },
+ "dr": "wide",
+ "train_plants": [
+  {
+   "gain": 5.0
+  },
+  {
+   "gain": 2.5,
+   "dz": 0.002
+  },
+  {
+   "gain": 10.0,
+   "dz": -0.002
+  },
+  {
+   "gain": 5.0,
+   "dy": 0.002,
+   "dth": 1.5
+  },
+  {
+   "gain": 4.0,
+   "dy": -0.002,
+   "dth": -1.5
+  }
+ ],
+ "test_plants": [
+  {
+   "gain": 3.5,
+   "dz": -0.001,
+   "dy": 0.001
+  },
+  {
+   "gain": 7.0,
+   "dz": 0.001,
+   "dy": -0.001,
+   "dth": -1.0
+  },
+  {
+   "gain": 5.0,
+   "dz": 0.002,
+   "dy": -0.002
+  },
+  {
+   "gain": 3.0
+  },
+  {
+   "gain": 6.0,
+   "dth": 1.0,
+   "dz": -0.0015
+  }
+ ],
+ "baseline_train": [
+  {
+   "matched": 13,
+   "wrong": 4,
+   "f1": 0.274,
+   "timing_ms": {
+    "median": -14.000000000000234,
+    "p90_abs": 15.33333333333431
+   }
+  },
+  {
+   "matched": 0,
+   "wrong": 0,
+   "f1": 0.0,
+   "timing_ms": {
+    "median": 0.0,
+    "p90_abs": 0.0
+   }
+  },
+  {
+   "matched": 78,
+   "wrong": 0,
+   "f1": 1.0,
+   "timing_ms": {
+    "median": -39.99999999999915,
+    "p90_abs": 41.33333333333411
+   }
+  },
+  {
+   "matched": 78,
+   "wrong": 0,
+   "f1": 1.0,
+   "timing_ms": {
+    "median": -40.000000000000036,
+    "p90_abs": 46.00000000000026
+   }
+  },
+  {
+   "matched": 0,
+   "wrong": 0,
+   "f1": 0.0,
+   "timing_ms": {
+    "median": 0.0,
+    "p90_abs": 0.0
+   }
+  }
+ ],
+ "baseline_test": [
+  {
+   "matched": 50,
+   "wrong": 0,
+   "f1": 0.781,
+   "timing_ms": {
+    "median": -13.666666666666494,
+    "p90_abs": 17.999999999998906
+   }
+  },
+  {
+   "matched": 0,
+   "wrong": 0,
+   "f1": 0.0,
+   "timing_ms": {
+    "median": 0.0,
+    "p90_abs": 0.0
+   }
+  },
+  {
+   "matched": 0,
+   "wrong": 0,
+   "f1": 0.0,
+   "timing_ms": {
+    "median": 0.0,
+    "p90_abs": 0.0
+   }
+  },
+  {
+   "matched": 21,
+   "wrong": 0,
+   "f1": 0.424,
+   "timing_ms": {
+    "median": -3.9999999999995595,
+    "p90_abs": 10.000000000001563
+   }
+  },
+  {
+   "matched": 78,
+   "wrong": 0,
+   "f1": 1.0,
+   "timing_ms": {
+    "median": -43.333333333336554,
+    "p90_abs": 48.00000000000004
+   }
+  }
+ ],
+ "cem_train": [
+  {
+   "matched": 78,
+   "wrong": 0,
+   "f1": 1.0,
+   "timing_ms": {
+    "median": 0.0,
+    "p90_abs": 0.6666666666674814
+   }
+  },
+  {
+   "matched": 78,
+   "wrong": 0,
+   "f1": 1.0,
+   "timing_ms": {
+    "median": 21.333333333334537,
+    "p90_abs": 22.866666666667435
+   }
+  },
+  {
+   "matched": 78,
+   "wrong": 0,
+   "f1": 1.0,
+   "timing_ms": {
+    "median": -13.999999999999346,
+    "p90_abs": 15.999999999998238
+   }
+  },
+  {
+   "matched": 78,
+   "wrong": 0,
+   "f1": 1.0,
+   "timing_ms": {
+    "median": -11.999999999998678,
+    "p90_abs": 12.000000000002231
+   }
+  },
+  {
+   "matched": 78,
+   "wrong": 0,
+   "f1": 1.0,
+   "timing_ms": {
+    "median": 22.00000000000024,
+    "p90_abs": 22.666666666665947
+   }
+  }
+ ],
+ "cem_test": [
+  {
+   "matched": 78,
+   "wrong": 0,
+   "f1": 1.0,
+   "timing_ms": {
+    "median": 2.666666666666373,
+    "p90_abs": 4.000000000001336
+   }
+  },
+  {
+   "matched": 78,
+   "wrong": 0,
+   "f1": 1.0,
+   "timing_ms": {
+    "median": 9.999999999999787,
+    "p90_abs": 11.333333333332973
+   }
+  },
+  {
+   "matched": 78,
+   "wrong": 0,
+   "f1": 1.0,
+   "timing_ms": {
+    "median": 8.000000000000895,
+    "p90_abs": 8.6666666666666
+   }
+  },
+  {
+   "matched": 78,
+   "wrong": 0,
+   "f1": 1.0,
+   "timing_ms": {
+    "median": 9.999999999999787,
+    "p90_abs": 10.000000000001563
+   }
+  },
+  {
+   "matched": 78,
+   "wrong": 0,
+   "f1": 1.0,
+   "timing_ms": {
+    "median": -14.000000000000234,
+    "p90_abs": 15.33333333333431
+   }
+  }
+ ],
+ "cem": {
+  "samples": 48,
+  "elites": 8,
+  "iters": 6,
+  "commit_s": 0.5,
+  "windows": 0
+ },
+ "wall_s": 15
+}

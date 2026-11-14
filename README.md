@@ -24,7 +24,7 @@ The plan is optimised in simulation on five slightly different pianos at once, s
 |:--:|:--:|:--:|:--:|
 | Mozart K.265 theme, hand alone | Für Elise opening, moving wrist | timing of 90 % of the notes it hits | to optimise one piece on 10 CPU cores |
 
-> **The numbers on this page are simulation.** On 14 Nov the real hand played Ode to Joy **in the air** (half and full speed, 0.5 A and 1.0 A). Nothing has touched a piano yet. What we measured is in [docs/RUNBOOK.md](docs/RUNBOOK.md).
+> **The numbers on this page are simulation.** On 14 and 15 Nov the real right hand played Ode to Joy, Jingle Bells and When the Saints at full speed and 1.0 A. No keyboard recording has confirmed the notes yet. **Two hands: simulation only**, the second hand arrives on 15 Nov. What we measured is in [docs/RUNBOOK.md](docs/RUNBOOK.md).
 
 ## Watch it play
 
@@ -49,6 +49,12 @@ Click a clip for the video with sound. The sound is synthesised from the keys th
   <a href="docs/media/ode_level.mp4"><img src="docs/media/ode_level.gif" width="640" alt="Simulated hand playing Ode to Joy with a fixed, level wrist"></a>
   <br>
   <strong>Ode to Joy</strong>: five keys, one finger each, the hand never moves. <strong>62 / 62</strong> notes, 0 wrong, on all ten test setups. Level hand, wrist further back, fingers nearly straight. The piece for the first test on the tripod.
+</p>
+
+<p align="center">
+  <a href="docs/media/ode_duet.mp4"><img src="docs/media/ode_duet.gif" width="640" alt="Two simulated hands playing Ode to Joy: melody and accompaniment"></a>
+  <br>
+  <strong>Two hands</strong>, both fixed: the right hand plays the melody, a left hand the accompaniment two octaves below. <strong>62 / 62</strong> and <strong>127 / 127</strong> notes, 0 wrong. Also ready: Jingle Bells, <a href="docs/media/korobeiniki_duet.mp4">Korobeiniki speeding up from 120 to 200 bpm</a> and <a href="docs/media/canon_duet.mp4">Pachelbel's Canon</a>. Setup: <a href="docs/RUNBOOK.md#two-hands">runbook, Two hands</a>.
 </p>
 
 Third clip, K.265 with the wrist following a human pianist: [docs/media/k265_human.mp4](docs/media/k265_human.mp4) (75 / 80).
@@ -259,10 +265,15 @@ Two facts that save an hour: the hand has the fixed address **192.168.1.111** (r
 | Folder | Piece | Wrist | Notes hit in sim | Plays on the hand alone |
 |---|---|---|:--:|:--:|
 | [`plans/ode_level_stroke90_s0`](plans/ode_level_stroke90_s0) | Ode to Joy, 62 notes | fixed and level, five keys C5 to G5, 90 ms key strokes | 62 / 62, 0 wrong | **yes, try this first; [duet notes](assets/ode_to_joy/README.md)** |
-| [`plans/jingle_level_bpm120_s0`](plans/jingle_level_bpm120_s0) | Jingle Bells chorus, 51 notes, 120 bpm | same mount and keys as Ode to Joy; stroke parameters taken over from the Ode plan, no new optimisation | 51 / 51, 0 wrong | not yet played on the hand |
-| [`plans/saints_dmajor_bpm120_s0`](plans/saints_dmajor_bpm120_s0) | When the Saints Go Marching In, 32 notes, D major | **black-key position**: fixed and level, keys D5 E5 F♯5 G5 A5, the middle finger plays F♯; mount 6 cm above the keys, 11 cm in front, 3 cm right of E5 | 32 / 32, 0 wrong | not yet played on the hand; [video](docs/media/saints_dmajor.mp4) |
+| [`plans/jingle_level_bpm120_s0`](plans/jingle_level_bpm120_s0) | Jingle Bells chorus, 51 notes, 120 bpm | same mount and keys as Ode to Joy; stroke parameters taken over from the Ode plan, no new optimisation | 51 / 51, 0 wrong | played on the hand 15 Nov, full speed, 1.0 A |
+| [`plans/saints_dmajor_bpm120_s0`](plans/saints_dmajor_bpm120_s0) | When the Saints Go Marching In, 32 notes, D major | **black-key position**: fixed and level, keys D5 E5 F♯5 G5 A5, the middle finger plays F♯; mount 6 cm above the keys, 11 cm in front, 3 cm right of E5 | 32 / 32, 0 wrong | played on the hand 15 Nov, twice, full speed, 1.0 A; [video](docs/media/saints_dmajor.mp4) |
 | [`plans/ode_dmajor_bpm108_s0`](plans/ode_dmajor_bpm108_s0) | Ode to Joy in D major (Beethoven's key), 62 notes | black-key position | 62 / 62, 0 wrong | not yet played on the hand |
 | [`plans/jingle_dmajor_bpm120_s0`](plans/jingle_dmajor_bpm120_s0) | Jingle Bells chorus in D major, 51 notes | black-key position | 51 / 51, 0 wrong | not yet played on the hand |
+| [`plans/ode_accomp_left_s0`](plans/ode_accomp_left_s0) · [`_right_`](plans/ode_accomp_right_s0) | **Two hands:** accompaniment for Ode to Joy, 127 notes, for a left hand · for a second right hand | fixed and level, five keys C3 to G3, mirrored mount for the left hand | 127 / 127, 0 wrong; with `ode_level_stroke90_s0` in one simulation: all notes of both | no second hand yet; [video](docs/media/ode_duet.mp4), [setup](docs/RUNBOOK.md#two-hands) |
+| [`plans/jingle_accomp_left_s0`](plans/jingle_accomp_left_s0) · [`_right_`](plans/jingle_accomp_right_s0) | **Two hands:** accompaniment for Jingle Bells, 123 notes | same position as the Ode accompaniment | 123 / 123, 0 wrong | no second hand yet |
+| [`plans/korobeiniki_melody_right_s0`](plans/korobeiniki_melody_right_s0) | **Two hands:** Korobeiniki, first phrase four times, 120 → 200 bpm, 78 notes | fixed and level, keys D5 to A5 (one key right of the Ode position) | 78 / 78, 0 wrong | not yet played on the hand; [video](docs/media/korobeiniki_duet.mp4) |
+| [`plans/korobeiniki_accomp_left_s0`](plans/korobeiniki_accomp_left_s0) · [`_right_`](plans/korobeiniki_accomp_right_s0) | **Two hands:** accompaniment for Korobeiniki, 123 notes | keys D3 to A3 | 123 / 123, 0 wrong | no second hand yet |
+| [`plans/canon_melody_right_s0`](plans/canon_melody_right_s0) + [`plans/canon_bass_left_s0`](plans/canon_bass_left_s0) | **Two hands:** Pachelbel's Canon in C, simplified, 72 bpm, 26 + 26 notes | each thumb reaches one key beyond the five-finger position; right hand centred on C5, left hand on G3 | 26 / 26 and 26 / 26, 0 wrong; optimised | no second hand yet; [video](docs/media/canon_duet.mp4) |
 | [`plans/ode_level_s0`](plans/ode_level_s0) | Ode to Joy, 62 notes | same, strokes as fast as the joints allow | 62 / 62, 0 wrong | in the air only: jerky on the real hand |
 | [`plans/k265_fixed`](plans/k265_fixed) | K.265 theme | fixed, first mount | 76 / 80, 1 wrong | not yet: on the real hand the thumb cannot reach from this mount |
 | [`plans/ode_fixed`](plans/ode_fixed) | Ode to Joy, 62 notes | fixed, first mount | 61 / 62, 0 wrong | in the air only (played 14 Nov); same thumb problem |
@@ -297,6 +308,9 @@ Wuji-Quartet/
 │   ├── <a href="scripts/make_theme.py">make_theme.py</a>       fast plan without optimisation (30 s), takes the key calibration
 │   ├── <a href="scripts/render_theme.py">render_theme.py</a> · <a href="scripts/view_theme.py">view_theme.py</a>    video with sound · interactive viewer
 │   ├── <a href="scripts/play_on_hand.py">play_on_hand.py</a>     1 kHz playback on the hand, MIDI capture and score, --dry-run
+│   ├── <a href="scripts/play_duet.py">play_duet.py</a> · <a href="scripts/hand_off.py">hand_off.py</a>    two hands in step · switch every hand off and confirm it
+│   ├── <a href="scripts/make_melody.py">make_melody.py</a> · <a href="scripts/make_duet.py">make_duet.py</a>   five-finger tunes for one hand · for two hands
+│   ├── <a href="scripts/render_duet.py">render_duet.py</a>      two plans in one simulation: score, hand-to-hand contacts, video
 │   ├── <a href="scripts/sysid_step.py">sysid_step.py</a> · <a href="scripts/calibrate_keys.py">calibrate_keys.py</a>   real stiffness · right key and depth
 │   ├── <a href="scripts/hand_info.py">hand_info.py</a> · <a href="scripts/hand_net.sh">hand_net.sh</a>     read-only hand check · network to the hand
 │   ├── <a href="scripts/rdk_setup.sh">rdk_setup.sh</a>        one-time setup of the RDK X5: Docker with the fixes its kernel needs
@@ -307,7 +321,8 @@ Wuji-Quartet/
 ├── <a href="hardware/">hardware/</a>               printable tripod bracket for the hand (STL + the script that makes it)
 ├── <a href="results/">results/</a>                mount sweeps, front and back approach
 ├── <a href="assets/">assets/</a>
-│   ├── wuji-description/   Hand 2.1 and 2.2: MuJoCo model, URDF, right-hand meshes, flange drawings
+│   ├── wuji-description/   Hand 2.1 and 2.2: MuJoCo model, URDF, right-hand meshes, Hand 2.2 left-hand meshes, flange drawings
+│   ├── melodies/ · duets/  tunes for one hand · one MIDI file per hand for two hands
 │   ├── furelise/15/        K.265 MIDI and the pianist's wrist path
 │   ├── fur_elise_beethoven/   Für Elise MIDI
 │   └── ode_to_joy/         Ode to Joy MIDI, left-hand chords for a duet

@@ -1,0 +1,14 @@
+ode_left: 127 notes, 35.3 s, wrist fixed {}; fingers used {'thumb': 22, 'index': 10, 'middle': 22, 'ring': 10, 'pinky': 63}
+IK keyframes: 5 distinct strokes in 6 s; keys F2..D4
+start parameters: lead and per-finger medians from plans/ode_level_stroke90_s0/theme_q_1khz.npz
+lead iter 0: lead ms [144, 141, 141, 135, 140] -> nominal F1 1.000 (127/127, 0 wrong)
+lead iter 1: lead ms [143, 141, 141, 136, 139] -> nominal F1 1.000 (127/127, 0 wrong)
+lead iter 2: lead ms [143, 142, 141, 135, 139] -> nominal F1 1.000 (127/127, 0 wrong)
+DR set wide: [{'gain': 5.0}, {'gain': 2.5, 'dz': 0.002}, {'gain': 10.0, 'dz': -0.002}, {'gain': 5.0, 'dy': 0.002, 'dth': 1.5}, {'gain': 4.0, 'dy': -0.002, 'dth': -1.5}]
+baseline (no CEM) train plants: ['0/127 w0', '0/127 w0', '127/127 w0', '127/127 w0', '0/127 w0']  test: ['32/127 w0', '0/127 w0', '0/127 w0', '10/127 w0', '127/127 w0']
+start (before CEM) train plants: ['127/127 w0', '127/127 w0', '127/127 w0', '127/127 w0', '127/127 w0']  test: ['127/127 w0', '127/127 w0', '127/127 w0', '127/127 w0', '127/127 w0']
+CEM done in 0 s
+CEM train plants: ['127/127 w0', '127/127 w0', '127/127 w0', '127/127 w0', '127/127 w0']  test: ['127/127 w0', '127/127 w0', '127/127 w0', '127/127 w0', '127/127 w0']
+nominal missed: []
+nominal wrong: []
+total 19 s -> out/ode_accomp_right_s0

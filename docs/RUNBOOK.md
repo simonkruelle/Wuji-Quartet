@@ -1,6 +1,6 @@
 # Runbook: from the first motion to the full piece
 
-**Status, 15 Nov 2026, early morning: the hand has moved, in the air only.** First-motion test, then Ode to Joy at half and full speed, at 0.5 A and 1.0 A; last, the level-mount plan with gentle strokes, twice at full speed and 1.0 A. Nothing has touched a piano yet: the key check and everything over the keys are still untested.
+**Status, 15 Nov 2026, morning: one right hand plays three pieces from this repo at full speed and 1.0 A** (Ode to Joy, Jingle Bells, When the Saints in D major; every run complete, peak current 0.9 A). The key check (step 4) has no recorded result yet. **Two hands are prepared in simulation only**: see [Two hands](#two-hands).
 
 Before you start: [RDK_X5_SETUP.md](RDK_X5_SETUP.md) is done and `./wq hand python scripts/hand_info.py` shows 20 of 20 joints.
 
@@ -56,6 +56,80 @@ Commands are written for the RDK X5. With a native install (Mac, Linux laptop) d
 - Current limit: **1.5 A is the hard limit** and the scripts refuse more. Measured in the air: at 0.5 A the fingers complete 70 % of each stroke at full speed, at 1.0 A 82 %. Use 0.5 A for anything new, 1.0 A to play.
 - On the RDK X5 without Docker: `cd ~/Wuji-Quartet && ~/wq-venv/bin/python scripts/...` instead of `./wq hand python scripts/...`.
 - Then send Simon G and the four measured mount numbers: a plan for your exact setup takes 15 minutes (step 6 with `--piece ode`).
+
+## Two hands
+
+**Prepared 15 Nov in simulation only. No second hand has been connected yet, and two real hands have never run together.**
+
+Each hand stays in one place and plays five neighbouring white keys. Hand 1 is our right hand with the plan it already plays. Hand 2 plays the accompaniment; its plan exists for a **left hand** and for a **second right hand**.
+
+| Piece | Hand 1 (right) | Hand 2 is a left hand | Hand 2 is a right hand | Both hands in one simulation |
+|---|---|---|---|---|
+| Ode to Joy, 108 bpm, 36 s | `plans/ode_level_stroke90_s0` | `plans/ode_accomp_left_s0` | `plans/ode_accomp_right_s0` | 62 / 62 and 127 / 127 notes, 0 wrong |
+| Jingle Bells, 120 bpm, 32 s | `plans/jingle_level_bpm120_s0` | `plans/jingle_accomp_left_s0` | `plans/jingle_accomp_right_s0` | 51 / 51 and 123 / 123, 0 wrong |
+| Korobeiniki, 120 → 200 bpm, 25 s | `plans/korobeiniki_melody_right_s0` | `plans/korobeiniki_accomp_left_s0` | `plans/korobeiniki_accomp_right_s0` | 78 / 78 and 123 / 123, 0 wrong |
+| Pachelbel's Canon in C, simplified, 72 bpm, 43 s | `plans/canon_melody_right_s0` | `plans/canon_bass_left_s0` | none: the bass needs the thumb on the high side | 26 / 26 and 26 / 26, 0 wrong |
+
+Every plan in the table also plays all its notes on all ten simulated setups (mount off by 2 mm, softer and stiffer servos). For the first three pieces nothing new was optimised: every new plan reuses the stroke settings of the Ode plan. The two Canon parts were optimised (4 minutes each): before that, the thumbs missed notes on the soft, 2 mm too high setup. Videos: [ode_duet.mp4](media/ode_duet.mp4), [korobeiniki_duet.mp4](media/korobeiniki_duet.mp4), [canon_duet.mp4](media/canon_duet.mp4).
+
+**Order to try them: Ode to Joy first** (hand 1's plan has already run on the real hand), then Korobeiniki (the fast one), the Canon last: it is the only piece where a finger leaves the five-finger position.
+
+**Where hand 2 goes: the same mount as hand 1, mirrored.**
+
+| | Hand 1 (right) | Hand 2 |
+|---|---|---|
+| Flange centre over | the middle of **E5** | the middle of **E3**, 32.9 cm to the left (14 white keys) |
+| Height, distance, tilt | 6 cm above the white keys, 12 cm in front of the key fronts, level | the same |
+| Keys, Ode and Jingle | C5 D5 E5 F5 G5, thumb on C5 | C3 D3 E3 F3 G3; left hand: thumb on G3; right hand: thumb on C3 |
+| Korobeiniki | everything one white key (2.35 cm) to the right: centre over F5, keys D5 to A5 | centre over F3, keys D3 to A3 |
+| Canon | centre over **C5** (4.7 cm left of the Ode position), keys A4 to E5, the thumb also plays G4 | a left hand, centre over **G3** (23.5 cm left of hand 1), keys E3 to A3, the thumb plays C4 |
+
+Hand 2 can sit over any other E instead (E4 is 16.5 cm from hand 1): same plan, the accompaniment sounds an octave higher.
+
+Canon: both thumbs reach one key beyond the five-finger position and press 7 mm behind the key's front edge; further back they do not reach. The piece is the ground bass three times; the melody enters in round two with Pachelbel's first line, round three is a quarter-note line on the chord notes written for this hand, not Pachelbel's own variation.
+
+**Order for the new hand.** Same rule as for the first one: every new step in the air first, at 0.5 A.
+
+```bash
+python scripts/hand_info.py                                   # reads only: both hands listed, LEFT / RIGHT, 20 of 20 joints each
+python scripts/hand_hello.py --side left                      # first motion of the new hand: one joint, 9 degrees, in the AIR
+python scripts/play_on_hand.py plans/ode_accomp_left_s0/theme_q_1khz.npz --tempo 0.5 --effort 0.5       # its part alone, in the AIR
+python scripts/calibrate_keys.py plans/ode_accomp_left_s0/theme_q_1khz.npz --manual --effort 0.5        # over the keys: right key? how deep?
+python scripts/play_duet.py plans/ode_level_stroke90_s0 plans/ode_accomp_left_s0 --dry-run              # no hardware: checks the timing
+python scripts/play_duet.py plans/ode_level_stroke90_s0 plans/ode_accomp_left_s0 --tempo 0.5 --effort 0.5
+python scripts/play_duet.py plans/ode_level_stroke90_s0 plans/ode_accomp_left_s0 --effort 1.0
+```
+
+- With two hands connected, every script picks the hand by the plan's side (left or right, read from the serial number: 4th character J = left, K = right). It refuses to guess: two right hands need `--sn` (`play_duet.py --sn-a ... --sn-b ...`).
+- `play_duet.py` starts one `play_on_hand.py` per hand with the same start time. If one hand stops, it stops the other. It ends with `both hands switched off: confirmed`; if not, it runs `hand_off.py`, which switches off every hand it finds.
+- `--only a` or `--only b` plays one part alone with the same timing.
+- Network: a left hand ships at 192.168.1.110, a right hand at 192.168.1.111, both fixed. The RDK X5 has one network port, so two hands need a **network switch**. Two right hands have the same address: one needs a new one first (the `ip_address` parameter in the `wuji` tool, active after a restart of the hand; we have not done this).
+- Firmware: our scripts are tested on 3.0.0 only. Check what the new hand reports in `hand_info.py`.
+
+<details><summary>Not known before the second hand is here</summary>
+
+| Unknown | Why it matters |
+|---|---|
+| Two hands driven from one RDK X5 at once | never run; the board already sends 12 to 16 % of the commands late with one hand |
+| The new hand's joint stops | the plans assume the two stops measured on our right hand, mirrored |
+| The left-hand model | the planner uses Wuji's left model, an exact mirror of the right one in simulation; no real left hand has confirmed it |
+| The thumb's sideways reach (Canon) | the reach is at its limit: at full key depth the thumb ends 1.6 mm short of its target point in the model. The real right thumb stopped at 0.44 rad sideways and the driver clips its command at 0.42 rad; with that clip the plan still plays all notes in simulation. Not tried on the hand |
+| Speed of the real hand | the fastest piece on the real hand so far was 120 bpm; Korobeiniki ends at 200 bpm, with eighth notes 150 ms apart |
+| Chopsticks | hands side by side, 11.8 cm apart: clean in simulation for two right hands; with a left and a right hand the two thumbs overlap by 1.6 mm. No plan in the repo; `make_duet.py chopsticks` prints the lines to make one |
+
+</details>
+
+To make another two-hand piece: add it to `scripts/make_duet.py` (one note list per hand), run it, and plan each part with the line it prints:
+
+```bash
+python scripts/make_duet.py ode
+python scripts/sbto_piano.py --piece assets/duets/ode_left.mid --wrist fixed --real-limits --side left --five 55,53,52,50,48 --center 52 \
+    --mount 0.27,0.06,0,0.0 --press-x 0.135,0.115,0.115,0.115,0.125 --stroke 0.09 --start-hover \
+    --init-from plans/ode_level_stroke90_s0/theme_q_1khz.npz --no-cem --out out/ode_accomp_left --workers 8
+python scripts/render_duet.py plans/ode_level_stroke90_s0 out/ode_accomp_left --check        # both hands in one simulation, 10 s
+```
+
+`--center` is the key the flange centre sits over; `--five` lists the keys from the thumb to the pinky (a left hand: from the highest key down).
 
 ## 0 · Dry run
 

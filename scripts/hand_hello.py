@@ -14,12 +14,13 @@ ap = argparse.ArgumentParser(); ap.add_argument("--joint", type=int, default=4, 
 ap.add_argument("--delta", type=float, default=-0.15, help="rad; negative = the finger straightens"); ap.add_argument("--reps", type=int, default=2)
 ap.add_argument("--period", type=float, default=1.0, help="seconds one way"); ap.add_argument("--effort", type=float, default=0.5, help="current limit, A")
 ap.add_argument("--kp", type=float, default=3.0); ap.add_argument("--kd", type=float, default=0.05); ap.add_argument("--sn", default=None)
+ap.add_argument("--side", default=None, choices=["left", "right"], help="which hand, when two are connected")
 ap.add_argument("--yes", action="store_true"); ap.add_argument("--dry-run", action="store_true"); ap.add_argument("--log", default=None); A = ap.parse_args()
 if abs(A.delta) > 0.3 or A.effort > 0.8: raise SystemExit("this is a first-motion test: |delta| <= 0.3 rad and effort <= 0.8 A")
 J = A.joint; NAMES = ["thumb", "index", "middle", "ring", "pinky"]
 if not (A.yes or A.dry_run): input(f"hand in the air or on its back, fingers free? Enter = enable and move {NAMES[J // 4]} joint {J % 4} by {A.delta} rad, Ctrl-C = abort ")
 k0 = None
-with hw.Session(mode="mit", kp=A.kp, kd=A.kd, effort=A.effort, dry_run=A.dry_run, sn=A.sn) as s:
+with hw.Session(mode="mit", kp=A.kp, kd=A.kd, effort=A.effort, dry_run=A.dry_run, sn=A.sn, side=A.side) as s:
     try:
         q0 = s.q_before.copy()
         def hold(sec, q):

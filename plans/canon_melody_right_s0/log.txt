@@ -1,0 +1,13 @@
+canon_right: 26 notes, 29.3 s, wrist fixed {}; fingers used {'thumb': 8, 'index': 5, 'middle': 7, 'ring': 3, 'pinky': 3}
+IK keyframes: 6 distinct strokes in 7 s; keys C4..B5
+re-export: lead, P, WK from plans/canon_melody_right_s0/theme_q_1khz.npz
+lead iter 0: lead ms [143, 141, 142, 135, 139] -> nominal F1 1.000 (26/26, 0 wrong)
+lead iter 1: lead ms [142, 141, 142, 135, 139] -> nominal F1 1.000 (26/26, 0 wrong)
+lead iter 2: lead ms [142, 141, 142, 135, 139] -> nominal F1 1.000 (26/26, 0 wrong)
+DR set wide: [{'gain': 5.0}, {'gain': 2.5, 'dz': 0.002}, {'gain': 10.0, 'dz': -0.002}, {'gain': 5.0, 'dy': 0.002, 'dth': 1.5}, {'gain': 4.0, 'dy': -0.002, 'dth': -1.5}]
+baseline (no CEM) train plants: ['0/26 w5', '0/26 w0', '26/26 w0', '23/26 w0', '0/26 w0']  test: ['17/26 w0', '0/26 w0', '0/26 w0', '5/26 w0', '26/26 w0']
+CEM done in 0 s
+CEM train plants: ['26/26 w0', '26/26 w0', '26/26 w0', '26/26 w0', '26/26 w0']  test: ['26/26 w0', '26/26 w0', '26/26 w0', '26/26 w0', '26/26 w0']
+nominal missed: []
+nominal wrong: []
+total 16 s -> out/canon_melody_right_x_s0

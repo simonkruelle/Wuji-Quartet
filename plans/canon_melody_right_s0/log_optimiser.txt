@@ -1,0 +1,39 @@
+canon_right: 26 notes, 29.3 s, wrist fixed {}; fingers used {'thumb': 8, 'index': 5, 'middle': 7, 'ring': 3, 'pinky': 3}
+IK keyframes: 6 distinct strokes in 7 s; keys C4..B5
+start parameters: lead and per-finger medians from plans/ode_level_stroke90_s0/theme_q_1khz.npz
+lead iter 0: lead ms [144, 141, 141, 135, 140] -> nominal F1 1.000 (26/26, 0 wrong)
+lead iter 1: lead ms [143, 141, 141, 135, 139] -> nominal F1 1.000 (26/26, 0 wrong)
+lead iter 2: lead ms [143, 141, 142, 135, 139] -> nominal F1 1.000 (26/26, 0 wrong)
+DR set wide: [{'gain': 5.0}, {'gain': 2.5, 'dz': 0.002}, {'gain': 10.0, 'dz': -0.002}, {'gain': 5.0, 'dy': 0.002, 'dth': 1.5}, {'gain': 4.0, 'dy': -0.002, 'dth': -1.5}]
+baseline (no CEM) train plants: ['0/26 w5', '0/26 w0', '26/26 w0', '23/26 w0', '0/26 w0']  test: ['17/26 w0', '0/26 w0', '0/26 w0', '5/26 w0', '26/26 w0']
+start (before CEM) train plants: ['26/26 w0', '23/26 w0', '26/26 w0', '26/26 w0', '26/26 w0']  test: ['26/26 w0', '26/26 w0', '26/26 w0', '26/26 w0', '26/26 w0']
+window   0 t  -0.05 s: 1 notes, dims  5, cost   0.28 ->   0.23  [9 s]
+window   3 t   1.45 s: 1 notes, dims  5, cost   0.29 ->   0.24  [18 s]
+window   6 t   2.95 s: 1 notes, dims  5, cost   0.29 ->   0.24  [27 s]
+window  10 t   4.95 s: 1 notes, dims  5, cost   0.26 ->   0.23  [36 s]
+window  13 t   6.45 s: 1 notes, dims  5, cost   0.26 ->   0.22  [45 s]
+window  16 t   7.95 s: 1 notes, dims  5, cost   0.96 ->   0.24  [55 s]
+window  20 t   9.95 s: 1 notes, dims  5, cost   0.26 ->   0.22  [66 s]
+window  23 t  11.45 s: 1 notes, dims  5, cost   0.27 ->   0.23  [76 s]
+window  26 t  12.95 s: 1 notes, dims  5, cost   0.27 ->   0.23  [85 s]
+window  28 t  13.95 s: 1 notes, dims  5, cost   0.28 ->   0.23  [95 s]
+window  30 t  14.95 s: 1 notes, dims  5, cost   0.28 ->   0.24  [104 s]
+window  31 t  15.45 s: 1 notes, dims  5, cost   0.27 ->   0.23  [113 s]
+window  33 t  16.45 s: 1 notes, dims  5, cost   0.28 ->   0.24  [122 s]
+window  35 t  17.45 s: 1 notes, dims  5, cost   0.26 ->   0.22  [131 s]
+window  36 t  17.95 s: 1 notes, dims  5, cost   0.27 ->   0.23  [140 s]
+window  38 t  18.95 s: 1 notes, dims  5, cost   0.98 ->   0.24  [150 s]
+window  40 t  19.95 s: 1 notes, dims  5, cost   0.26 ->   0.21  [159 s]
+window  41 t  20.45 s: 1 notes, dims  5, cost   0.29 ->   0.24  [168 s]
+window  43 t  21.45 s: 1 notes, dims  5, cost   0.98 ->   0.24  [177 s]
+window  45 t  22.45 s: 1 notes, dims  5, cost   0.28 ->   0.24  [186 s]
+window  46 t  22.95 s: 1 notes, dims  5, cost   0.25 ->   0.22  [195 s]
+window  48 t  23.95 s: 1 notes, dims  5, cost   0.28 ->   0.24  [205 s]
+window  50 t  24.95 s: 1 notes, dims  5, cost   0.26 ->   0.23  [214 s]
+window  51 t  25.45 s: 1 notes, dims  5, cost   0.28 ->   0.24  [223 s]
+window  53 t  26.45 s: 2 notes, dims 10, cost   0.56 ->   0.48  [233 s]
+CEM done in 233 s
+CEM train plants: ['26/26 w0', '26/26 w0', '26/26 w0', '26/26 w0', '26/26 w0']  test: ['26/26 w0', '26/26 w0', '26/26 w0', '26/26 w0', '26/26 w0']
+nominal missed: []
+nominal wrong: []
+total 251 s -> out/canon_melody_right_cem2_s0

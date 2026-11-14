@@ -32,6 +32,7 @@ U_BASE = pc.key_y(76) / pc.PITCH + BASE["dy"] / pc.PITCH         # mount positio
 OFF = np.array([-1.0, 0.0, 1.0, 2.0, 3.0])                         # finger rest position vs mount, white keys
 PRE, POST, VMAX = 1.5, 1.0, 20.0
 T_DOWN, T_UP, T_MOVE, FAST, LIFT_RAD = 0.03, 0.03, 0.08, 0.25, 0.3
+V_CROSS = VMAX                                                     # joint speed limit while a lifted finger crosses to another key (fixed wrist); --stroke >= 0.06 sets 10 rad/s
 START_HOVER = False                                                # --start-hover: fingers wait at their hover pose, not curled up in the transit pose
 WRIST_KP, WRIST_KV, KNOT_DT = 20000.0, 320.0, 0.2
 SD0 = np.array([0.02, 0.03, 0.08, 0.06, 0.05]); LO = np.array([-0.06, -0.08, -0.3, -0.25, -0.2]); HI = -LO
@@ -51,11 +52,13 @@ def widx(m): return pc.key_y(m) / pc.PITCH
 # ------------------------------------------------------------------ scene
 PRESS_X_F = {}      # finger -> contact point along the key (m from the hinge); empty = pc.PRESS_X for all (--press-x)
 LIMITS = None       # joint ranges narrower than the shipped model, e.g. pc.REAL_LIMITS (--real-limits)
+SIDE = "right"      # --side left: the left-hand model at the mirrored mount (thumb on the treble side); fixed wrist only
+CENTER = 76         # --center: the key the mount is measured from (the middle finger's key in a five-finger position)
 
 
 def scene_xml(gain, keys, wrist, dx=0.0, dy=0.0, dz=0.0, dth=0.0):
     xml = pc.build_scene(WUJI, theta=BASE["theta"] + dth, mount_x=BASE["x"] + dx, mount_z=BASE["z"] + dz,
-                         mount_dy=BASE["dy"] + dy, gain=gain, keys=keys, approach="front", limits=LIMITS)
+                         mount_dy=BASE["dy"] + dy, gain=gain, keys=keys, approach="front", limits=LIMITS, side=SIDE, center_key=CENTER)
     if not wrist: return xml
     tag = '<body name="hand_mount" pos="'; i = xml.index(tag); j = xml.index('"', i + len(tag)); pos = xml[i + len(tag): j]
     k = xml.index("</worldbody>")
@@ -228,15 +231,21 @@ class Plan:
         t_first = self.on[idx[0]] - self.lead[f] + P[idx[0], 0]
         d_desc = max(T_UP, (math.pi / 2) * float(np.max(np.abs(hov(idx[0]) - q_start))) / VMAX)
         wl.append((max(0.3, t_first - 0.05 - d_desc), q_start)); wl.append((wl[-1][0] + d_desc, hov(idx[0])))
-        def add(t, q):
-            t0, q0 = wl[-1]; t = max(t, t0 + (math.pi / 2) * float(np.max(np.abs(q - q0))) / VMAX); wl.append((t, q))
+        def need(qa, qb, v): return (math.pi / 2) * float(np.max(np.abs(qb - qa))) / v
+        def add(t, q, v=VMAX):
+            t0, q0 = wl[-1]; t = max(t, t0 + need(q0, q, v)); wl.append((t, q))
+        vx = VMAX if self.wrist else V_CROSS
         for k, i in enumerate(idx):
             j = idx[k + 1] if k + 1 < len(idx) else None
             ts = self.on[i] - self.lead[f] + P[i, 0]
             if ts > wl[-1][0]: wl.append((ts, wl[-1][1]))
             add(ts + T_DOWN, prs(i))
             rel = min(self.off[i], self.cap[i]) - self.lead[f] + P[i, 1]
-            if j is not None: rel = min(rel, self.on[j] - self.lead[f] + P[j, 0] - T_UP - 0.005)
+            if j is not None:      # fixed wrist, same finger goes on to ANOTHER key: let go early enough to lift, cross and come down at the planned stroke speed
+                cross = 0.0
+                if not self.wrist and self.pitch[j] != self.pitch[i]:
+                    cross = max(T_UP, need(prs(i), trn(i), vx)) + max(T_MOVE, need(trn(i), trn(j), vx)) + max(T_UP, need(trn(j), hov(j), vx)) - T_UP
+                rel = min(rel, self.on[j] - self.lead[f] + P[j, 0] - T_UP - 0.005 - cross)
             rel = max(rel, wl[-1][0] + 0.01); wl.append((rel, wl[-1][1]))
             tsj = (self.on[j] - self.lead[f] + P[j, 0]) if j is not None else 0.0
             if j is None: add(rel + T_UP, hov(i))
@@ -244,7 +253,7 @@ class Plan:
                 add(rel + T_UP, trn(i)); add(max(wl[-1][0] + T_MOVE, tsj - T_UP - 0.04), trn(j)); add(wl[-1][0] + T_UP, hov(j))
             elif self.pitch[j] == self.pitch[i] and self.on[j] - self.on[i] < FAST: add(rel + T_UP, lift(i))
             elif self.pitch[j] != self.pitch[i]:
-                add(rel + T_UP, trn(i)); add(wl[-1][0] + T_MOVE, trn(j)); add(wl[-1][0] + T_UP, hov(j))
+                add(rel + T_UP, trn(i), vx); add(wl[-1][0] + T_MOVE, trn(j), vx); add(wl[-1][0] + T_UP, hov(j), vx)
             else: add(rel + T_UP, hov(j))
         return np.array([w[0] for w in wl]), np.array([w[1] for w in wl])
 
@@ -362,20 +371,27 @@ def main():
     ap.add_argument("--press-x", default=None, help="contact point per finger, m from the key hinge: thumb,index,middle,ring,pinky (front edge = 0.15; default 0.115 for all)")
     ap.add_argument("--real-limits", action="store_true", help="use the joint stops measured on the real hand (pc.REAL_LIMITS)")
     ap.add_argument("--stroke", type=float, default=None, help="time of one key stroke, down or up, in s (default 0.03 = as fast as the joints allow; 0.09 = gentle)")
+    ap.add_argument("--move", type=float, default=None, help="time a lifted finger takes to cross to another key, in s (default 0.08, or 1.5 x --stroke)")
     ap.add_argument("--start-hover", action="store_true", help="fixed wrist: fingers wait at their hover pose from the start, instead of curled up until their first note")
     ap.add_argument("--recal-lead", action="store_true", help="with --from-npz: fit the per-finger command lead again (needed after changing --stroke)")
     ap.add_argument("--warm", action="store_true", help="with --from-npz: run the CEM again, starting from that plan")
     ap.add_argument("--init-from", default=None, help="a finished plan for the same mount (another piece): start from its lead and its per-finger median stroke parameters")
     ap.add_argument("--no-cem", action="store_true", help="export the start parameters as they are (seconds, not minutes)")
     ap.add_argument("--five", default=None, help="fixed wrist: the five keys under thumb..pinky as MIDI numbers, e.g. 74,76,78,79,81 for D E F# G A (default: C5 D5 E5 F5 G5, thumb also B4, pinky also A5)")
+    ap.add_argument("--also", default=None, help="with --five: further keys for a finger as key:finger pairs (finger 0 = thumb .. 4 = pinky), e.g. 67:0 lets the thumb also play G4")
+    ap.add_argument("--side", default="right", choices=["right", "left"], help="which hand; left = mirrored mount, thumb on the treble side, --five from the thumb's (highest) key down. Fixed wrist only")
+    ap.add_argument("--center", type=int, default=76, help="MIDI number of the key the mount's sideways offset is measured from (default 76 = E5); for a five-finger position use the middle finger's key")
     ap.add_argument("--seed", type=int, default=0); A = ap.parse_args()
-    global LIMITS, T_DOWN, T_UP, START_HOVER
-    if A.stroke: T_DOWN = T_UP = A.stroke
-    START_HOVER = A.start_hover
-    if A.real_limits: LIMITS = pc.REAL_LIMITS
+    global LIMITS, T_DOWN, T_UP, T_MOVE, START_HOVER, SIDE, CENTER, V_CROSS
+    if A.stroke: T_DOWN = T_UP = A.stroke; T_MOVE = max(T_MOVE, 1.5 * A.stroke)      # a finger crossing to another key takes its time too
+    if A.move: T_MOVE = A.move
+    if A.stroke and A.stroke >= 0.06: V_CROSS = 10.0
+    START_HOVER = A.start_hover; SIDE = A.side; CENTER = A.center
+    if SIDE == "left" and (A.wrist != "fixed" or not A.five): raise SystemExit("--side left needs --wrist fixed and --five (thumb..pinky, from the highest key down)")
+    if A.real_limits: LIMITS = pc.real_limits(SIDE)
     if A.press_x: PRESS_X_F.update({f: float(v) for f, v in enumerate(A.press_x.split(","))})
     if A.mount: x, z, th, dy = (float(v) for v in A.mount.split(",")); BASE.update(x=x, z=z, theta=th, dy=dy)
-    global U_BASE; U_BASE = pc.key_y(76) / pc.PITCH + BASE["dy"] / pc.PITCH
+    global U_BASE; U_BASE = pc.key_y(CENTER) / pc.PITCH + BASE["dy"] / pc.PITCH
     if A.gain != 5.0:
         for L in (TRAIN_PLANTS, MILD_PLANTS, TEST_PLANTS):
             for p_ in L: p_["gain"] = p_.get("gain", 5.0) * A.gain / 5.0
@@ -387,6 +403,7 @@ def main():
     if A.wrist == "fixed":
         FIX = {71: 0, 72: 0, 74: 1, 76: 2, 77: 3, 79: 4, 81: 4}
         if A.five: FIX = {int(k): f for f, k in enumerate(A.five.split(","))}; assert len(FIX) == 5, "--five takes five different keys"
+        if A.also: FIX.update({int(k): int(f) for k, f in (kv.split(":") for kv in A.also.split(","))})
         if any(n["pitch"] not in FIX for n in notes): raise SystemExit(f"this fixed wrist covers the keys {sorted(FIX)} only; use --five, or --wrist human or plan")
         fing = [FIX[n["pitch"]] for n in notes]; u_note = [U_BASE] * len(notes); wtu = None; winfo = {}
     else:
@@ -488,7 +505,8 @@ def main():
                             mount=np.array([BASE["x"], BASE["dy"], BASE["z"], BASE["theta"]]), approach="front", rev="hand2_2", wrist=A.wrist,
                             home_hover=C[0, :20], notes=np.array([[n["on"], n["off"], n["pitch"]] for n in notes]), pre_roll=PRE, tempo=1.0,
                             fing=np.array([[n["pitch"], f] for n, f in zip(notes, fing)]), title=title,
-                            press_x=np.array([PRESS_X_F.get(f, pc.PRESS_X) for f in range(5)]), real_limits=bool(LIMITS), stroke_s=T_DOWN, start_hover=START_HOVER, **calib)
+                            press_x=np.array([PRESS_X_F.get(f, pc.PRESS_X) for f in range(5)]), real_limits=bool(LIMITS), stroke_s=T_DOWN, move_s=T_MOVE, start_hover=START_HOVER,
+                            side=SIDE, center=CENTER, piece_t0=t0, **calib)
         pc.write_scene(os.path.join(A.out, "scene.xml"), scene_xml(5.0, range(21, 109), moving))
         write_notes(os.path.join(A.out, "target.mid"), [dict(on=n["on"] + PRE, off=n["off"] + PRE, pitch=n["pitch"], vel=70) for n in notes])
         write_notes(os.path.join(A.out, "sim_played.mid"), [dict(on=e["t"] + PRE, off=e["t"] + PRE + 0.2, pitch=e["pitch"], vel=70) for e in det_nom])

@@ -12,8 +12,9 @@ from midi_io import note_name
 ap = argparse.ArgumentParser(); ap.add_argument("plan"); ap.add_argument("--midi-dev", default=None); ap.add_argument("--manual", action="store_true")
 ap.add_argument("--fingers", default="thumb,index,middle,ring,pinky"); ap.add_argument("--alpha-max", type=float, default=1.6); ap.add_argument("--speed", type=float, default=0.25, help="alpha per second")
 ap.add_argument("--margin", type=float, default=0.15, help="alpha past the first sound; 0.15 ~ 3 mm deeper. Sim: 0.3 deeper starts hitting neighbour keys"); ap.add_argument("--effort", type=float, default=0.6); ap.add_argument("--kp", type=float, default=3.0); ap.add_argument("--kd", type=float, default=0.05)
-ap.add_argument("--mode", default="mit", choices=["mit", "position"]); ap.add_argument("--dry-run", action="store_true"); A = ap.parse_args()
-Z = np.load(A.plan)
+ap.add_argument("--mode", default="mit", choices=["mit", "position"]); ap.add_argument("--dry-run", action="store_true")
+ap.add_argument("--sn", default=None, help="serial number of the hand, when two hands of the same side are connected"); A = ap.parse_args()
+Z = np.load(A.plan); plan_side = str(Z["side"]) if "side" in Z.files else "right"      # with two hands connected, the plan's side picks the hand
 if "kf_pairs" not in Z.files:      # plans from sbto_piano.py carry no per-key poses: use the baseline plan if it has the same mount
     B = os.path.join(os.path.dirname(os.path.dirname(os.path.abspath(__file__))), "plans/baseline_k265_gain5/theme_q_1khz.npz"); ZB = np.load(B)
     if "mount" not in Z.files or not np.allclose(Z["mount"], ZB["mount"]) or str(Z["rev"]) != str(ZB["rev"]):
@@ -26,7 +27,7 @@ if not midi and not A.manual and not A.dry_run: raise SystemExit("give --midi-de
 enter = threading.Event()
 if A.manual: threading.Thread(target=lambda: [enter.set() for _ in iter(sys.stdin.readline, "")], daemon=True).start()
 res = {}
-with hw.Session(mode=A.mode, kp=A.kp, kd=A.kd, effort=A.effort, dry_run=A.dry_run) as s:
+with hw.Session(mode=A.mode, kp=A.kp, kd=A.kd, effort=A.effort, dry_run=A.dry_run, sn=A.sn, side=None if (A.sn or A.dry_run) else plan_side) as s:
     s.ramp_to(home, 2.0)
     for name in A.fingers.split(","):
         f = NAMES.index(name); m = home_key[f]; h, p = kf[(f, m)]; sl = slice(4 * f, 4 * f + 4)

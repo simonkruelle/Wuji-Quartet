@@ -18,8 +18,12 @@ ap.add_argument("--cutoff", type=float, default=40.0); ap.add_argument("--tempo"
 ap.add_argument("--start", type=float, default=None, help="music time s"); ap.add_argument("--end", type=float, default=None)
 ap.add_argument("--fingers", default="thumb,index,middle,ring,pinky"); ap.add_argument("--ramp", type=float, default=2.0)
 ap.add_argument("--midi-dev", default=None); ap.add_argument("--yes", action="store_true"); ap.add_argument("--dry-run", action="store_true"); ap.add_argument("--sn", default=None)
+ap.add_argument("--side", default=None, choices=["left", "right"], help="which hand, when two are connected (default: the side the plan was made for)")
+ap.add_argument("--start-at", type=float, default=None, help="wall-clock time (time.time()) at which the plan starts; play_duet.py uses it to start two hands together")
 ap.add_argument("--log", default=None); ap.add_argument("--fingers-only", action="store_true"); A = ap.parse_args()
 Z = np.load(A.plan); t, q = Z["t"], Z["q"].astype(float)[:, :20]; pre = float(Z["pre_roll"]); notes = Z["notes"]
+plan_side = str(Z["side"]) if "side" in Z.files else "right"        # plans made before the left hand existed are right-hand plans
+if A.side and A.side != plan_side: raise SystemExit(f"this plan is for a {plan_side} hand; --side {A.side} would play it mirrored on the wrong keys: refusing")
 if "wrist" in Z.files and str(Z["wrist"]) != "fixed" and not A.fingers_only:
     raise SystemExit("this plan moves the wrist (needs an arm); the hand alone would play only the finger part. Add --fingers-only to do that anyway.")
 # window + tempo (time-stretch the joint trajectory; lead stays as planned in plan time, fine for tempo <= 1)
@@ -38,10 +42,17 @@ print(f"plan {os.path.basename(os.path.dirname(A.plan))}: {len(cmd)/1000:.1f} s 
 if vmax > 35: raise SystemExit("command faster than 35 rad/s: refusing")
 log = A.log or os.path.join(os.path.dirname(A.plan), time.strftime("hw_%m%d_%H%M%S.npz"))
 midi = hw.MidiIn(A.midi_dev) if A.midi_dev else None
-with hw.Session(mode=A.mode, kp=A.kp, kd=A.kd, effort=A.effort, effort_scale=A.effort_scale, cutoff=A.cutoff, dry_run=A.dry_run, sn=A.sn) as s:
+with hw.Session(mode=A.mode, kp=A.kp, kd=A.kd, effort=A.effort, effort_scale=A.effort_scale, cutoff=A.cutoff, dry_run=A.dry_run, sn=A.sn,
+                side=None if (A.sn or A.dry_run) else plan_side) as s:
     try:
+        if s.side and s.side != plan_side: raise RuntimeError(f"hand {s.sn} is a {s.side} hand, the plan is for a {plan_side} hand: not playing")
         print(f"ramping to the start pose over {A.ramp:.1f} s ..."); s.ramp_to(cmd[0], A.ramp)
-        if not (A.yes or A.dry_run): input("at start pose. Enter = play, Ctrl-C = abort ")
+        if not (A.yes or A.dry_run or A.start_at): input("at start pose. Enter = play, Ctrl-C = abort ")
+        if A.start_at:
+            late = time.time() - A.start_at
+            if late > 0: raise RuntimeError(f"ready {late:.1f} s after the common start time: not playing out of step (start again with a longer --countdown)")
+            print(f"at start pose, starting in {-late:.1f} s", flush=True)
+            while (w := A.start_at - time.time()) > 0: time.sleep(min(w, 0.005))
         tp, st = s.stream(cmd); print(f"streamed {st['sent']} frames, skipped {st['skipped']} (late host)")
         s.ramp_to(home, 0.8)
     except KeyboardInterrupt:

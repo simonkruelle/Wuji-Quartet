@@ -1,0 +1,267 @@
+{
+ "piece": "assets/duets/korobeiniki_left.mid",
+ "title": "korobeiniki_left",
+ "wrist": "fixed",
+ "wrist_info": {},
+ "notes": 123,
+ "lead_ms": [
+  143.6,
+  141.1,
+  141.3,
+  135.2,
+  139.6
+ ],
+ "fingers": {
+  "thumb": 59,
+  "index": 16,
+  "middle": 16,
+  "ring": 16,
+  "pinky": 16
+ },
+ "dr": "wide",
+ "train_plants": [
+  {
+   "gain": 5.0
+  },
+  {
+   "gain": 2.5,
+   "dz": 0.002
+  },
+  {
+   "gain": 10.0,
+   "dz": -0.002
+  },
+  {
+   "gain": 5.0,
+   "dy": 0.002,
+   "dth": 1.5
+  },
+  {
+   "gain": 4.0,
+   "dy": -0.002,
+   "dth": -1.5
+  }
+ ],
+ "test_plants": [
+  {
+   "gain": 3.5,
+   "dz": -0.001,
+   "dy": 0.001
+  },
+  {
+   "gain": 7.0,
+   "dz": 0.001,
+   "dy": -0.001,
+   "dth": -1.0
+  },
+  {
+   "gain": 5.0,
+   "dz": 0.002,
+   "dy": -0.002
+  },
+  {
+   "gain": 3.0
+  },
+  {
+   "gain": 6.0,
+   "dth": 1.0,
+   "dz": -0.0015
+  }
+ ],
+ "baseline_train": [
+  {
+   "matched": 0,
+   "wrong": 0,
+   "f1": 0.0,
+   "timing_ms": {
+    "median": 0.0,
+    "p90_abs": 0.0
+   }
+  },
+  {
+   "matched": 0,
+   "wrong": 0,
+   "f1": 0.0,
+   "timing_ms": {
+    "median": 0.0,
+    "p90_abs": 0.0
+   }
+  },
+  {
+   "matched": 123,
+   "wrong": 0,
+   "f1": 1.0,
+   "timing_ms": {
+    "median": -33.99999999999892,
+    "p90_abs": 40.66666666666663
+   }
+  },
+  {
+   "matched": 123,
+   "wrong": 0,
+   "f1": 1.0,
+   "timing_ms": {
+    "median": -31.333333333332547,
+    "p90_abs": 45.999999999999375
+   }
+  },
+  {
+   "matched": 0,
+   "wrong": 0,
+   "f1": 0.0,
+   "timing_ms": {
+    "median": 0.0,
+    "p90_abs": 0.0
+   }
+  }
+ ],
+ "baseline_test": [
+  {
+   "matched": 32,
+   "wrong": 0,
+   "f1": 0.413,
+   "timing_ms": {
+    "median": -13.666666666666494,
+    "p90_abs": 15.333333333334132
+   }
+  },
+  {
+   "matched": 0,
+   "wrong": 0,
+   "f1": 0.0,
+   "timing_ms": {
+    "median": 0.0,
+    "p90_abs": 0.0
+   }
+  },
+  {
+   "matched": 0,
+   "wrong": 0,
+   "f1": 0.0,
+   "timing_ms": {
+    "median": 0.0,
+    "p90_abs": 0.0
+   }
+  },
+  {
+   "matched": 8,
+   "wrong": 0,
+   "f1": 0.122,
+   "timing_ms": {
+    "median": 9.999999999999787,
+    "p90_abs": 10.000000000001563
+   }
+  },
+  {
+   "matched": 123,
+   "wrong": 0,
+   "f1": 1.0,
+   "timing_ms": {
+    "median": -37.333333333332774,
+    "p90_abs": 48.00000000000004
+   }
+  }
+ ],
+ "cem_train": [
+  {
+   "matched": 123,
+   "wrong": 0,
+   "f1": 1.0,
+   "timing_ms": {
+    "median": 0.0,
+    "p90_abs": 0.6666666666674814
+   }
+  },
+  {
+   "matched": 123,
+   "wrong": 0,
+   "f1": 1.0,
+   "timing_ms": {
+    "median": 22.000000000002018,
+    "p90_abs": 24.666666666664838
+   }
+  },
+  {
+   "matched": 123,
+   "wrong": 0,
+   "f1": 1.0,
+   "timing_ms": {
+    "median": -15.33333333333431,
+    "p90_abs": 16.000000000000014
+   }
+  },
+  {
+   "matched": 123,
+   "wrong": 0,
+   "f1": 1.0,
+   "timing_ms": {
+    "median": -11.333333333332973,
+    "p90_abs": 12.666666666667936
+   }
+  },
+  {
+   "matched": 123,
+   "wrong": 0,
+   "f1": 1.0,
+   "timing_ms": {
+    "median": 22.00000000000024,
+    "p90_abs": 24.666666666664838
+   }
+  }
+ ],
+ "cem_test": [
+  {
+   "matched": 123,
+   "wrong": 0,
+   "f1": 1.0,
+   "timing_ms": {
+    "median": 2.666666666666373,
+    "p90_abs": 4.000000000001336
+   }
+  },
+  {
+   "matched": 123,
+   "wrong": 0,
+   "f1": 1.0,
+   "timing_ms": {
+    "median": 8.6666666666666,
+    "p90_abs": 11.333333333332973
+   }
+  },
+  {
+   "matched": 123,
+   "wrong": 0,
+   "f1": 1.0,
+   "timing_ms": {
+    "median": 8.000000000000895,
+    "p90_abs": 8.6666666666666
+   }
+  },
+  {
+   "matched": 123,
+   "wrong": 0,
+   "f1": 1.0,
+   "timing_ms": {
+    "median": 9.999999999999787,
+    "p90_abs": 10.000000000001563
+   }
+  },
+  {
+   "matched": 123,
+   "wrong": 0,
+   "f1": 1.0,
+   "timing_ms": {
+    "median": -14.000000000000234,
+    "p90_abs": 15.999999999998238
+   }
+  }
+ ],
+ "cem": {
+  "samples": 48,
+  "elites": 8,
+  "iters": 6,
+  "commit_s": 0.5,
+  "windows": 0
+ },
+ "wall_s": 15
+}

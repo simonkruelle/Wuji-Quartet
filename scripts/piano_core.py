@@ -57,6 +57,9 @@ def hand_paths(root, rev="hand2_2", side="right"):
 
 # Upper joint stops measured on our real hand (14 Nov, both in-air runs): the shipped model allows 0.698 rad on both.
 REAL_LIMITS = {"r_thumb_cmc_abd": (None, 0.44), "r_index_finger_mcp_abd": (None, 0.60)}
+def real_limits(side="right"):
+    """The same two stops for either hand. They were measured on our RIGHT hand only; for a left hand they are an assumption."""
+    return {("l_" + k[2:] if side == "left" else k): v for k, v in REAL_LIMITS.items()}
 
 
 def build_scene(root, theta=20.0, mount_x=0.0, mount_z=0.09, mount_dy=PITCH, center_key=76, gain=1.0,
@@ -65,8 +68,9 @@ def build_scene(root, theta=20.0, mount_x=0.0, mount_z=0.09, mount_dy=PITCH, cen
     (origin: key hinge line at A0; +x toward the player, key fronts at x = 0.15; +y toward the treble; z = white key top).
     approach="front": hand comes from the player's side like a pianist, fingers point -x, thumb on the bass side.
     approach="back" : hand reaches over the fallboard, fingers point +x, thumb on the TREBLE side.
-    Palm down, fingertips pitched down by theta degrees."""
-    assert side == "right", "left hand needs a mirrored mount; not built"
+    Palm down, fingertips pitched down by theta degrees.
+    side="left": the left-hand model at the mirrored mount (mirror plane across the keyboard): thumb on the treble side
+    for approach="front". The left model is the mirror image of the right one, so equal joint values give mirrored poses."""
     hand_xml, meshdir = hand_paths(root, rev, side)
     st, sr = KEY_MODELS[key_model]
     kx = []
@@ -94,7 +98,9 @@ def build_scene(root, theta=20.0, mount_x=0.0, mount_z=0.09, mount_dy=PITCH, cen
     R0 = np.array([[0, 0, -1], [1, 0, 0], [0, -1, 0]], float)
     Ry = np.array([[math.cos(th), 0, math.sin(th)], [0, 1, 0], [-math.sin(th), 0, math.cos(th)]])
     Rz = np.diag([-1.0, -1.0, 1.0]) if approach == "front" else np.eye(3)      # 180 deg about z: fingers toward the fallboard
-    q = np.zeros(4); mujoco.mju_mat2Quat(q, (Rz @ Ry @ R0).flatten())
+    Rm = Rz @ Ry @ R0
+    if side == "left": Mi = np.diag([1.0, -1.0, 1.0]); Rm = Mi @ Rm @ Mi       # mirror of the right hand's mount
+    q = np.zeros(4); mujoco.mju_mat2Quat(q, Rm.flatten())
     my = key_y(center_key) + mount_dy
     return f'''<mujoco model="wuji_piano"><compiler angle="radian" meshdir="{meshdir}"/>
 <option timestep="{timestep}" integrator="implicitfast" solver="Newton" iterations="50" tolerance="1e-10"/>
@@ -106,6 +112,25 @@ def build_scene(root, theta=20.0, mount_x=0.0, mount_z=0.09, mount_dy=PITCH, cen
 <geom type="box" size="0.1 0.65 0.35" pos="0.075 {YMID:.3f} -0.4" rgba="0.12 0.12 0.12 1" contype="0" conaffinity="0"/>{"".join(kx)}</body>
 <body name="hand_mount" pos="{mount_x:.4f} {my:.4f} {mount_z:.4f}" quat="{q[0]:.6f} {q[1]:.6f} {q[2]:.6f} {q[3]:.6f}">{bodies}</body>
 </worldbody><contact>{excl}</contact>{act}</mujoco>'''
+
+
+def build_duo_scene(root, first, second, keys=range(21, 109), **common):
+    """One keyboard, two hands. first / second: build_scene keyword sets (theta, mount_x, mount_z, mount_dy, center_key, side, gain, limits).
+    Actuators: the first hand's 20, then the second hand's 20. A second hand of the same side gets the name prefix "b_"."""
+    import re as _re
+    A = build_scene(root, keys=keys, **{**common, **first}); B = build_scene(root, keys=[], **{**common, **second})
+    sa, sb = first.get("side", "right"), second.get("side", "right")
+    md = _re.search(r'meshdir="([^"]+)"', A).group(1); A = A.replace(f'meshdir="{md}"', f'meshdir="{os.path.dirname(md)}"', 1)
+    A = _re.sub(r'file="([^"/]+\.STL)"', lambda mo: f'file="{sa}/{mo.group(1)}"', A)
+    cut = lambda x, a, b: x[x.index(a) + len(a): x.index(b)]
+    assets = _re.sub(r'file="([^"/]+\.STL)"', lambda mo: f'file="{sb}/{mo.group(1)}"', cut(B, "<asset>", "</asset>")) if sb != sa else ""
+    if sb != sa: assets = _re.sub(r'<material [^>]*/>', "", assets)                    # the materials are the same in both models
+    i = B.index('<body name="hand_mount"'); body = B[i: B.index("</worldbody>")].replace('name="hand_mount"', 'name="hand_mount_2"', 1)
+    excl = cut(B, "<contact>", "</contact>"); act = _re.sub(r"^<actuator[^>]*>|</actuator>$", "", B[B.index("<actuator"): B.index("</mujoco>")].strip())
+    if sb == sa:
+        ren = lambda x: _re.sub(r'\b(name|joint|body1|body2)="([rl]_)', r'\1="b_\2', x); body, excl, act = ren(body), ren(excl), ren(act)
+    A = A.replace("</asset>", assets + "</asset>", 1).replace("</worldbody>", body + "</worldbody>", 1).replace("</contact>", excl + "</contact>", 1)
+    k = A.rindex("</actuator>"); return A[:k] + act + A[k:]
 
 
 def hand_qadr(model):
@@ -137,6 +162,7 @@ class Keyframer:
             self.ik.jnt_range[j] += np.array([limit_margin, -limit_margin])   # stay off the hard stops (real hand: stall / heat)
             if any(s in n for s in ("mcp_flex", "_pip", "_dip")) and "thumb" not in n: self.ik.jnt_range[j, 0] = 0.0   # no hyperextension
         self.qadr = hand_qadr(self.model)
+        self.pre = "l_" if mujoco.mj_name2id(self.model, mujoco.mjtObj.mjOBJ_SITE, "l_thumb_tip") >= 0 else "r_"   # left or right hand
         self.q_nom = np.zeros(self.model.nq)
         self.post_cost = np.full(self.model.nv, 5e-3)
         for j in range(self.model.njnt):
@@ -170,15 +196,15 @@ class Keyframer:
         err = {s: float(np.linalg.norm(cfg.get_transform_frame_to_world(s, "site").translation() - np.asarray(x))) for s, x in targets.items()}
         return cfg.q.copy(), err
 
-    def pad(self, q, finger, side_prefix="r_"):
+    def pad(self, q, finger):
         self.data.qpos[:] = q; mujoco.mj_forward(self.model, self.data)
-        return float(self.data.site(f"{side_prefix}{finger}_tip").xpos[2]) - pad_min_z(self.model, self.data, finger)
+        return float(self.data.site(f"{self.pre}{finger}_tip").xpos[2]) - pad_min_z(self.model, self.data, finger)
 
     def keyframes(self, pairs, hover_h=0.012, lift_h=0.003, press_d=-0.0085, press_x=PRESS_X, press_overrides=None, fixed=None, q_start=None):
         """pairs: iterable of (finger_index, midi). Returns {(f, m): dict(hover, lift, press, err_mm)} with 4-vectors."""
         out = {}
         for f, m in pairs:
-            fin = FINGERS[f]; site = f"r_{fin}_tip"; x = press_x + (0.0 if not is_black(m) else -0.04)   # black: 15 mm behind its front edge
+            fin = FINGERS[f]; site = f"{self.pre}{fin}_tip"; x = press_x + (0.0 if not is_black(m) else -0.04)   # black: 15 mm behind its front edge
             ztop = 0.0 if not is_black(m) else BOFF
             q1, _ = self.solve({site: (x, key_y(m), ztop + 0.02)}, self.q_nom if q_start is None else q_start, fixed=fixed)
             pad = self.pad(q1, fin)

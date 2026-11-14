@@ -1,0 +1,14 @@
+korobeiniki_left: 123 notes, 24.4 s, wrist fixed {}; fingers used {'thumb': 59, 'index': 16, 'middle': 16, 'ring': 16, 'pinky': 16}
+IK keyframes: 5 distinct strokes in 5 s; keys G2..E4
+start parameters: lead and per-finger medians from plans/ode_level_stroke90_s0/theme_q_1khz.npz
+lead iter 0: lead ms [144, 141, 141, 135, 140] -> nominal F1 1.000 (123/123, 0 wrong)
+lead iter 1: lead ms [144, 141, 141, 135, 140] -> nominal F1 1.000 (123/123, 0 wrong)
+lead iter 2: lead ms [144, 141, 141, 135, 140] -> nominal F1 1.000 (123/123, 0 wrong)
+DR set wide: [{'gain': 5.0}, {'gain': 2.5, 'dz': 0.002}, {'gain': 10.0, 'dz': -0.002}, {'gain': 5.0, 'dy': 0.002, 'dth': 1.5}, {'gain': 4.0, 'dy': -0.002, 'dth': -1.5}]
+baseline (no CEM) train plants: ['0/123 w0', '0/123 w0', '123/123 w0', '123/123 w0', '0/123 w0']  test: ['32/123 w0', '0/123 w0', '0/123 w0', '8/123 w0', '123/123 w0']
+start (before CEM) train plants: ['123/123 w0', '123/123 w0', '123/123 w0', '123/123 w0', '123/123 w0']  test: ['123/123 w0', '123/123 w0', '123/123 w0', '123/123 w0', '123/123 w0']
+CEM done in 0 s
+CEM train plants: ['123/123 w0', '123/123 w0', '123/123 w0', '123/123 w0', '123/123 w0']  test: ['123/123 w0', '123/123 w0', '123/123 w0', '123/123 w0', '123/123 w0']
+nominal missed: []
+nominal wrong: []
+total 15 s -> out/korobeiniki_accomp_left_s0

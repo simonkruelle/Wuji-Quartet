@@ -14,6 +14,11 @@ HI[1] = 0.42; HI[5] = 0.56     # stops measured on our hand, 14 Nov (thumb sidew
 MAX_EFFORT_A = 1.5             # hard limit set by the team: never ask the hand for more current than this
 
 
+def side_of(sn):
+    """'left' / 'right' from the serial number: Wuji Hand 2 encodes the side in the 4th character (J = left, K = right; wuji-sdk Handedness)."""
+    return {"J": "left", "K": "right"}.get(str(sn)[3:4].upper())
+
+
 # ------------------------------------------------------------------ fake device
 class _Res:
     def __init__(self, v): self.v = v
@@ -116,10 +121,17 @@ def check_effort_limit(read_back, want):
 
 class Session:
     """with Session(mode="mit"|"position", ...) as s: s.ramp_to(q); s.stream(cmd); ... Always disables on exit."""
-    def __init__(self, mode="mit", kp=3.0, kd=0.05, effort=0.8, effort_scale=0.8, cutoff=40.0, dry_run=False, sn=None, log_states=True):
+    def __init__(self, mode="mit", kp=3.0, kd=0.05, effort=0.8, effort_scale=0.8, cutoff=40.0, dry_run=False, sn=None, log_states=True, side=None):
+        """sn / side ("left" | "right") choose the hand when more than one is connected; with one hand connected neither is needed."""
         self.mode, self.kp, self.kd, self.effort, self.effort_scale, self.cutoff = mode, kp, kd, effort, effort_scale, cutoff
-        self.dry, self.sn, self.log_states = dry_run, sn, log_states
-        self.states = []; self._stop = threading.Event(); self.restore = []
+        self.dry, self.sn, self.log_states, self.side = dry_run, sn, log_states, side
+        self.states = []; self._stop = threading.Event(); self.restore = []; self._hit = False; self._prev = {}
+
+    def _on_signal(self, *_):
+        """Ctrl-C, a closed terminal or a kill: the FIRST one starts the orderly stop (ramp aborted, hand switched off and confirmed).
+        Further ones change nothing: a second Ctrl-C must not cut the switch-off short."""
+        if self._hit: return
+        self._hit = True; raise KeyboardInterrupt
 
     def __enter__(self):
         if self.mode == "mit" and self.effort > MAX_EFFORT_A: raise SystemExit(f"current limit {self.effort} A is above the hard limit of {MAX_EFFORT_A} A: refusing")
@@ -130,15 +142,21 @@ class Session:
             import wuji_sdk
             self.sdk = wuji_sdk; self.JC = wuji_sdk.JointCommand; self.manager = wuji_sdk.SdkManager.instance()
             hands = [d for d in self.manager.scan() if d.device_type == wuji_sdk.DeviceType.WujiHand2]
+            for d in hands: print(f"  found SN={d.sn} ({side_of(d.sn) or 'side unknown'}) ip={d.ip} fw={d.firmware_version}")
             if self.sn: hands = [d for d in hands if d.sn == self.sn]
-            if not hands: raise SystemExit("no Wuji Hand 2 found (Ethernet link? same subnet? PSU on?)")
-            for d in hands: print(f"  found SN={d.sn} ip={d.ip} fw={d.firmware_version}")
-            self.hand = self.manager.connect(sn=hands[0].sn, device_name="piano")
+            if self.side: hands = [d for d in hands if side_of(d.sn) in (self.side, None)]      # a serial number we cannot read counts as a candidate
+            want = " ".join(x for x in (self.side and f"{self.side} hand", self.sn and f"SN {self.sn}") if x)
+            if not hands: raise SystemExit(f"no Wuji Hand 2 found{' for: ' + want if want else ''} (Ethernet link? same subnet? PSU on?)")
+            if len(hands) > 1: raise SystemExit(f"{len(hands)} hands match ({', '.join(d.sn for d in hands)}): choose one with --sn or --side; refusing to guess")
+            self.sn = hands[0].sn                                     # from here on (reconnect included) only this hand
+            if side_of(self.sn) is None and self.side: print(f"  WARNING: cannot read left/right from SN {self.sn}; taking it as the {self.side} hand")
+            self.side = side_of(self.sn) or self.side
+            self.hand = self.manager.connect(sn=self.sn, device_name="piano")
             self.nid2i = wuji_sdk.WujiHand2.nid_to_joint_index
         online = int(self.hand.online_joints_count().get())
         if online != JOINTS: self.close(); raise SystemExit(f"{online}/20 joints online, refusing to move")
-        for sig in ("SIGHUP", "SIGTERM"):      # a dropped SSH session or a kill must still disable the hand
-            try: signal.signal(getattr(signal, sig), _interrupt)
+        for sig in ("SIGINT", "SIGHUP", "SIGTERM"):      # Ctrl-C, a dropped SSH session or a kill must all disable the hand, once
+            try: self._prev[sig] = signal.signal(getattr(signal, sig), self._on_signal)
             except Exception: pass
         self._configure()
         # read the pose first, then enable while already commanding that pose: the hand must not move at the moment of enabling
@@ -269,6 +287,17 @@ class Session:
 
     def close(self):
         self._stop.set()
+        old = {}
+        for sig in ("SIGINT", "SIGHUP", "SIGTERM"):      # nothing may interrupt the switch-off: a second Ctrl-C would leave the hand in an unknown state
+            try: old[sig] = signal.signal(getattr(signal, sig), signal.SIG_IGN)
+            except Exception: pass
+        try: self._close()
+        finally:
+            for sig, h in old.items():                    # Ctrl-C works again for whatever the script does next; after an interrupt the script
+                try: signal.signal(getattr(signal, sig), signal.SIG_IGN if self._hit else self._prev.get(sig, h))    # is on its way out: let it save its log
+                except Exception: pass
+
+    def _close(self):
         for f in (lambda: self.hand.disable(), lambda: self.pub.close(), lambda: self._sub.close()):
             try: f()
             except Exception: pass
