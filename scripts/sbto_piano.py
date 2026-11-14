@@ -365,6 +365,8 @@ def main():
     ap.add_argument("--start-hover", action="store_true", help="fixed wrist: fingers wait at their hover pose from the start, instead of curled up until their first note")
     ap.add_argument("--recal-lead", action="store_true", help="with --from-npz: fit the per-finger command lead again (needed after changing --stroke)")
     ap.add_argument("--warm", action="store_true", help="with --from-npz: run the CEM again, starting from that plan")
+    ap.add_argument("--init-from", default=None, help="a finished plan for the same mount (another piece): start from its lead and its per-finger median stroke parameters")
+    ap.add_argument("--no-cem", action="store_true", help="export the start parameters as they are (seconds, not minutes)")
     ap.add_argument("--seed", type=int, default=0); A = ap.parse_args()
     global LIMITS, T_DOWN, T_UP, START_HOVER
     if A.stroke: T_DOWN = T_UP = A.stroke
@@ -405,6 +407,11 @@ def main():
     # --- lead calibration on the nominal plant, in this process (servo lag per finger, like make_theme.py)
     w_init([TRAIN_PLANTS[0]], plan, keys, default_q)
     Zr = np.load(A.from_npz) if A.from_npz else None
+    if A.init_from:
+        Zi = np.load(A.init_from, allow_pickle=True); fi = Zi["fing"][:, 1]; lead = [float(x) for x in Zi["lead"]]; fa = np.array(fing)
+        for f in range(5):
+            if (fi == f).any() and (fa == f).any(): P[fa == f] = np.median(Zi["P"][fi == f], axis=0)
+        say("start parameters: lead and per-finger medians from", A.init_from)
     if Zr is not None: lead = list(Zr["lead"]); P = Zr["P"].copy(); WK = Zr["WK"].copy(); say("re-export: lead, P, WK from", A.from_npz)
     for it in range(3 if (Zr is None or A.recal_lead) else 0):
         plan.lead = np.asarray(lead, float)
@@ -414,18 +421,21 @@ def main():
         for n, dd in s["matched"]: per[fing[_note_index(notes, n)]].append(dd)
         say(f"lead iter {it}: lead ms {[round(l*1e3) for l in lead]} -> nominal F1 {s['f1']:.3f} ({s['n_matched']}/{nN}, {len(s['extra'])} wrong)")
         if it < 2: lead = [max(0.0, lead[f] + (float(np.median(per[f])) if per[f] else 0.03)) for f in range(5)]
-    plan.lead = np.asarray(lead, float)
+    plan.lead = np.asarray(lead, float); P_ref = P.copy()      # the CEM is pulled gently toward its start parameters (zeros unless --init-from / --from-npz)
     from multiprocessing import Pool
     dr = A.dr or ("wide" if A.wrist == "fixed" else "mild"); plants = TRAIN_PLANTS if dr == "wide" else MILD_PLANTS; K = len(plants)
     say(f"DR set {dr}: {plants}")
     with Pool(A.workers, initializer=w_init, initargs=(plants + TEST_PLANTS, plan, keys, default_q)) as pool:
         base_eval = evaluate(pool, K + len(TEST_PLANTS), np.zeros_like(P), np.zeros_like(WK), plan, keys)
         say("baseline (no CEM) train plants:", [f"{e[0]['n_matched']}/{nN} w{len(e[0]['extra'])}" for e in base_eval[:K]], " test:", [f"{e[0]['n_matched']}/{nN} w{len(e[0]['extra'])}" for e in base_eval[K:]])
+        if A.init_from:
+            e0 = evaluate(pool, K + len(TEST_PLANTS), P, WK, plan, keys)
+            say("start (before CEM) train plants:", [f"{e[0]['n_matched']}/{nN} w{len(e[0]['extra'])}" for e in e0[:K]], " test:", [f"{e[0]['n_matched']}/{nN} w{len(e[0]['extra'])}" for e in e0[K:]])
         # --- receding-horizon DR-CEM
         T0 = plan.on.min() - 0.05; S = T0 - 0.25
         states = pool.starmap(w_state, [(p, P, WK, S) for p in range(K)])
         sd_note = np.tile(SD0, (nN, 1)); win = 0; t_cem = time.time()
-        while (Zr is None or A.warm) and T0 < plan.on.max() + 0.01:
+        while (Zr is None or A.warm) and not A.no_cem and T0 < plan.on.max() + 0.01:
             opt = np.nonzero((plan.on >= T0) & (plan.on < T0 + A.commit))[0]
             kn = np.nonzero((plan.knots >= T0 - 0.3) & (plan.knots < T0 + A.commit))[0] if moving else np.zeros(0, int)
             E = min(T0 + A.commit + 0.35, plan.T)
@@ -433,6 +443,7 @@ def main():
                 d_n, d_k = len(opt) * 5, len(kn) * 2
                 mu = np.concatenate([P[opt].ravel(), WK[kn].ravel()]); sd = np.concatenate([np.tile(SD0, len(opt)), np.tile(WSD0, len(kn))])
                 lo = np.concatenate([np.tile(LO, len(opt)), np.tile(WLO, len(kn))]); hi = -lo; sd0 = sd.copy()
+                ref = np.concatenate([P_ref[opt].ravel(), np.zeros(d_k)])
                 best_x, best_c = mu.copy(), None; N = A.samples if len(mu) <= 25 else int(A.samples * 1.33)
                 for it in range(A.iters):
                     X = np.clip(mu + sd * rng.standard_normal((N, len(mu))), lo, hi); X[0] = mu; X[1] = best_x
@@ -441,7 +452,7 @@ def main():
                         P2 = P.copy(); P2[opt] = x[:d_n].reshape(-1, 5); WK2 = WK.copy()
                         if d_k: WK2[kn] = x[d_n:].reshape(-1, 2)
                         for p in range(K): jobs.append((p, states[p], E, P2, WK2, S + 0.1, E - 0.17))
-                    cs = np.array(pool.map(w_cost, jobs, chunksize=4)).reshape(N, K).mean(1) + W_REG * np.sum(((X - 0) / sd0) ** 2, axis=1)
+                    cs = np.array(pool.map(w_cost, jobs, chunksize=4)).reshape(N, K).mean(1) + W_REG * np.sum(((X - ref) / sd0) ** 2, axis=1)
                     o = np.argsort(cs); el = X[o[:A.elites]]
                     if best_c is None or cs[o[0]] < best_c: best_c, best_x = float(cs[o[0]]), X[o[0]].copy()
                     if it == 0: c_first = float(cs[0])

@@ -157,6 +157,17 @@ On a laptop or Henry's machine, not on the RDK X5 (its small processor would nee
     --mount 0.27,0.06,0,0.0 --press-x 0.135,0.115,0.115,0.115,0.125 --stroke 0.09 --start-hover --out out/ode_hw --workers 8
 ```
 
+Another melody on the same five keys (C5 to G5) needs no new optimisation: it takes over what the optimiser learned on Ode to Joy, per finger. About 20 seconds:
+
+```bash
+./wq sim python scripts/make_melody.py jingle            # also: saints, mary; or write your own .mid with one note at a time
+./wq sim python scripts/sbto_piano.py --piece assets/melodies/jingle.mid --wrist fixed --real-limits \
+    --mount 0.27,0.06,0,0.0 --press-x 0.135,0.115,0.115,0.115,0.125 --stroke 0.09 --start-hover \
+    --init-from plans/ode_level_stroke90_s0/theme_q_1khz.npz --no-cem --out out/jingle --workers 8
+```
+
+Leave out `--no-cem` to optimise from that start (15 minutes).
+
 `--stroke 0.09` makes each key stroke take 90 ms instead of about 35 ms; `--start-hover` lets the fingers wait above their keys instead of curled up. Without them the plan plays the same notes in simulation but looks jerky on the real hand.
 
 `--mount` is `x,z,pitch,dy` with the same meaning as in step 3. 15 to 30 minutes. Then copy `out/sbto_hw` to the robot computer (commit it under `plans/`, or `rsync`) and play it as in step 5.

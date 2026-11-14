@@ -259,6 +259,7 @@ Two facts that save an hour: the hand has the fixed address **192.168.1.111** (r
 | Folder | Piece | Wrist | Notes hit in sim | Plays on the hand alone |
 |---|---|---|:--:|:--:|
 | [`plans/ode_level_stroke90_s0`](plans/ode_level_stroke90_s0) | Ode to Joy, 62 notes | fixed and level, five keys C5 to G5, 90 ms key strokes | 62 / 62, 0 wrong | **yes, try this first; [duet notes](assets/ode_to_joy/README.md)** |
+| [`plans/jingle_level_bpm120_s0`](plans/jingle_level_bpm120_s0) | Jingle Bells chorus, 51 notes, 120 bpm | same mount and keys as Ode to Joy; stroke parameters taken over from the Ode plan, no new optimisation | 51 / 51, 0 wrong | not yet played on the hand |
 | [`plans/ode_level_s0`](plans/ode_level_s0) | Ode to Joy, 62 notes | same, strokes as fast as the joints allow | 62 / 62, 0 wrong | in the air only: jerky on the real hand |
 | [`plans/k265_fixed`](plans/k265_fixed) | K.265 theme | fixed, first mount | 76 / 80, 1 wrong | not yet: on the real hand the thumb cannot reach from this mount |
 | [`plans/ode_fixed`](plans/ode_fixed) | Ode to Joy, 62 notes | fixed, first mount | 61 / 62, 0 wrong | in the air only (played 14 Nov); same thumb problem |

@@ -1,0 +1,14 @@
+jingle: 51 notes, 31.6 s, wrist fixed {}; fingers used {'thumb': 3, 'index': 6, 'middle': 26, 'ring': 11, 'pinky': 5}
+IK keyframes: 5 distinct strokes in 6 s; keys F4..D6
+start parameters: lead and per-finger medians from plans/ode_level_stroke90_s0/theme_q_1khz.npz
+lead iter 0: lead ms [144, 141, 141, 135, 140] -> nominal F1 1.000 (51/51, 0 wrong)
+lead iter 1: lead ms [144, 141, 141, 135, 140] -> nominal F1 1.000 (51/51, 0 wrong)
+lead iter 2: lead ms [144, 141, 141, 135, 140] -> nominal F1 1.000 (51/51, 0 wrong)
+DR set wide: [{'gain': 5.0}, {'gain': 2.5, 'dz': 0.002}, {'gain': 10.0, 'dz': -0.002}, {'gain': 5.0, 'dy': 0.002, 'dth': 1.5}, {'gain': 4.0, 'dy': -0.002, 'dth': -1.5}]
+baseline (no CEM) train plants: ['0/51 w4', '0/51 w0', '51/51 w0', '51/51 w0', '0/51 w0']  test: ['34/51 w0', '0/51 w0', '0/51 w0', '5/51 w0', '51/51 w0']
+start (before CEM) train plants: ['51/51 w0', '51/51 w0', '51/51 w0', '51/51 w0', '51/51 w0']  test: ['51/51 w0', '51/51 w0', '51/51 w0', '51/51 w0', '51/51 w0']
+CEM done in 0 s
+CEM train plants: ['51/51 w0', '51/51 w0', '51/51 w0', '51/51 w0', '51/51 w0']  test: ['51/51 w0', '51/51 w0', '51/51 w0', '51/51 w0', '51/51 w0']
+nominal missed: []
+nominal wrong: []
+total 18 s -> out/jingle_level_bpm120_s0
