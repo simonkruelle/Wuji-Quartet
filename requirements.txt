@@ -1,0 +1,20 @@
+# Exact environment the committed plans were made with (Python 3.13.5, Linux x86_64, 2026-11-13).
+# Wheels exist for Linux x86_64, Linux aarch64 (RDK X5, Jetson) and macOS arm64 (Apple silicon). Not Intel Macs.
+mujoco==3.17.0
+mink==1.4.0
+daqp==0.11.1
+qpsolvers==4.13.0
+numpy==2.5.4
+scipy==1.18.1
+pillow==13.0.0
+wuji-sdk==2026.11.9
+# pulled in by the packages above, pinned so every machine resolves the same set
+absl-py==2.5.1
+etils==1.15.0
+fsspec==2026.9.0
+glfw==2.11.0
+packaging==26.3
+PyOpenGL==3.1.10
+typing_extensions==4.16.0
+websockets==17.4
+zipp==4.1.2

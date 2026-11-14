@@ -1,0 +1,45 @@
+#!/usr/bin/env bash
+# Wuji Quartet container helper. The repo folder is mounted at /work, so edits and outputs stay on the host.
+#
+#   ./wq build                 build the image (about 5 min, 1.4 GB)
+#   ./wq sim  <command...>     run a command without hardware: optimise, simulate, render
+#   ./wq hand <command...>     run a command that talks to the hand (Linux host only: RDK X5, Jetson, Linux PC)
+#   ./wq shell | hand-shell    interactive shell in either mode
+#   ./wq check                 import test + fake-hand playback, no hardware needed
+#
+# examples
+#   ./wq sim  python scripts/sbto_piano.py --piece k265 --wrist fixed --out out/sbto_k265_fixed --workers 8
+#   ./wq hand python scripts/play_on_hand.py plans/k265_fixed/theme_q_1khz.npz --tempo 0.5 --fingers index --effort 0.5
+set -euo pipefail
+cd "$(dirname "$0")"
+IMG="${WQ_IMAGE:-wuji-quartet:local}"
+run=(docker run --rm -v "$PWD":/work -w /work -u "$(id -u):$(id -g)" -e HOME=/home/wq)
+if [ -t 0 ] && [ -t 1 ]; then run+=(-it); fi
+if [ -n "${MUJOCO_GL:-}" ]; then run+=(-e "MUJOCO_GL=$MUJOCO_GL" -e "PYOPENGL_PLATFORM=$MUJOCO_GL"); fi
+
+hand_args() {
+  if [ "$(uname -s)" != "Linux" ]; then
+    echo "hand mode needs a Linux host (RDK X5, Jetson, Linux PC)." >&2
+    echo "Docker on macOS runs in a VM that cannot see the hand's UDP broadcasts: on a Mac use the native install (README, 'Set up')." >&2
+    exit 1
+  fi
+  mkdir -p "$HOME/.wuji"
+  # host network: the SDK finds the hand by UDP broadcast on 192.168.1.x (Wuji's own Docker guide does the same)
+  run+=(--network host --cap-add SYS_NICE --ulimit rtprio=99 -v "$HOME/.wuji":/home/wq/.wuji)
+  # USB-MIDI keyboard: ALSA devices (char major 116), also when plugged in after the container started
+  if [ -d /dev/snd ]; then
+    run+=(-v /dev/snd:/dev/snd --device-cgroup-rule 'c 116:* rmw')
+    gid="$(getent group audio | cut -d: -f3 || true)"; if [ -n "$gid" ]; then run+=(--group-add "$gid"); fi
+  fi
+}
+
+cmd="${1:-help}"; [ $# -gt 0 ] && shift
+case "$cmd" in
+  build)      exec docker build -t "$IMG" "$@" . ;;
+  sim)        exec "${run[@]}" "$IMG" "$@" ;;
+  shell)      exec "${run[@]}" "$IMG" bash ;;
+  hand)       hand_args; exec "${run[@]}" "$IMG" "$@" ;;
+  hand-shell) hand_args; exec "${run[@]}" "$IMG" bash ;;
+  check)      mkdir -p out; exec "${run[@]}" "$IMG" bash -c 'python -c "import mujoco, mink, daqp, wuji_sdk, platform; print(\"python\", platform.python_version(), platform.machine(), \"| mujoco\", mujoco.__version__, \"| wuji-sdk import ok\")" && python scripts/view_theme.py plans/k265_fixed --check && python scripts/play_on_hand.py plans/k265_fixed/theme_q_1khz.npz --dry-run --yes --end 3 --log out/check_dry_run.npz' ;;
+  *)          sed -n '2,12p' "$0" | sed 's/^# \{0,1\}//' ;;
+esac

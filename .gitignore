@@ -1,0 +1,15 @@
+# new runs land here; move a run to plans/ when the team should use it
+out/
+# 590 MB pianist motion capture (FürElise); fetch with scripts/furelise_peek.py if you need it
+assets/furelise/*/motion.pkl
+__pycache__/
+*.pyc
+.venv/
+venv/
+.DS_Store
+*.swp
+.idea/
+.vscode/
+# by-products of rendering inside a plan folder (shared videos live in docs/media)
+plans/**/test_frame.png
+plans/**/theme_sim.mp4

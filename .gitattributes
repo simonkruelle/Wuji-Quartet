@@ -1,0 +1,15 @@
+* text=auto eol=lf
+wq text eol=lf
+*.sh text eol=lf
+*.STL binary
+*.STEP -text -diff
+# vendored upstream files stay byte-identical
+assets/wuji-description/** -text
+*.npz binary
+*.mp4 binary
+*.gif binary
+*.png binary
+*.jpg binary
+*.pdf binary
+*.mid binary
+*.replay binary
