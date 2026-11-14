@@ -45,6 +45,12 @@ Click a clip for the video with sound. The sound is synthesised from the keys th
   </tr>
 </table>
 
+<p align="center">
+  <a href="docs/media/ode_fixed.mp4"><img src="docs/media/ode_fixed.gif" width="640" alt="Simulated hand playing Ode to Joy with a fixed wrist"></a>
+  <br>
+  <strong>Ode to Joy</strong>: five keys, one finger each, the hand never moves. <strong>61 / 62</strong> notes, 0 wrong. The piece for the first test on the tripod.
+</p>
+
 Third clip, K.265 with the wrist following a human pianist: [docs/media/k265_human.mp4](docs/media/k265_human.mp4) (75 / 80).
 
 ## The hand
@@ -70,6 +76,7 @@ Notes hit, before and after optimisation. "Setups" vary servo stiffness and moun
 
 | Piece | Wrist | Our best guess of the setup | 5 training setups | 5 unseen setups | Wrong notes |
 |---|---|:--:|:--:|:--:|:--:|
+| Ode to Joy, 62 notes | fixed | 62 → **61** | 0 to 62 → 30 to 62 | 11 to 62 → 28 to 62 | 0 |
 | K.265 theme, 80 notes | fixed | 69 → **76** | 4 to 69 → 47 to 76 | 14 to 65 → 40 to 74 | 1 |
 | Für Elise opening, 86 notes | planned from the notes | 72 → **82** | 47 to 75 → 81 to 83 | 5 to 69 → 60 to 83 | 8 |
 | K.265 theme, 80 notes | follows a human pianist | 58 → **75** | 38 to 62 → 70 to 75 | 13 to 60 → 56 to 74 | 4 |
