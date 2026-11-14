@@ -48,9 +48,13 @@ def widx(m): return pc.key_y(m) / pc.PITCH
 
 
 # ------------------------------------------------------------------ scene
+PRESS_X_F = {}      # finger -> contact point along the key (m from the hinge); empty = pc.PRESS_X for all (--press-x)
+LIMITS = None       # joint ranges narrower than the shipped model, e.g. pc.REAL_LIMITS (--real-limits)
+
+
 def scene_xml(gain, keys, wrist, dx=0.0, dy=0.0, dz=0.0, dth=0.0):
     xml = pc.build_scene(WUJI, theta=BASE["theta"] + dth, mount_x=BASE["x"] + dx, mount_z=BASE["z"] + dz,
-                         mount_dy=BASE["dy"] + dy, gain=gain, keys=keys, approach="front")
+                         mount_dy=BASE["dy"] + dy, gain=gain, keys=keys, approach="front", limits=LIMITS)
     if not wrist: return xml
     tag = '<body name="hand_mount" pos="'; i = xml.index(tag); j = xml.index('"', i + len(tag)); pos = xml[i + len(tag): j]
     k = xml.index("</worldbody>")
@@ -178,7 +182,7 @@ def note_keyframes(notes, fing, u_note, wrist, gain=5.0):
                 fx = {fixed_j["x"]: 0.0, fixed_j["y"]: (u - U_BASE) * pc.PITCH, fixed_j["z"]: 0.0}
                 kf = kfr.keyframes([(f, m)], fixed=fx, hover_h=0.016)[(f, m)]
             else:
-                kf = kfr.keyframes([(f, m)], press_overrides={(4, 81): -0.013})[(f, m)]
+                kf = kfr.keyframes([(f, m)], press_overrides={(4, 81): -0.013}, press_x=PRESS_X_F.get(f, pc.PRESS_X))[(f, m)]
             cache[key] = kf
         out.append(cache[key])
     return out, kr, len(cache)
@@ -353,7 +357,12 @@ def main():
     ap.add_argument("--mount", default=None, help="measured mount 'x,z,theta,dy' in m, m, deg, m (default 0.22,0.10,25,-0.0235)")
     ap.add_argument("--gain", type=float, default=5.0, help="identified stiffness (sysid_step.py); every plant's gain is scaled by gain/5")
     ap.add_argument("--from-npz", default=None, help="re-export a finished run: reuse its lead, P, WK (no CEM)")
+    ap.add_argument("--press-x", default=None, help="contact point per finger, m from the key hinge: thumb,index,middle,ring,pinky (front edge = 0.15; default 0.115 for all)")
+    ap.add_argument("--real-limits", action="store_true", help="use the joint stops measured on the real hand (pc.REAL_LIMITS)")
     ap.add_argument("--seed", type=int, default=0); A = ap.parse_args()
+    global LIMITS
+    if A.real_limits: LIMITS = pc.REAL_LIMITS
+    if A.press_x: PRESS_X_F.update({f: float(v) for f, v in enumerate(A.press_x.split(","))})
     if A.mount: x, z, th, dy = (float(v) for v in A.mount.split(",")); BASE.update(x=x, z=z, theta=th, dy=dy)
     global U_BASE; U_BASE = pc.key_y(76) / pc.PITCH + BASE["dy"] / pc.PITCH
     if A.gain != 5.0:
@@ -382,7 +391,7 @@ def main():
     if any(f not in fing for f in range(5)):
         kfr = pc.Keyframer(scene_xml(5.0, keys, False)); home = {0: 72, 1: 74, 2: 76, 3: 77, 4: 79}
         for f in range(5):
-            if f not in fing: default_q[4 * f:4 * f + 4] = kfr.keyframes([(f, home[f])])[(f, home[f])]["hover"]
+            if f not in fing: default_q[4 * f:4 * f + 4] = kfr.keyframes([(f, home[f])], press_x=PRESS_X_F.get(f, pc.PRESS_X))[(f, home[f])]["hover"]
     lead = [0.06] * 5
     plan = Plan(notes, fing, kf, lead, wtu, sag); nN = len(notes); P = np.zeros((nN, 5)); WK = np.zeros((len(plan.knots), 2))
     # --- lead calibration on the nominal plant, in this process (servo lag per finger, like make_theme.py)
@@ -445,12 +454,19 @@ def main():
         t = np.arange(0, plan.T, 0.001); C = np.zeros((len(t), plan.n_dim))
         G_local = dict(default_q=default_q)
         C = plan.commands(P, WK, t)
+        calib = {}
+        if A.wrist == "fixed":       # per-key poses for calibrate_keys.py: each finger's most played key is its home key
+            pk = {}
+            for n, f, k_ in zip(notes, fing, kf): pk.setdefault((f, n["pitch"]), k_)
+            hk = {f: max({m for (g, m) in pk if g == f}, key=lambda m: sum(1 for n, g in zip(notes, fing) if g == f and n["pitch"] == m)) for f in sorted({f for f, _ in pk})}
+            calib = dict(home=np.array(sorted(hk.items())), kf_pairs=np.array(sorted(pk)), kf_hover=np.array([pk[k_]["hover"] for k_ in sorted(pk)]), kf_press=np.array([pk[k_]["press"] for k_ in sorted(pk)]))
         for f in range(5):
             if not plan.byf[f]: C[:, 4 * f:4 * f + 4] = default_q[4 * f:4 * f + 4]
         np.savez_compressed(os.path.join(A.out, "theme_q_1khz.npz"), t=t, q=C.astype(np.float32), lead=np.array(lead), gain=A.gain, P=P, WK=WK,
                             mount=np.array([BASE["x"], BASE["dy"], BASE["z"], BASE["theta"]]), approach="front", rev="hand2_2", wrist=A.wrist,
                             home_hover=C[0, :20], notes=np.array([[n["on"], n["off"], n["pitch"]] for n in notes]), pre_roll=PRE, tempo=1.0,
-                            fing=np.array([[n["pitch"], f] for n, f in zip(notes, fing)]), title=title)
+                            fing=np.array([[n["pitch"], f] for n, f in zip(notes, fing)]), title=title,
+                            press_x=np.array([PRESS_X_F.get(f, pc.PRESS_X) for f in range(5)]), real_limits=bool(LIMITS), **calib)
         pc.write_scene(os.path.join(A.out, "scene.xml"), scene_xml(5.0, range(21, 109), moving))
         write_notes(os.path.join(A.out, "target.mid"), [dict(on=n["on"] + PRE, off=n["off"] + PRE, pitch=n["pitch"], vel=70) for n in notes])
         write_notes(os.path.join(A.out, "sim_played.mid"), [dict(on=e["t"] + PRE, off=e["t"] + PRE + 0.2, pitch=e["pitch"], vel=70) for e in det_nom])

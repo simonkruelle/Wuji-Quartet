@@ -10,6 +10,8 @@ JOINTS = 20
 # joint limits from docs.wuji.tech control-guide joint table (= MJCF ranges), rad
 LO = np.array([-1.187, -1.484, -1.047, -1.047] + [-1.047, -0.698, -1.047, -1.047] * 4)
 HI = np.array([1.291, 0.698, 1.57, 1.57] + [1.57, 0.698, 2.094, 1.57] * 4)
+HI[1] = 0.42; HI[5] = 0.56     # stops measured on our hand, 14 Nov (thumb sideways stalls at 0.44, index sideways at 0.56-0.62): beyond them the motor only pushes
+MAX_EFFORT_A = 1.5             # hard limit set by the team: never ask the hand for more current than this
 
 
 # ------------------------------------------------------------------ fake device
@@ -120,6 +122,7 @@ class Session:
         self.states = []; self._stop = threading.Event(); self.restore = []
 
     def __enter__(self):
+        if self.mode == "mit" and self.effort > MAX_EFFORT_A: raise SystemExit(f"current limit {self.effort} A is above the hard limit of {MAX_EFFORT_A} A: refusing")
         if self.dry:
             self.sdk = None; self.JC = _FakeCmd; self.hand = FakeHand(); self.manager = None; self.nid2i = FakeHand.nid_to_joint_index
             print("[dry-run] fake hand, first-order lag 30 ms")

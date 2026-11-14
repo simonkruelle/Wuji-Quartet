@@ -55,8 +55,12 @@ def hand_paths(root, rev="hand2_2", side="right"):
     return os.path.join(base, "mjcf", f"{side}.xml"), os.path.abspath(os.path.join(base, "meshes", side))
 
 
+# Upper joint stops measured on our real hand (14 Nov, both in-air runs): the shipped model allows 0.698 rad on both.
+REAL_LIMITS = {"r_thumb_cmc_abd": (None, 0.44), "r_index_finger_mcp_abd": (None, 0.60)}
+
+
 def build_scene(root, theta=20.0, mount_x=0.0, mount_z=0.09, mount_dy=PITCH, center_key=76, gain=1.0,
-                key_model="piano", keys=range(21, 109), rev="hand2_2", side="right", timestep=0.002, approach="front"):
+                key_model="piano", keys=range(21, 109), rev="hand2_2", side="right", timestep=0.002, approach="front", limits=None):
     """Scene XML. Mount = hand root (arm flange) at (mount_x, key_y(center_key)+mount_dy, mount_z) in the piano frame
     (origin: key hinge line at A0; +x toward the player, key fronts at x = 0.15; +y toward the treble; z = white key top).
     approach="front": hand comes from the player's side like a pianist, fingers point -x, thumb on the bass side.
@@ -80,6 +84,9 @@ def build_scene(root, theta=20.0, mount_x=0.0, mount_z=0.09, mount_dy=PITCH, cen
     acts = h.find("actuator")
     for a in acts:
         a.set("kp", str(float(a.get("kp")) * gain)); a.set("kv", str(float(a.get("kv")) * math.sqrt(gain)))
+    for name, (lo, hi) in (limits or {}).items():          # narrower joint ranges, e.g. REAL_LIMITS
+        for e, attr in [(j, "range") for j in h.iter("joint") if j.get("name") == name] + [(a, "ctrlrange") for a in acts if a.get("joint") == name]:
+            r = [float(v) for v in e.get(attr).split()]; e.set(attr, f"{r[0] if lo is None else lo} {r[1] if hi is None else hi}")
     act = ET.tostring(acts, encoding="unicode")
     pre = "r_" if side == "right" else "l_"
     excl = "".join(f'<exclude body1="{a}" body2="{b}"/>' for a in (pre + "wrist", pre + "mount") for b in hb if b not in (pre + "wrist", pre + "mount"))
