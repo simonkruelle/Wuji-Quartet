@@ -80,7 +80,11 @@ def save_settings(new):
                 raise ValueError("unknown hand")
         elif k == "sound":
             v = bool(v)
+        if k == "ssh_host" and v != S.get(k):
+            LINK["board"] = dict(state="unknown", text="not checked yet", time=None, found=None, checking=True)
         S[k] = v
+        if k in ("target", "ssh_host"):
+            LINK_KICK.set()                   # check the hand now, not in a minute
     with open(SETTINGS_FILE, "w") as fh:
         json.dump(S, fh, indent=1)
 
@@ -150,6 +154,79 @@ def note_hand_line(line):
         M.set_hand("not_confirmed", "switch-off NOT confirmed")
     elif "all joints limp" in line:
         M.set_hand("confirmed", "off, confirmed")
+
+
+# ------------------------------------------------------------------ is the real hand there? (reads only, never a command to the hand)
+# The robot computer pings the hand's fixed address every few seconds (only while a page is open and no hand job runs), and every job
+# on a real hand reports what it found. The hand on this computer is never pinged: a home Wi-Fi on 192.168.1.x would answer for it.
+LINK = {t: dict(state="unknown", text="not checked yet", time=None, found=None, checking=False) for t in ("local", "board")}
+LINK_KICK = threading.Event()
+SEEN = [0.0]                                        # when a page last asked for /api/state
+HAND_SIDE = {"192.168.1.111": "right", "192.168.1.110": "left"}
+PROBE = ("for a in 192.168.1.111 192.168.1.110; do d=$(ip -o route get $a 2>/dev/null | sed -n 's/.* dev \\([^ ]*\\).*/\\1/p'); "
+         "if ping -c 1 -W 1 $a >/dev/null 2>&1; then echo \"up $a $d\"; else echo \"down $a $d\"; fi; done")
+SSH_DOWN = re.compile(r"ssh: |Connection timed out|Could not resolve|No route to host|Connection refused|Permission denied \(|does not answer")
+
+
+def set_link(target, state, text, found=None):
+    old = LINK[target]
+    keep = old["found"] if state == "ok" and found is None else found
+    LINK[target] = dict(state=state, text=text, time=time.time(), found=keep, checking=False)
+
+
+def note_link_line(target, line):
+    """What a job on a real hand learnt about the connection."""
+    if target not in LINK:
+        return
+    m = re.search(r"found\s+SN=(\S+)\s+\(?(\w+)", line)
+    if m:
+        side = m.group(2).lower() if m.group(2).lower() in ("left", "right") else ""
+        set_link(target, "ok", f"{side or 'a'} hand found", dict(sn=m.group(1), side=side, joints=None))
+    elif (m := re.search(r"(\S+): joints online: (\d+) of 20", line)) and LINK[target]["found"]:
+        LINK[target]["found"]["joints"] = int(m.group(2))
+    elif "no Wuji Hand 2 found" in line:
+        set_link(target, "no_hand", "the hand does not answer: power on? network cable in?")
+    elif target == "board" and SSH_DOWN.search(line):
+        set_link(target, "down", "the robot computer does not answer: is it on, and on Tailscale?")
+
+
+def probe_board():
+    LINK["board"]["checking"] = True
+    try:
+        rc, out, err = ssh_run(PROBE, timeout=20)
+    except Exception:
+        rc, out, err = 255, "", "timeout"
+    if rc != 0 and not out:
+        return set_link("board", "down", "the robot computer does not answer: is it on, and on Tailscale?")
+    up, wifi = [], False
+    for parts in (ln.split() for ln in out.splitlines()):
+        if len(parts) >= 2 and parts[0] == "up":
+            if len(parts) > 2 and parts[2].startswith("wl"):
+                wifi = True                       # 192.168.1.x leaves through Wi-Fi: that is not the cable to the hand
+            else:
+                up.append(HAND_SIDE.get(parts[1], parts[1]))
+    if up:
+        return set_link("board", "ok", " and ".join(up) + " hand answer" + ("" if len(up) > 1 else "s"))
+    if wifi:
+        return set_link("board", "no_hand", "the robot computer reaches 192.168.1.x over Wi-Fi, not over the cable to the hand")
+    set_link("board", "no_hand", "the robot computer answers, the hand does not: power on? network cable in?")
+
+
+def link_loop():
+    last = 0.0
+    while True:
+        kicked = LINK_KICK.wait(2.0)
+        LINK_KICK.clear()
+        if not S["ssh_host"] or not ENV.get("ssh"):
+            continue
+        every = 10 if S["target"] == "board" else 60
+        if not kicked and (time.time() - SEEN[0] > 30 or time.time() - last < every):
+            continue
+        if M.active("hand"):                      # a running hand job reports the connection itself
+            LINK["board"]["checking"] = False
+            continue
+        last = time.time()
+        probe_board()
 
 
 # ------------------------------------------------------------------ retarget (the SBTO optimiser)
@@ -421,6 +498,7 @@ def start_play(req):
 
             def on_line(line):
                 note_hand_line(line)
+                note_link_line(target, line)
                 if "ramping to the start pose" in line:
                     job.phase = "Moving to the start pose"
                 elif "at start pose" in line:
@@ -477,6 +555,7 @@ def start_util(req, which):
     def run(job):
         def on_line(line):
             note_hand_line(line)
+            note_link_line(target, line)
             m = re.match(r"found\s+SN=(\S+)\s+(LEFT|RIGHT|side unknown) hand\s+ip=(\S+)\s+firmware=(\S+)", line)
             if m:
                 meta["hands"].append(dict(sn=m.group(1), side=m.group(2).lower(), ip=m.group(3), firmware=m.group(4)))
@@ -614,6 +693,7 @@ def start_follow(req):
 
         def on_line(line):
             note_hand_line(line)
+            note_link_line(target, line)
             if line.startswith("A "):
                 CAM["actual"] = line
                 del job.log[-1]
@@ -806,7 +886,10 @@ class Handler(BaseHTTPRequestHandler):
                     return self.fail(403, "not served")
                 return self.file(lib.safe_path(rel, (".mp4", ".gif", ".png")))
             if p == "/api/state":
-                return self.send(200, dict(time=time.time(), env=ENV, settings=S, targets=targets(), jobs=M.snapshot(), hand=M.hand,
+                if SEEN[0] == 0.0 or time.time() - SEEN[0] > 30:
+                    LINK_KICK.set()                      # a page opened: check the hand right away
+                SEEN[0] = time.time()
+                return self.send(200, dict(time=time.time(), env=ENV, settings=S, targets=targets(), jobs=M.snapshot(), hand=M.hand, link=LINK,
                                            queue=len(M.queue), camera=dict(running=bool(CAM["job"]), driving=bool(M.active(kind="follow")))))
             if p == "/api/library":
                 lib.plans(fresh=True)                   # after a run ends the page asks here: never an old list
@@ -904,6 +987,11 @@ class Handler(BaseHTTPRequestHandler):
             if p == "/api/play": return self.job(start_play(req))
             if p == "/api/hand/off": return self.job(start_util(req, "off"))
             if p == "/api/hand/info": return self.job(start_util(req, "info"))
+            if p == "/api/hand/link":
+                if (req.get("target") or S["target"]) == "board":
+                    LINK["board"]["checking"] = True
+                    LINK_KICK.set()
+                return self.send(200, dict(ok=True))
             if p == "/api/sync": return self.job(start_sync(req))
             if p == "/api/stop":
                 if req.get("all"):
@@ -991,6 +1079,7 @@ def main():
     ap.add_argument("--no-browser", action="store_true")
     A = ap.parse_args()
     probe_env()
+    threading.Thread(target=link_loop, daemon=True).start()
     local = A.host in ("127.0.0.1", "localhost", "::1")
     if (A.tailscale or not local) and not A.no_token:
         TOKEN = load_token(A.new_token)

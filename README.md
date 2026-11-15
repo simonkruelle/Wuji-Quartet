@@ -51,7 +51,7 @@ The plan is optimised in simulation on five slightly different pianos at once, s
 | Camera | the hand follows your hand in front of the webcam (Sebas's tracking) |
 | Settings | which hand, the robot computer, defaults |
 
-> **Tested on 15 Nov in a browser with the fake hand only.** No page has moved the real hand yet, and the camera page has not seen a live webcam. Details: [docs/STUDIO.md](docs/STUDIO.md).
+> **Tested on 15 Nov in a browser with the fake hand, and Play on the real right hand through the robot computer.** A green band at the top means the real hand answers, red means it does not. Two hands, Teach and Camera have not moved the real hand yet, and the camera page has not seen a live webcam. Details: [docs/STUDIO.md](docs/STUDIO.md).
 
 ## Watch it play
 

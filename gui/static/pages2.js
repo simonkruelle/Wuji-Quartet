@@ -351,11 +351,17 @@ App.pages.settings = {
   },
   paintTargets() {
     clear(this.targets);
-    for (const t of App.state.targets) this.targets.append(h('div', {class: 'opt' + (t.id === App.target ? ' on' : ''), onclick: () => { if (t.real && t.ok === false) return flash(t.help, true); setTarget(t.id); }},
-      h('span', {class: 'radio'}), h('div', {style: {flex: 1}}, h('div', {class: 't', text: t.label}), h('div', {class: 'd', text: t.help}))));
+    for (const t of App.state.targets) {
+      const l = linkOf(t.id), k = linkKind(l);
+      const chip = t.real && !(t.ok === false) ? h('span', {class: 'chip ' + (k === 'unknown' ? 'plain' : k), text: k === 'ok' ? 'connected' : linkHead(l).toLowerCase(), title: linkDetail(l)}) : null;
+      this.targets.append(h('div', {class: 'opt' + (t.id === App.target ? ' on' : ''), onclick: () => { if (t.real && t.ok === false) return flash(t.help, true); setTarget(t.id); }},
+        h('span', {class: 'radio'}), h('div', {style: {flex: 1}}, h('div', {class: 't'}, t.label, chip ? ' ' : null, chip), h('div', {class: 'd', text: t.help}))));
+    }
+    this.linkSig = linkSigOf();
   },
   onTarget() { if (this.targets) this.paintTargets(); },
   update() {
+    if (this.targets && linkSigOf() !== this.linkSig) this.paintTargets();
     const e = App.state.env, yes = (b, y, n) => h('span', {class: 'chip ' + (b ? 'ok' : 'plain'), text: b ? y : n});
     const sig = JSON.stringify(e) + App.state.jobs.filter(j => j.kind === 'hand_info').map(j => j.id + j.state).join();
     if (sig === this.sig) return;

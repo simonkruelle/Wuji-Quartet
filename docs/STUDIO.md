@@ -18,7 +18,7 @@ python gui/app.py --tailscale    # prints a link with a token: open that link on
 
 Starting it needs Python only. Pages that need more say so: MuJoCo to optimise, `wuji-sdk` to drive a hand from this computer, `pip install -r requirements-camera.txt` for the camera.
 
-**Status, 15 Nov 2026: every page was tested with the fake hand in a browser. No page has moved the real hand yet.**
+**Status, 15 Nov 2026: every page was tested with the fake hand in a browser. Play has driven the real right hand through the robot computer (one hand, from the Ode position); Two hands, Teach and Camera have not yet.**
 
 ## Pages
 
@@ -31,6 +31,18 @@ Starting it needs Python only. Pages that need more say so: MuJoCo to optimise, 
 | **Settings** | which hand, the robot computer, default current limits |
 
 The hand (fake, this computer, robot computer) is chosen at the top right and holds for every page.
+
+With a real hand chosen, a band over the page says whether it is there:
+
+| Band | Means |
+|---|---|
+| green, **Hand connected** | the hand answers (the robot computer pings it every 10 s while a page is open; it never sends the hand a command) |
+| red, **Hand not found** | the robot computer answers, the hand does not: power, network cable, eth0 address (`bash scripts/hand_net.sh` there) |
+| red, **Robot computer not reachable** | SSH to the robot computer fails: is it on, and on Tailscale? |
+| grey | not checked yet. **Check now** checks at once; for the hand on this computer it runs Find the hand (reads only), since a home Wi-Fi on 192.168.1.x could answer a ping in the hand's place |
+| blue, **Real hand moving** | a job is driving the hand; Stop is the red button at the top right |
+
+Settings › Find the hand adds the serial number and how many of the 20 joints are online.
 
 ### Any song on one hand: "One hand, simplified"
 

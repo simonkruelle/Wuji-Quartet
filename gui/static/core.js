@@ -167,6 +167,22 @@ function targetSeg() {
   return el;
 }
 function handBusy() { return ((App.state && App.state.jobs) || []).find(j => j.group === 'hand' && (j.state === 'running' || j.state === 'queued')); }
+// Is the real hand there? The server pings it from the robot computer every few seconds; jobs on the hand report what they found.
+function linkOf(id) { return (App.state && App.state.link && App.state.link[id]) || {state: 'unknown', text: 'not checked yet'}; }
+function linkSigOf() { return Object.entries((App.state && App.state.link) || {}).map(([k, v]) => k + v.state + v.text + (v.found ? v.found.joints : '')).join('|'); }
+function linkKind(l) { return l.state === 'ok' ? 'ok' : (l.state === 'no_hand' || l.state === 'down') ? 'bad' : 'unknown'; }
+function linkHead(l) {
+  return {ok: 'Hand connected', bad: l.state === 'down' ? 'Robot computer not reachable' : 'Hand not found', unknown: l.checking ? 'Checking the hand …' : 'Hand not checked yet'}[linkKind(l)];
+}
+function linkDetail(l) {
+  const f = l.found;
+  return (l.state === 'unknown' ? '' : l.text) + (l.state === 'ok' && f && f.joints != null ? ` · ${f.joints} of 20 joints online` : '');
+}
+function checkHand(id) {
+  id = id || App.target;
+  if (id === 'board') return act(async () => { await api('/api/hand/link', {target: id}); if (App.state) App.state.link.board.checking = true; paintHeader(); });
+  return act(async () => { await api('/api/hand/info', {target: id}); flash('Looking for the hand (reads only) …'); });
+}
 
 // ---------------------------------------------------------------- shell
 function buildNav() {
@@ -194,20 +210,39 @@ function show(key, arg) {
 }
 function paintHeader() {
   const t = targetInfo(), sel = $('#handsel'), ts = (App.state && App.state.targets) || [];
-  const sig = ts.map(x => x.id + x.label + x.ok).join();
+  const mark = x => !x.real ? '' : {ok: ' · connected', bad: ' · ' + linkHead(linkOf(x.id)).toLowerCase(), unknown: ''}[linkKind(linkOf(x.id))];
+  const sig = ts.map(x => x.id + x.label + x.ok + mark(x)).join();
   if (sel.dataset.sig !== sig) {
     sel.dataset.sig = sig; clear(sel);
-    for (const x of ts) sel.append(h('option', {value: x.id, text: (x.real ? '● ' : '') + x.label, disabled: x.real && x.ok === false}));
+    for (const x of ts) sel.append(h('option', {value: x.id, text: x.label + mark(x), disabled: x.real && x.ok === false}));
   }
   sel.value = t.id;
   sel.classList.toggle('real', !!t.real);
+  sel.classList.toggle('ok', !!t.real && linkKind(linkOf(t.id)) === 'ok');
+  sel.classList.toggle('bad', !!t.real && linkKind(linkOf(t.id)) === 'bad');
   sel.disabled = !!handBusy();
-  $('#realbar').hidden = !t.real;
-  $('#realbar').textContent = 'REAL HAND · ' + t.label + ' · commands move the physical hand';
   const busy = handBusy();
+  paintLinkBar(t, busy);
   const stop = $('#stopall');
   stop.hidden = !busy;
   if (busy) stop.textContent = busy.stopping ? 'Stopping …' : '■ Stop the hand';
+}
+function paintLinkBar(t, busy) {
+  // The band over the page when a real hand is chosen: green = it answers, red = it does not, blue = it is moving.
+  const bar = $('#realbar');
+  bar.hidden = !t.real;
+  if (!t.real) return;
+  const l = linkOf(t.id), moving = busy && busy.meta.real;
+  const kind = moving ? 'moving' : linkKind(l);
+  const head = moving ? 'Real hand moving' : linkHead(l);
+  const detail = moving ? (busy.phase || '') : [linkDetail(l), l.time ? 'checked ' + ago(l.time) : ''].filter(Boolean).join(' · ');
+  const sig = [kind, head, detail, t.label, l.checking].join('|');
+  if (bar.dataset.sig === sig) return;
+  bar.dataset.sig = sig;
+  bar.className = kind;
+  clear(bar).append(h('b', {text: (kind === 'bad' ? '✕ ' : '● ') + head}), h('span', {text: ' · ' + t.label + (detail ? ' · ' + detail : '')}), h('span', {class: 'grow'}),
+    !moving ? h('a', {text: l.checking ? 'checking …' : 'Check now', title: 'Reads only, never moves the hand', onclick: () => checkHand(t.id)}) : null,
+    h('span', {class: 'tail', text: 'real hand: commands move it'}));
 }
 function paintStatus() {
   const s = App.state; if (!s) return;
@@ -216,8 +251,14 @@ function paintStatus() {
   const t = targetInfo();
   if (busy) set('#st-hand', busy.meta.real ? 'rec' : 'busy', (busy.meta.real ? 'Moving' : 'Fake hand moving') + (busy.phase ? ' · ' + busy.phase : ''));
   else if (s.hand.state === 'not_confirmed') set('#st-hand', 'bad', 'Switch-off NOT confirmed');
-  else if (s.hand.state === 'confirmed') set('#st-hand', 'ok', 'Off · confirmed ' + ago(s.hand.time));
-  else set('#st-hand', '', t.real ? 'Not used yet' : 'Fake hand');
+  else if (t.real) {
+    const l = linkOf(t.id), k = linkKind(l), off = s.hand.state === 'confirmed' ? ' · off, confirmed ' + ago(s.hand.time) : '';
+    set('#st-hand', k === 'unknown' ? '' : k, (k === 'ok' ? 'Connected' : linkHead(l)) + off);
+  }
+  else {                                       // the fake hand is chosen: still say whether the real one is there
+    const b = (s.targets || []).find(x => x.id === 'board'), l = b && linkOf('board'), k = l && linkKind(l);
+    set('#st-hand', '', 'Fake hand' + (k === 'ok' ? ' · real hand connected' : k === 'bad' ? ' · real hand: ' + linkHead(l).toLowerCase() : ''));
+  }
   const comp = s.jobs.filter(j => j.group === 'compute' && (j.state === 'running' || j.state === 'queued'));
   const run = comp.find(j => j.state === 'running');
   if (run) set('#st-compute', 'busy', (run.progress != null ? Math.round(run.progress * 100) + ' %' : 'Running') + (run.eta ? ' · ' + dur(run.eta) + ' left' : '') + (comp.length > 1 ? ' · ' + (comp.length - 1) + ' waiting' : ''));
