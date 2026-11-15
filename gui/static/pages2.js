@@ -1,6 +1,11 @@
 // Pages: Play (one hand, two hands, teach), Camera, Settings.
 'use strict';
 
+// where a plan's hand sits: its middle finger's key and the mount; two plans with the same of both share the position
+const samePlace = (a, b) => a && b && a.side === b.side && a.center === b.center && a.mount && b.mount &&
+  ['x', 'z', 'theta', 'dy'].every(k => Math.abs(a.mount[k] - b.mount[k]) < (k === 'theta' ? 0.5 : 0.002));
+const whiteIdx = m => { let n = 0; for (let k = 21; k < m; k++) if (![1, 3, 6, 8, 10].includes(k % 12)) n++; return n; };
+
 // ---------------------------------------------------------------- a hand run: stage + one status line + result
 function runView(match) {
   const V = {stage: Stage(), status: h('div', {}), rest: [], shown: null};
@@ -97,22 +102,28 @@ App.pages.play = {
       ...field('Current limit', this.effort, 'never above 1.5 A'), ...field('Fingers', this.fingers), ...field('Lead time', this.lead, 'from Start to the first note'),
       ...field('Serial numbers', h('div', {}, this.snA, this.snB), 'two hands of the same side only'), ...field('Two hands', h('div', {class: 'row'}, this.checkBtn, this.checkEl))));
     el.append(...pageHead('Play'),
-      card(null, h('div', {class: 'bar-row'}, this.modeSeg, this.plan, this.pair, this.tempoSeg, h('span', {class: 'grow'}), this.btn), this.teachRow, this.more),
+      card(null, h('div', {class: 'bar-row'}, this.modeSeg, this.plan, this.pair, this.tempoSeg, h('span', {class: 'grow'}), this.btn), this.posLine = h('div', {}), this.teachRow, this.more),
       card(null, this.view.stage.el, fingerLegend()), this.view.status);
     this.onLibrary(); this.setMode(this.mode);
   },
   show(arg) {
-    if (arg && arg.plan) { if (this.mode === 'two') this.setMode('one'); this.fill(arg.plan); this.changed(); }
+    if (arg && arg.plan) {
+      if (this.mode === 'two') this.setMode('one');
+      this.want = arg.plan;                       // a run that just finished may not be in the library yet: keep asking for it
+      this.fill(arg.plan); this.changed();
+      if (!planById(arg.plan)) loadLibrary();
+    }
     this.view.stage.redraw();
   },
   duet() { return (App.lib.duets || []).find(d => d.id === this.pair.value); },
   fill(keep) {
-    const cur = keep || this.plan.value;
-    clear(this.plan);
     const ps = App.lib.plans.filter(p => !p.error && p.playable);
+    let cur = keep || this.plan.value;
+    if (this.want && ps.some(p => p.id === this.want)) { cur = this.want; this.want = null; }
+    clear(this.plan);
     for (const [label, sh] of [['Shared', true], ['This computer', false]]) {
       const g = h('optgroup', {label});
-      for (const p of ps.filter(p => p.shared === sh)) g.append(h('option', {value: p.id, text: p.name + ' · ' + scoreText(p)}));
+      for (const p of ps.filter(p => p.shared === sh)) g.append(h('option', {value: p.id, text: p.name + ' · ' + scoreText(p) + (p.center ? ' · middle finger ' + noteName(p.center) : '')}));
       if (g.children.length) this.plan.append(g);
     }
     this.plan.value = ps.some(p => p.id === cur) ? cur : (ps.some(p => p.id === App.lib.ref_plan) ? App.lib.ref_plan : (ps[0] || {}).id);
@@ -140,6 +151,7 @@ App.pages.play = {
       return;
     }
     const p = planById(this.plan.value); if (!p) return;
+    this.paintPos(p);
     if (this.mode === 'teach') {
       this.ph = phrases(p.notes, 8); if (this.sel >= this.ph.length) this.sel = 0;
       clear(this.phr).append(h('button', {class: 'pill' + (this.sel < 0 ? ' primary' : ''), text: 'All', onclick: () => { this.sel = -1; this.changed(); }}),
@@ -150,6 +162,19 @@ App.pages.play = {
     this.view.stage.idle = sec ? sec.start + 0.6 : 0;
     this.view.setRest([planTrack(p, this.fingers.value)]);
     this.view.stage.redraw();
+  },
+  paintPos(p) {
+    // where the hand has to sit for this plan; a warning when that is not where it plays Ode to Joy
+    const ref = planById(App.lib.ref_plan);
+    clear(this.posLine);
+    if (!p.center) return;
+    const here = `${p.side} hand, middle finger on ${noteName(p.center)}`;
+    if (!ref || p.side !== ref.side || samePlace(p, ref)) return this.posLine.append(h('div', {class: 'oneline', text: here + (samePlace(p, ref) ? ': where it plays Ode to Joy' : '')}));
+    const d = whiteIdx(p.center) - whiteIdx(ref.center);
+    const dy = p.mount.dy - ref.mount.dy;
+    const move = d ? `${Math.abs(d)} white key${Math.abs(d) > 1 ? 's' : ''} to the ${d < 0 ? 'left' : 'right'} of where it plays Ode to Joy`
+      : Math.abs(dy) > 0.002 ? `${Math.round(Math.abs(dy) * 1000)} mm further ${dy > 0 ? 'right' : 'left'} than for Ode to Joy` : 'at another height or angle than for Ode to Joy';
+    this.posLine.append(h('div', {class: 'banner warn', style: {marginTop: '8px'}, text: `This plan needs the ${here}: ${move}. Move the hand first, or pick a plan for the Ode position.`}));
   },
   section() { return this.mode === 'teach' && this.sel >= 0 && this.ph ? this.ph[this.sel] : null; },
   async start() {

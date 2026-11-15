@@ -809,10 +809,13 @@ class Handler(BaseHTTPRequestHandler):
                 return self.send(200, dict(time=time.time(), env=ENV, settings=S, targets=targets(), jobs=M.snapshot(), hand=M.hand,
                                            queue=len(M.queue), camera=dict(running=bool(CAM["job"]), driving=bool(M.active(kind="follow")))))
             if p == "/api/library":
+                lib.plans(fresh=True)                   # after a run ends the page asks here: never an old list
                 return self.send(200, dict(pieces=lib.pieces(), plans=lib.plans(), duets=lib.duets(), recordings=lib.recordings(), detail=planner.DETAIL,
                                            ref_plan=planner.REF_PLAN))
             if p == "/api/piece":
                 pc = lib.piece(q["id"][0])
+                if pc and pc.get("group") != "dataset":
+                    pc["fits"] = planner.fits_fixed(pc["id"], "right") or planner.fits_fixed(pc["id"], "left")
                 return self.send(200, pc) if pc else self.fail(404, "no such piece")
             if p == "/api/positions":
                 return self.send(200, planner.positions(q["piece"][0], q.get("side", ["right"])[0]))
@@ -878,7 +881,14 @@ class Handler(BaseHTTPRequestHandler):
                 return self.send(200, dict(piece=lib.import_midi(name, raw)))
             req = json.loads(raw or b"{}")
             if p == "/api/excerpt":
-                return self.send(200, dict(piece=lib.excerpt(req["piece"], req.get("start", 0), req.get("length", 20), req.get("mode", "melody"))))
+                args = (req["piece"], req.get("start", 0), req.get("length", 20), req.get("mode", "onehand"), req.get("tempo", 1.0), req.get("at_once", 1))
+                part = req.get("part") or None
+                if part is not None and not re.fullmatch(r"\d{1,3}:\d{1,2}", str(part)):
+                    raise ValueError("unknown part")
+                if req.get("preview"):                  # what the excerpt would be, without saving it: for Listen and the numbers
+                    notes, info = lib.cut(*args, part=part, hand=req.get("hand") or None)
+                    return self.send(200, dict(notes=notes, info=info))
+                return self.send(200, dict(piece=lib.excerpt(*args, part=part, hand=req.get("hand") or None)))
             if p == "/api/estimate":
                 out = planner.estimate(req)
                 try:
@@ -951,6 +961,25 @@ def tailscale_address():
     return ip, name
 
 
+def load_token(new=False):
+    """The token other computers need. Kept in out/gui/token so a restart keeps the links (and browser cookies) working;
+    --new-token makes a new one, which ends every link given out before."""
+    path = os.path.join(REPO, "out", "gui", "token")
+    if not new:
+        try:
+            with open(path) as fh:
+                t = fh.read().strip()
+            if re.fullmatch(r"[A-Za-z0-9_-]{12,64}", t):
+                return t
+        except OSError:
+            pass
+    t = secrets.token_urlsafe(12)
+    os.makedirs(os.path.dirname(path), exist_ok=True)
+    with open(os.open(path, os.O_WRONLY | os.O_CREAT | os.O_TRUNC, 0o600), "w") as fh:
+        fh.write(t + "\n")
+    return t
+
+
 def main():
     global TOKEN
     ap = argparse.ArgumentParser(description="Wuji Quartet Studio")
@@ -958,12 +987,13 @@ def main():
     ap.add_argument("--tailscale", action="store_true", help="also reachable from your other Tailscale devices (and only from those); they need the token link that is printed")
     ap.add_argument("--host", default="127.0.0.1", help="address to listen on (default: this computer only). Anything else asks other computers for a token")
     ap.add_argument("--no-token", action="store_true", help="with --host: no token (only behind a port that is itself private, as ./wq gui on a Mac)")
+    ap.add_argument("--new-token", action="store_true", help="a new token: the links given out before stop working (the token is otherwise kept across restarts)")
     ap.add_argument("--no-browser", action="store_true")
     A = ap.parse_args()
     probe_env()
     local = A.host in ("127.0.0.1", "localhost", "::1")
     if (A.tailscale or not local) and not A.no_token:
-        TOKEN = secrets.token_urlsafe(12)
+        TOKEN = load_token(A.new_token)
     srv = Server((A.host, A.port), Handler)
     names = {"127.0.0.1", "localhost"}
     if not local:

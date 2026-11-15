@@ -42,6 +42,30 @@ def _five_from_plan(p):
     return (five, also) if len(set(five)) == 5 else None
 
 
+def proven_hands(side="right"):
+    """Hand positions (level mount, wrist fixed) that shared plans use: what a simplified song should prefer.
+    -> [dict(keys, five, also, stretch, source)], keys = five plus the keys a finger also takes."""
+    out, seen = [], set()
+    for p in sorted(lib.plans(), key=lambda p: (p["id"] != REF_PLAN, -p.get("hw_runs", 0), p["id"])):
+        if p.get("error") or not p.get("shared") or p.get("wrist") != "fixed" or p.get("side") != side or not p.get("level"):
+            continue
+        fa = _five_from_plan(p)
+        if not fa:
+            continue
+        five, also = fa
+        extra = [int(a.split(":")[0]) for a in also]
+        keys = tuple(sorted(set(five) | set(extra)))
+        if keys not in seen:
+            seen.add(keys)
+            out.append(dict(keys=list(keys), five=five, also=also, stretch=extra, plan=p["id"], source=p.get("title") or p["name"]))
+    return out
+
+
+def fits_fixed(piece_id, side="right"):
+    """True if a hand that stays in place reaches every key of the piece (not counting the old tilted mount)."""
+    return any(not o["legacy"] for o in positions(piece_id, side)["positions"])
+
+
 def _describe(five, also, side):
     names = [lib.note_name(k) for k in five]
     extra = ""

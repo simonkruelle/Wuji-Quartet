@@ -12,6 +12,8 @@ venv/
 .vscode/
 # the studio: this computer's settings, the downloaded hand model (8 MB, scripts/camera_track.py --fetch-model)
 gui/settings.local.json
+# Library › Mine: MIDI files you import and parts you cut stay on this computer (imports are often someone else's arrangement)
+assets/library/
 assets/mediapipe/
 # by-products of rendering inside a plan folder (shared videos live in docs/media)
 plans/**/duet_*.mp4

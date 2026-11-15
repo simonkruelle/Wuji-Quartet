@@ -45,7 +45,7 @@ The plan is optimised in simulation on five slightly different pianos at once, s
 
 | Page | |
 |---|---|
-| Library | our 17 pieces, and the 153 performances of the FürElise dataset: cut an excerpt, then retarget it |
+| Library | our 17 pieces, 14 Christmas songs, the 153 performances of the FürElise dataset and your own MIDI files: cut a part, simplify it for one hand, with chords of two or three keys if you like (plays on the real hand without an arm), then retarget it |
 | Retarget | the search; tries, rounds and wrist knots under More |
 | Play | one hand · two hands · Teach. Stop is always in the top bar |
 | Camera | the hand follows your hand in front of the webcam (Sebas's tracking) |
@@ -355,6 +355,7 @@ Wuji-Quartet/
 ├── <a href="assets/">assets/</a>
 │   ├── wuji-description/   Hand 2.1 and 2.2: MuJoCo model, URDF, right-hand meshes, Hand 2.2 left-hand meshes, flange drawings
 │   ├── melodies/ · duets/  tunes for one hand · one MIDI file per hand for two hands
+│   ├── songs/              14 Christmas songs, verse 1, tune as part 1 (public domain / CC0; <a href="assets/songs/README.md">list</a>)
 │   ├── furelise/15/        K.265 MIDI and the pianist's wrist path
 │   ├── fur_elise_beethoven/   Für Elise MIDI
 │   └── ode_to_joy/         Ode to Joy MIDI, left-hand chords for a duet
@@ -366,8 +367,8 @@ Wuji-Quartet/
 | Limit | Detail |
 |---|---|
 | Left hand | simulation only: the left model is an exact mirror of the right one; no real left hand has confirmed it |
-| One line per hand | each hand plays one melodic line; a piece for two hands is two plans |
-| Fixed wrist reaches seven white keys | B4 to A5, no black keys; anything wider needs `--wrist plan` (a moving wrist, so an arm) |
+| One line per hand | each hand plays its tune, plus up to two chord notes (one key per finger); a piece for two hands is two plans |
+| Fixed wrist reaches five neighbouring keys | six with the thumb's stretch; a wider song is simplified for one hand in the studio, or needs `--wrist plan` (a moving wrist, so an arm) |
 | Moving wrist is an ideal arm | three stiff sliding axes stand in for the arm; no real arm model |
 | Für Elise "wrong" notes | about half of the 8 are the right key, 50 to 70 ms off |
 | K.265 ending | the last three-note turn (100 ms per note) never plays |
@@ -395,6 +396,7 @@ Wuji-Quartet/
 | Hand model in `assets/wuji-description` | [wuji-technology/wuji-description](https://github.com/wuji-technology/wuji-description), cloned 10 Nov 2026, subset | MIT, © 2025 Wuji Technology ([LICENSE](assets/wuji-description/LICENSE)) |
 | K.265 MIDI and wrist path in `assets/furelise/15`; the MIDI of all 153 performances in `assets/furelise/midi` | [FürElise dataset](https://huggingface.co/datasets/rcwang/for_elise) ([paper](https://arxiv.org/abs/2410.05791)) | CC BY-NC 4.0: **non-commercial use only** |
 | `assets/fur_elise_beethoven/fur_elise.mid` | [Mutopia Project](https://www.mutopiaproject.org/) | public domain |
+| `assets/songs/` (14 Christmas songs) | Wikimedia Commons settings by Rabanus Flavus; Open Hymnal Project ([list with links](assets/songs/README.md)) | CC0 or public domain; every melody is public domain |
 | Piano key model | constants from [RoboPianist](https://github.com/google-research/robopianist) | Apache 2.0 |
 | Hand control | [wuji-sdk](https://github.com/wuji-technology/wuji-sdk) · [Wuji Hand 2 docs](https://docs.wuji.tech/docs/en/wuji-hand/latest/) | |
 | Hand tracking in the camera page | [MediaPipe Hand Landmarker](https://ai.google.dev/edge/mediapipe/solutions/vision/hand_landmarker), downloaded on first use | Apache 2.0 |

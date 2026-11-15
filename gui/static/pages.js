@@ -49,7 +49,9 @@ App.pages.library = {
     this.groupEl = h('div', {});
     this.list = h('div', {class: 'rows'});
     this.detail = h('div', {});
-    el.append(h('div', {class: 'split'}, h('div', {class: 'pane'}, this.groupEl, this.search, this.list), this.detail));
+    this.importIn = h('input', {type: 'file', accept: '.mid,.midi,audio/midi', style: {display: 'none'}, onchange: () => this.importFile()});
+    el.append(h('div', {class: 'split'}, h('div', {class: 'pane'}, this.groupEl, this.search, this.list,
+      h('a', {class: 'oneline', text: '+ Import a MIDI file', title: 'Saved to assets/library/ on this computer', onclick: () => this.importIn.click()}), this.importIn), this.detail));
     this.onLibrary();
   },
   hide() { stopListening(); },
@@ -57,13 +59,15 @@ App.pages.library = {
   onLibrary() {
     if (!this.list || !App.lib) return;
     const n = g => App.lib.pieces.filter(p => p.group === g).length;
-    clear(this.groupEl).append(seg([['one', 'Ours'], ['two', 'Duets'], ['dataset', 'Pianists ' + n('dataset')], ...(n('imported') ? [['imported', 'Excerpts ' + n('imported')]] : [])],
-      this.group, v => { this.group = v; this.paintList(); }));
+    const songs = App.lib.pieces.filter(p => p.group === 'songs'), xmas = songs.length && songs.every(p => p.kind === 'christmas');
+    const tabs = [['one', 'Ours'], ['two', 'Duets'], ['songs', xmas ? 'Christmas' : 'Sing-along'], ['dataset', 'Pianists'], ['imported', 'Mine']].filter(([g]) => n(g) || g === 'one');
+    clear(this.groupEl).append(seg(tabs.map(([g, label]) => [g, label + (g === 'dataset' ? ' ' + n(g) : '')]), this.group, v => { this.group = v; this.paintList(); }));
     this.paintList(); this.paintDetail();
   },
   pick(id) {
     const p = pieceById(id); if (!p) return;
     this.sel = id;
+    if (this.q && !(p.title + ' ' + (p.composer || '')).toLowerCase().includes(this.q)) { this.q = ''; this.search.value = ''; }
     if (p.group !== this.group) { this.group = p.group; this.onLibrary(); } else { this.paintList(); this.paintDetail(); }
   },
   paintList() {
@@ -71,7 +75,7 @@ App.pages.library = {
     clear(this.list);
     for (const p of ps) this.list.append(h('div', {class: 'lrow' + (p.id === this.sel ? ' on' : ''), onclick: () => { this.sel = p.id; this.paintList(); this.paintDetail(); }},
       h('div', {class: 't', text: p.title}),
-      h('div', {class: 'd', text: [p.composer, mmss(p.duration), p.plans.length ? p.plans.length + (p.plans.length > 1 ? ' plans' : ' plan') : null].filter(Boolean).join(' · ')})));
+      h('div', {class: 'd', text: [p.version || p.composer, mmss(p.duration), p.plans.length ? p.plans.length + (p.plans.length > 1 ? ' plans' : ' plan') : null].filter(Boolean).join(' · ')})));
     this.showLocal = false;
     if (!ps.length) this.list.append(h('div', {class: 'lrow'}, h('div', {class: 'd', text: 'Nothing here.'})));
   },
@@ -83,7 +87,7 @@ App.pages.library = {
     if (!p || this.sel !== id) return;
     clear(this.detail);
     let cursor = null;
-    const facts = [p.composer, p.n_notes + ' notes', mmss(p.duration), noteName(p.lo) + '–' + noteName(p.hi)].filter(Boolean).join(' · ');
+    const facts = [p.version, p.composer, p.n_notes + ' notes', mmss(p.duration), noteName(p.lo) + '–' + noteName(p.hi), p.licence ? p.licence.split(':')[0] : null].filter(Boolean).join(' · ');
     if (p.group === 'dataset') return this.paintDataset(p, facts);
     const rl = roll(p.notes, {cursor: () => cursor});
     const rank = x => [x.id !== App.lib.ref_plan, !x.playable, !x.level, x.stroke_ms < 60, !x.hw_runs, x.name];
@@ -94,9 +98,12 @@ App.pages.library = {
     if (local.length && (this.showLocal || !shared.length)) for (const x of local) list.append(this.planRow(x));
     else if (local.length) list.append(h('a', {class: 'oneline', style: {display: 'block'}, text: `+ ${local.length} on this computer only`, onclick: () => { this.showLocal = true; this.paintDetail(); }}));
     this.detail.append(card(null,
-      h('div', {class: 'page-head'}, h('div', {}, h('h2', {class: 'pt', text: p.title}), h('div', {class: 'facts', text: facts + (p.human_wrist ? ' · pianist\'s wrist path known' : '')})),
+      h('div', {class: 'page-head'}, h('div', {}, h('h2', {class: 'pt', text: p.title}), h('div', {class: 'facts', text: facts + (p.human_wrist ? ' · pianist\'s wrist path known' : '')}),
+        p.lyrics ? h('div', {class: 'facts', style: {fontStyle: 'italic'}, text: '“' + p.lyrics + ' …”'}) : null),
         h('div', {class: 'actions'}, listenButton(async () => p.notes, t => { cursor = t; rl.draw(); }), h('button', {class: 'pill primary', text: 'Retarget ›', onclick: () => show('retarget', {piece: p.id})}))),
-      rl, h('h3', {text: 'Plans', style: {margin: '16px 0 0', fontSize: '15px'}}), list));
+      rl, h('h3', {text: 'Plans', style: {margin: '16px 0 0', fontSize: '15px'}}), list,
+      p.fits === false ? h('details', {class: 'disclosure', open: !plans.some(x => x.playable)},
+        h('summary', {text: 'Too wide for one hand in place: simplify it for one hand'}), h('div', {}, ...this.cutPanel(p, false))) : null));
   },
   planRow(x) {
     const open = this.open === x.id;
@@ -116,27 +123,87 @@ App.pages.library = {
     return row;
   },
   paintDataset(p, facts) {
-    // a recorded performance: minutes long, two hands. The robot learns an excerpt of it.
-    const ex = this.ex && this.ex.id === p.id ? this.ex : (this.ex = {id: p.id, start: 0, length: 20, mode: 'melody'});
-    let cursor = null;
-    const sel = () => p.notes.filter(n => n[0] >= ex.start && n[0] < ex.start + ex.length && (ex.mode === 'all' || n[2] >= 60));
-    const rl = roll(p.notes, {select: [ex.start, ex.start + ex.length], cursor: () => (cursor == null ? null : ex.start + cursor)});
-    const info = h('span', {class: 'oneline', style: {marginTop: 0}});
-    const paint = () => { info.textContent = `${sel().length} notes · ${mmss(ex.start)}–${mmss(Math.min(p.duration, ex.start + ex.length))}`; rl.draw(); };
-    const start = slider(0, Math.max(0, Math.floor(p.duration - 5)), 1, ex.start, v => mmss(v), v => { stopListening(); ex.start = v; paint(); });
-    const lseg = seg([[10, '10 s'], [20, '20 s'], [40, '40 s']], ex.length, v => { stopListening(); ex.length = parseFloat(v); paint(); });
-    const mseg = seg([['melody', 'Right-hand melody'], ['all', 'All notes']], ex.mode, v => { stopListening(); ex.mode = v; paint(); });
-    const go = h('button', {class: 'pill primary', text: 'Make the excerpt › Retarget', onclick: () => act(async () => {
-      const r = await api('/api/excerpt', {piece: p.id, start: ex.start, length: ex.length, mode: ex.mode});
+    // a recorded performance: minutes long, two hands. The robot learns a part of it.
+    this.detail.append(card(null,
+      h('div', {class: 'page-head'}, h('div', {}, h('h2', {class: 'pt', text: p.title}), h('div', {class: 'facts', text: facts + ' · FürElise piece ' + p.dataset_id}))),
+      ...this.cutPanel(p, true)));
+  },
+  cutPanel(p, withRoll) {
+    // a part of a piece, in one of three versions. "One hand" fits it into the keys the real hand reaches without an arm.
+    const short = p.duration <= 75;
+    const ex = this.ex && this.ex.id === p.id ? this.ex : (this.ex = {id: p.id, start: 0, length: short ? 0 : 20, mode: 'onehand', tempo: 1, at_once: 1, part: p.tune || '', hand: ''});
+    const len = () => ex.length || Math.min(180, p.duration - ex.start + 0.5);      // 0 = to the end (at most 3 minutes)
+    const sel = [0, 0];
+    let cursor = null, prev = null, token = 0;
+    const rl = withRoll ? roll(p.notes, {select: sel, cursor: () => (cursor == null ? null : ex.start + cursor * (ex.mode === 'onehand' ? ex.tempo : 1))}) : null;
+    const outEl = h('div', {style: {marginTop: '10px'}});
+    const info = h('div', {class: 'oneline'});
+    const tempoRow = h('div', {class: 'form', style: {marginTop: '8px', gridTemplateColumns: '70px minmax(0,1fr)'}});
+    const go = h('button', {class: 'pill primary', text: 'Make it › Retarget', disabled: true, onclick: () => act(async () => {
+      const r = await api('/api/excerpt', {piece: p.id, start: ex.start, length: len(), mode: ex.mode, tempo: ex.tempo, at_once: ex.at_once, part: ex.mode === 'all' ? null : ex.part || null, hand: ex.hand || null});
       await loadLibrary(); show('retarget', {piece: r.piece});
     })});
-    this.detail.append(card(null,
-      h('div', {class: 'page-head'}, h('div', {}, h('h2', {class: 'pt', text: p.title}), h('div', {class: 'facts', text: facts + ' · FürElise piece ' + p.dataset_id})),
-        h('div', {class: 'actions'}, listenButton(async () => sel().map(n => [n[0] - ex.start, n[1] - ex.start, n[2]]), t => { cursor = t; rl.draw(); }))),
-      rl,
-      h('div', {class: 'form', style: {marginTop: '12px', gridTemplateColumns: '70px minmax(0,1fr)'}}, ...field('From', start), ...field('Length', lseg), ...field('Notes', mseg)),
-      h('div', {class: 'bar-row', style: {marginTop: '12px'}}, go, info)));
-    paint();
+    const listenB = listenButton(async () => prev && prev.notes, t => { cursor = t; if (rl) rl.draw(); if (outEl.rl) outEl.rl.draw(); });
+    const whiteIdx = m => { let n = 0; for (let k = 21; k < m; k++) if (![1, 3, 6, 8, 10].includes(k % 12)) n++; return n; };
+    const describe = r => {
+      const i = r.info, k = i.keys, lo = noteName(k[0]), hi = noteName(k[k.length - 1]);
+      if (i.mode === 'onehand') {
+        return `${i.n_notes} notes on ${lo}–${hi}` + (i.chords ? ` · ${i.chords} chords` : '') + ` · ${Math.round(i.steps * 100)} % of the steps exact` +
+          (i.jumps ? ` · the tune moves key ${i.jumps}×` : '') + (i.dropped ? ` · ${i.dropped} too fast, left out` : '') +
+          (i.hand.proven ? ` · hand where it sits for ${i.hand.source}` : ' · a new hand position: simulation first');
+      }
+      const five = k.every(m => ![1, 3, 6, 8, 10].includes(m % 12)) && whiteIdx(k[k.length - 1]) - whiteIdx(k[0]) <= 4;
+      return `${i.n_notes} notes on ${lo}–${hi}` + (five ? ' · fits one hand' : ' · wider than one hand: the wrist has to move (simulation only, needs an arm)');
+    };
+    const refresh = () => {
+      stopListening();
+      sel[0] = ex.start; sel[1] = ex.start + len();
+      if (rl) rl.draw();
+      clear(tempoRow).append(...(ex.mode === 'onehand' ? [
+        ...field('At once', seg([[1, 'One key'], [2, 'Up to 2'], [3, 'Up to 3']], ex.at_once, v => { ex.at_once = v; refresh(); })),
+        ...field('Hand', seg([['', 'Best fit', false, 'The hand position where most of the tune keeps its pitch: the hand may have to be moved'],
+          [App.lib.ref_plan, 'Like Ode (real hand)', false, 'C5–G5: where the real hand already played Ode to Joy, Jingle Bells and Saints']], ex.hand, v => { ex.hand = v; refresh(); })),
+        ...field('Tempo', seg([[1, 'As played'], [0.75, '75 %'], [0.5, '50 %']], ex.tempo, v => { ex.tempo = v; refresh(); }))] : []));
+      const my = ++token;
+      go.disabled = true; info.textContent = '…';
+      clearTimeout(this.cutT);
+      this.cutT = setTimeout(async () => {
+        let r;
+        try { r = await api('/api/excerpt', {piece: p.id, start: ex.start, length: len(), mode: ex.mode, tempo: ex.tempo, at_once: ex.at_once, part: ex.mode === 'all' ? null : ex.part || null, hand: ex.hand || null, preview: true}); }
+        catch (e) { if (my === token) { prev = null; info.textContent = e.message; clear(outEl); } return; }
+        if (my !== token) return;
+        prev = r; go.disabled = false;
+        info.textContent = describe(r);
+        outEl.rl = roll(r.notes, {cursor: () => cursor, color: ex.mode === 'onehand' ? '#30a46c' : undefined});
+        clear(outEl).append(outEl.rl);
+      }, 150);
+    };
+    const start = slider(0, Math.max(0, Math.floor(p.duration - 2)), 1, ex.start, v => mmss(v), v => { ex.start = v; refresh(); });
+    const lseg = seg([[10, '10 s'], [20, '20 s'], [40, '40 s'], [0, 'To the end']], ex.length, v => { ex.length = v; refresh(); });
+    const mseg = seg([['onehand', 'One hand, simplified', false, 'Fitted into the keys one hand reaches with the wrist in place: plays on the real hand'],
+      ['melody', 'Melody', false, 'The top line as played: usually needs a moving wrist'], ['all', 'All notes', false, 'Both hands: needs a moving wrist']], ex.mode, v => { ex.mode = v; refresh(); });
+    // a band arrangement: which instrument plays the tune (the guess is marked; Listen tells)
+    const tune = p.parts ? h('select', {onchange: () => { ex.part = tune.value; refresh(); }},
+      h('option', {value: '', text: 'All instruments: the highest line'}),
+      p.parts.map(t => h('option', {value: t.part, text: (t.part === p.tune ? '♪ ' : '') + t.instrument + (t.name && t.name.toLowerCase() !== t.instrument ? ' "' + t.name + '"' : '') +
+        ` · ${t.n} notes · ${noteName(t.lo)}–${noteName(t.hi)}` + (t.part === p.tune ? ' · probably the tune' : '')}))) : null;
+    if (tune) tune.value = ex.part;
+    refresh();
+    return [rl, h('div', {class: 'form', style: {marginTop: '12px', gridTemplateColumns: '70px minmax(0,1fr)'}},
+      ...field('From', start), ...field('Length', lseg), ...(tune ? field('Tune', tune) : []), ...field('Version', mseg)), tempoRow,
+      outEl, info, h('div', {class: 'bar-row', style: {marginTop: '12px'}}, listenB, go)].filter(Boolean);
+  },
+  async importFile() {
+    const f = this.importIn.files[0];
+    this.importIn.value = '';
+    if (!f) return;
+    const r = await act(async () => {
+      const res = await fetch('/api/import?name=' + encodeURIComponent(f.name), {method: 'POST', headers: {'X-WQ': '1', 'Content-Type': 'audio/midi'}, body: await f.arrayBuffer()});
+      const d = await res.json().catch(() => null);
+      if (!res.ok) throw new Error((d && d.error) || 'Import failed: ' + res.status);
+      return d;
+    });
+    if (r) { await loadLibrary(); this.pick(r.piece); flash('Imported ' + f.name); }
   },
 };
 
@@ -200,9 +267,9 @@ App.pages.retarget = {
     if (!this.pieceSel || !App.lib) return;
     const ps = App.lib.pieces.filter(p => p.group !== 'dataset');
     clear(this.pieceSel);
-    for (const [label, grp] of [['Ours', 'one'], ['Two hands', 'two'], ['Excerpts', 'imported']]) {
+    for (const [label, grp] of [['Ours', 'one'], ['Two hands', 'two'], ['Christmas and sing-along', 'songs'], ['Mine', 'imported']]) {
       const g = h('optgroup', {label});
-      for (const p of ps.filter(p => p.group === grp)) g.append(h('option', {value: p.id, text: p.title}));
+      for (const p of ps.filter(p => p.group === grp)) g.append(h('option', {value: p.id, text: p.title + (p.version ? ' · ' + p.version : '')}));
       if (g.children.length) this.pieceSel.append(g);
     }
     if (!ps.some(p => p.id === this.f.piece)) this.f.piece = ps[0] ? ps[0].id : null;
@@ -289,7 +356,7 @@ App.pages.retarget = {
   },
   update() {
     const jobs = App.state.jobs.filter(j => j.kind === 'retarget').slice(0, 5);
-    const sig = jobs.map(j => j.id + j.state + j.phase + Math.round((j.progress || 0) * 200) + (j.stopping ? 's' : '')).join();
+    const sig = jobs.map(j => j.id + j.state + j.phase + Math.round((j.progress || 0) * 200) + (j.stopping ? 's' : '') + (planById(j.meta.plan) ? 'p' : '')).join();
     if (sig === this.sig) return;
     this.sig = sig;
     clear(this.runs);
@@ -304,7 +371,7 @@ App.pages.retarget = {
         progressBar(j),
         h('span', {class: 'row tight'}, h('a', {text: 'Log', onclick: () => openLog(j.id)}),
           live ? h('button', {class: 'pill', text: j.stopping ? 'Stopping …' : 'Stop', disabled: j.stopping, onclick: () => act(() => api('/api/stop', {id: j.id}))})
-            : j.state === 'done' ? h('button', {class: 'pill primary', text: '▶ Play', onclick: () => show('play', {plan: m.plan})}) : null)));
+            : j.state === 'done' && planById(m.plan) && planById(m.plan).playable ? h('button', {class: 'pill primary', text: '▶ Play', onclick: () => show('play', {plan: m.plan})}) : null)));
     }
     this.runs.append(c);
   },
