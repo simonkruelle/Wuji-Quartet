@@ -28,28 +28,28 @@ The plan is optimised in simulation on five slightly different pianos at once, s
 
 ## The studio
 
-<p align="center"><img src="docs/studio/retarget.png" width="880" alt="The studio's Retarget page: piece, hand position, search detail, a time estimate of 16 minutes and a running search"></p>
+<p align="center"><img src="docs/studio/library.png" width="880" alt="The studio's library: pieces on the left, the selected piece with its notes and its plans on the right"></p>
 
-**Pick a piece → listen → retarget → play, in one window.** `python gui/app.py` opens it in the browser.
+**Pick a piece → listen → retarget → play, in one window.** `python gui/app.py` opens it in the browser; `--tailscale` makes it reachable from your other devices.
 
 <table>
   <tr>
-    <td width="50%"><img src="docs/studio/play.png" alt="Play page: notes fall onto a keyboard in step with the hand, coloured by finger"></td>
-    <td width="50%"><img src="docs/studio/teach.png" alt="Teach page: phrase 3 of 7 at half speed, three rounds"></td>
+    <td width="50%"><img src="docs/studio/retarget.png" alt="Retarget: piece, hand, how detailed the search is, and the time it will take"></td>
+    <td width="50%"><img src="docs/studio/play.png" alt="Play: two hands, notes falling onto the keyboard in step with the hands"></td>
   </tr>
   <tr>
-    <td><strong>Play</strong>: one hand or two. The fake hand first, with sound; the real hand after one question.</td>
-    <td><strong>Teach</strong>: the hand sits higher and presses your fingers through a phrase, slowly, several times.</td>
+    <td><strong>Retarget</strong>: Reuse, Draft, Standard or Fine. The time comes before you start.</td>
+    <td><strong>Play</strong>: one hand, two hands, or Teach (a phrase, slowly, several times).</td>
   </tr>
 </table>
 
-| Page | What it does |
+| Page | |
 |---|---|
-| Library | 17 pieces with a sound preview · every plan with its scores and video |
-| Retarget | the search, as detailed as you have time for: tries per round, rounds, wrist knots. The time estimate comes before you start |
-| Play · Teach | the plan on the hand, with Stop always in the top bar |
-| Camera | the hand follows your hand in front of the webcam (Sebas's tracking, our hand limits) |
-| Arm and hand | not built yet |
+| Library | our 17 pieces, and the 153 performances of the FürElise dataset: cut an excerpt, then retarget it |
+| Retarget | the search; tries, rounds and wrist knots under More |
+| Play | one hand · two hands · Teach. Stop is always in the top bar |
+| Camera | the hand follows your hand in front of the webcam (Sebas's tracking) |
+| Settings | which hand, the robot computer, defaults |
 
 > **Tested on 15 Nov in a browser with the fake hand only.** No page has moved the real hand yet, and the camera page has not seen a live webcam. Details: [docs/STUDIO.md](docs/STUDIO.md).
 
@@ -382,7 +382,7 @@ Wuji-Quartet/
 
 | What | Size | Get it |
 |---|---|---|
-| The pianist's full motion capture (K.265) | 590 MB | `python scripts/furelise_peek.py assets/furelise`. Only needed to recompute the wrist path; the result is already in `assets/furelise/15/wrist_u.npz` |
+| The pianists' motion capture | 50 GB for all 153 pieces (median 278 MB each); K.265 is 590 MB | `python scripts/furelise_peek.py assets/furelise` fetches K.265. Only needed to recompute a wrist path; K.265's is already in `assets/furelise/15/wrist_u.npz` |
 | Left-hand meshes, USD files, full-hand STEP files | 400 MB | `git clone --depth 1 https://github.com/wuji-technology/wuji-description` |
 | MediaPipe hand model for the camera page | 8 MB | the button on the Camera page, or `python scripts/camera_track.py --fetch-model` |
 
@@ -393,7 +393,7 @@ Wuji-Quartet/
 | Part | From | Licence |
 |---|---|---|
 | Hand model in `assets/wuji-description` | [wuji-technology/wuji-description](https://github.com/wuji-technology/wuji-description), cloned 10 Nov 2026, subset | MIT, © 2025 Wuji Technology ([LICENSE](assets/wuji-description/LICENSE)) |
-| K.265 MIDI and wrist path in `assets/furelise/15` | [FürElise dataset](https://huggingface.co/datasets/rcwang/for_elise), piece 15 ([paper](https://arxiv.org/abs/2410.05791)) | CC BY-NC 4.0: **non-commercial use only** |
+| K.265 MIDI and wrist path in `assets/furelise/15`; the MIDI of all 153 performances in `assets/furelise/midi` | [FürElise dataset](https://huggingface.co/datasets/rcwang/for_elise) ([paper](https://arxiv.org/abs/2410.05791)) | CC BY-NC 4.0: **non-commercial use only** |
 | `assets/fur_elise_beethoven/fur_elise.mid` | [Mutopia Project](https://www.mutopiaproject.org/) | public domain |
 | Piano key model | constants from [RoboPianist](https://github.com/google-research/robopianist) | Apache 2.0 |
 | Hand control | [wuji-sdk](https://github.com/wuji-technology/wuji-sdk) · [Wuji Hand 2 docs](https://docs.wuji.tech/docs/en/wuji-hand/latest/) | |

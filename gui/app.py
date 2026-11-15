@@ -579,7 +579,7 @@ def camera_cmd(cmd):
     job = CAM["job"]
     if not job or not job.proc or job.proc.poll() is not None:
         raise ValueError("the camera is not running")
-    allowed = {k: cmd[k] for k in ("pause", "calibrate", "thumb", "flip_spread", "alpha", "quit") if k in cmd}
+    allowed = {k: cmd[k] for k in ("pause", "calibrate", "thumb", "flip_spread", "alpha", "quit", "driving") if k in cmd}
     job.proc.stdin.write(json.dumps(allowed) + "\n")
     job.proc.stdin.flush()
 
@@ -620,6 +620,10 @@ def start_follow(req):
             elif line.startswith("following:"):
                 job.phase = "The hand follows the camera"
                 CAM["sink"] = job.proc.stdin
+                try:
+                    camera_cmd(dict(driving=True))
+                except Exception:
+                    pass
             elif "switched off: confirmed" in line:
                 got["off"] = True
         try:
@@ -627,6 +631,10 @@ def start_follow(req):
         finally:
             CAM["sink"] = None
             CAM["actual"] = None
+            try:
+                camera_cmd(dict(driving=False))
+            except Exception:
+                pass
         if not got["off"]:
             M.set_hand("not_confirmed", "switch-off not seen")
             job.say("[studio] the switch-off was not confirmed: press 'Switch the hand off'")
@@ -803,6 +811,9 @@ class Handler(BaseHTTPRequestHandler):
             if p == "/api/library":
                 return self.send(200, dict(pieces=lib.pieces(), plans=lib.plans(), duets=lib.duets(), recordings=lib.recordings(), detail=planner.DETAIL,
                                            ref_plan=planner.REF_PLAN))
+            if p == "/api/piece":
+                pc = lib.piece(q["id"][0])
+                return self.send(200, pc) if pc else self.fail(404, "no such piece")
             if p == "/api/positions":
                 return self.send(200, planner.positions(q["piece"][0], q.get("side", ["right"])[0]))
             if p == "/api/job":
@@ -866,6 +877,8 @@ class Handler(BaseHTTPRequestHandler):
                 name = parse_qs(url.query).get("name", ["piece.mid"])[0]
                 return self.send(200, dict(piece=lib.import_midi(name, raw)))
             req = json.loads(raw or b"{}")
+            if p == "/api/excerpt":
+                return self.send(200, dict(piece=lib.excerpt(req["piece"], req.get("start", 0), req.get("length", 20), req.get("mode", "melody"))))
             if p == "/api/estimate":
                 out = planner.estimate(req)
                 try:

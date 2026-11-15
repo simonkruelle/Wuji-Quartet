@@ -1,18 +1,8 @@
 // Wuji Quartet Studio: shell (header, sidebar, status bar, log drawer, dialogs) and the link to the server.
 'use strict';
 
-const NAV = [
-  ['home', 'Home'],
-  [null, 'LIBRARY'],
-  ['pieces', 'Pieces', 1], ['plans', 'Plans', 1],
-  ['retarget', 'Retarget'],
-  [null, 'PLAY'],
-  ['play', 'One hand', 1], ['duet', 'Two hands', 1], ['arm', 'Arm and hand', 1, 'later'],
-  ['teach', 'Teach'],
-  ['camera', 'Camera'],
-  ['settings', 'Settings'],
-];
-const PARENT = {pieces: 'Library', plans: 'Library', play: 'Play', duet: 'Play', arm: 'Play'};
+const NAV = [['library', 'Library'], ['retarget', 'Retarget'], ['play', 'Play'], ['camera', 'Camera'], ['settings', 'Settings']];
+const PARENT = {};
 const FINGERS = ['thumb', 'index', 'middle', 'ring', 'pinky'];
 const FCOL = ['#ff9f0a', '#34c759', '#0a84ff', '#af52de', '#ff375f'];
 const NOTE = ['C', 'C♯', 'D', 'D♯', 'E', 'F', 'F♯', 'G', 'G♯', 'A', 'A♯', 'B'];
@@ -115,9 +105,8 @@ function checkrow(state, title, detail, action) {
   return h('div', {class: 'checkrow'}, h('span', {class: 'mark ' + state, text: marks[state] || '·'}),
     h('div', {class: 'b'}, h('b', {text: title}), h('div', {text: detail || ''})), action || null);
 }
-function pageHead(title, sub, actions) {
-  return [h('div', {class: 'page-head'}, h('div', {}, h('h1', {class: 'page-title', text: title}), h('p', {class: 'page-sub', text: sub || ''})),
-    actions ? h('div', {class: 'actions'}, actions) : null)];
+function pageHead(title, actions) {
+  return [h('div', {class: 'page-head'}, h('h1', {class: 'page-title', text: title}), actions ? h('div', {class: 'actions'}, actions) : null)];
 }
 function progressBar(job) {
   const b = h('div', {class: 'bar'}, h('i'));
@@ -188,7 +177,7 @@ function buildNav() {
   }
 }
 function show(key, arg) {
-  if (!App.pages[key]) key = 'home';
+  if (!App.pages[key]) key = 'library';
   const prev = App.page;
   if (prev && prev !== key && App.pages[prev].hide) App.pages[prev].hide();
   for (const a of document.querySelectorAll('#sidebar .item')) a.classList.toggle('on', a.dataset.k === key);
@@ -204,10 +193,15 @@ function show(key, arg) {
   $('#content').scrollTop = 0;
 }
 function paintHeader() {
-  const t = targetInfo();
-  const chip = $('#modechip');
-  chip.textContent = t.real ? 'Real hand' : 'Fake hand';
-  chip.classList.toggle('real', !!t.real);
+  const t = targetInfo(), sel = $('#handsel'), ts = (App.state && App.state.targets) || [];
+  const sig = ts.map(x => x.id + x.label + x.ok).join();
+  if (sel.dataset.sig !== sig) {
+    sel.dataset.sig = sig; clear(sel);
+    for (const x of ts) sel.append(h('option', {value: x.id, text: (x.real ? '● ' : '') + x.label, disabled: x.real && x.ok === false}));
+  }
+  sel.value = t.id;
+  sel.classList.toggle('real', !!t.real);
+  sel.disabled = !!handBusy();
   $('#realbar').hidden = !t.real;
   $('#realbar').textContent = 'REAL HAND · ' + t.label + ' · commands move the physical hand';
   const busy = handBusy();
@@ -218,7 +212,6 @@ function paintHeader() {
 function paintStatus() {
   const s = App.state; if (!s) return;
   const set = (id, cls, text) => { const el = $(id); el.className = 'st ' + cls; el.querySelector('b').textContent = text; };
-  set('#st-sim', s.env.mujoco ? 'ok' : '', s.env.mujoco ? 'Ready' : 'Not installed');
   const busy = handBusy();
   const t = targetInfo();
   if (busy) set('#st-hand', busy.meta.real ? 'rec' : 'busy', (busy.meta.real ? 'Moving' : 'Fake hand moving') + (busy.phase ? ' · ' + busy.phase : ''));
@@ -308,8 +301,8 @@ window.addEventListener('DOMContentLoaded', async () => {
   $('#loglink').addEventListener('click', e => { e.preventDefault(); toggleLog(); });
   $('#logjob').addEventListener('change', e => { App.logJob = e.target.value; App.logNext = 0; clear($('#logtext')); pollLog(true); });
   $('#stopall').addEventListener('click', () => act(async () => { await api('/api/stop', {all: true}); flash('Stop sent: the hand switches off.'); }));
-  $('#modechip').addEventListener('click', () => show('settings'));
+  $('#handsel').addEventListener('change', e => setTarget(e.target.value));
   await loadLibrary();
   await poll();
-  show(location.hash.slice(1) || 'home');
+  show(location.hash.slice(1) || 'library');
 });

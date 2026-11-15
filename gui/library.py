@@ -128,8 +128,18 @@ def _piece(piece_id, **extra):
     return dict(info, **extra)
 
 
-def pieces():
-    """All pieces, grouped: one hand, two hands (one entry per piece with its parts), imported."""
+def _dataset():
+    """The 153 recorded performances of the FürElise dataset (MIDI only; their hand motion stays on Hugging Face)."""
+    try:
+        with open(os.path.join(REPO, "assets/furelise/metadata.json")) as fh:
+            return json.load(fh)
+    except OSError:
+        return []
+
+
+def pieces(with_notes=False):
+    """All pieces, grouped: our pieces (one hand), two hands (one entry per part), the FürElise dataset, imported.
+    Without note lists unless asked: the dataset alone has about 400 000 notes."""
     out = []
     for name, b in BUILTIN.items():
         p = _piece(name, title=b["title"], composer=b["composer"], origin=b["origin"], group="one", file=b["file"], note=b.get("note", ""),
@@ -140,10 +150,21 @@ def pieces():
         d = os.path.join(REPO, folder)
         for f in sorted(os.listdir(d)) if os.path.isdir(d) else []:
             if f.lower().endswith((".mid", ".midi")):
-                p = _piece(f"{folder}/{f}", title=_pretty(os.path.splitext(f)[0]), origin="score" if group == "one" else "imported", group=group,
+                side = os.path.join(d, os.path.splitext(f)[0] + ".json")
+                try:
+                    with open(side) as fh:
+                        src = json.load(fh)
+                except (OSError, ValueError):
+                    src = {}
+                p = _piece(f"{folder}/{f}", title=src.get("title") or _pretty(os.path.splitext(f)[0]), composer=src.get("composer"), source=src.get("source"), origin="score" if group == "one" else "imported", group=group,
                            file=f"{folder}/{f}")
                 if p:
                     out.append(p)
+    for r in _dataset():
+        f = f"assets/furelise/midi/{r['id']}.mid"
+        p = _piece(f, title=r["title"], composer=r["composer"], origin="human", group="dataset", file=f, dataset_id=r["id"], motion_s=r["motion_s"])
+        if p:
+            out.append(p)
     d = os.path.join(REPO, "assets/duets")
     stems = sorted({f[:-len("_right.mid")] for f in os.listdir(d) if f.endswith("_right.mid")}) if os.path.isdir(d) else []
     for stem in stems:
@@ -160,14 +181,59 @@ def pieces():
             used.setdefault(pl["piece"], []).append(pl["id"])
     for p in out:
         p["plans"] = used.get(p["id"], [])
+        if p["id"] == "k265":
+            p["plans"] = p["plans"] + used.get("assets/furelise/midi/15.mid", [])
+        if not with_notes:
+            p.pop("notes", None)
     return out
 
 
 def piece(piece_id):
-    for p in pieces():
+    for p in pieces(with_notes=True):
         if p["id"] == piece_id:
             return p
     return None
+
+
+def excerpt(piece_id, start, length, mode="melody", name=None, split=60):
+    """Cut a piece down to something one robot hand can learn: a time window, and optionally only its top line
+    (the right hand's part, from middle C up: the highest note of every chord, shortened so notes never overlap).
+    Saved to assets/library/. Returns its id."""
+    notes = piece_notes(piece_id)
+    if not notes:
+        raise ValueError("no notes")
+    start, length = max(0.0, float(start)), min(max(float(length), 2.0), 120.0)
+    win = [n for n in notes if start <= n[0] < start + length]
+    if mode == "melody":
+        win = [n for n in win if n[2] >= split] or win
+        top, i = [], 0
+        win.sort(key=lambda n: (n[0], -n[2]))
+        while i < len(win):                       # notes starting within 40 ms of each other form one chord
+            j = i
+            while j + 1 < len(win) and win[j + 1][0] - win[i][0] < 0.04:
+                j += 1
+            top.append(max(win[i:j + 1], key=lambda n: n[2]))
+            i = j + 1
+        for a, b in zip(top, top[1:]):
+            a[1] = min(a[1], b[0] - 0.01)
+        win = [n for n in top if n[1] - n[0] >= 0.03]
+    elif mode != "all":
+        raise ValueError("mode is melody or all")
+    if len(win) < 2:
+        raise ValueError("fewer than two notes in this window")
+    t0 = win[0][0]
+    p = piece(piece_id) or {}
+    stem = name or re.sub(r"[^A-Za-z0-9]+", "_", (p.get("title") or os.path.basename(piece_id)))[:32].strip("_").lower()
+    rel = f"assets/library/{stem}_{int(start)}s_{int(length)}s{'' if mode == 'melody' else '_all'}.mid"
+    os.makedirs(os.path.join(REPO, "assets/library"), exist_ok=True)
+    from midi_io import write_notes
+    write_notes(os.path.join(REPO, rel), [dict(on=n[0] - t0, off=n[1] - t0, pitch=n[2], vel=72) for n in win])
+    mm = lambda s: f"{int(s // 60)}:{int(s % 60):02d}"
+    with open(os.path.join(REPO, rel[:-4] + ".json"), "w") as fh:      # where it came from, for the library's title
+        json.dump(dict(title=f"{p.get('title', stem)} · {mm(start)}–{mm(start + length)}" + ("" if mode == "melody" else " · all notes"), composer=p.get("composer"),
+                       source=piece_id, start=start, length=length, mode=mode), fh, ensure_ascii=False)
+    _piece_cache.pop(rel, None)
+    return rel
 
 
 def safe_path(rel, suffixes=None, must_exist=True):

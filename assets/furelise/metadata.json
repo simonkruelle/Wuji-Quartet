@@ -1,0 +1,920 @@
+[
+{
+"id": 0,
+"composer": "J.S. Bach",
+"title": "Concerto in D Minor, BWV 1052: I. Allegro",
+"motion_s": 554.9
+},
+{
+"id": 1,
+"composer": "J.S. Bach",
+"title": "Italian Concerto, BWV 971: I. Allegro",
+"motion_s": 254.1
+},
+{
+"id": 2,
+"composer": "J.S. Bach",
+"title": "Preludes and Fugue in F Minor, BWV 881",
+"motion_s": 295.8
+},
+{
+"id": 3,
+"composer": "J.S. Bach",
+"title": "English Suite no 6 in D minor, BWV 811, Gavotte",
+"motion_s": 192.0
+},
+{
+"id": 4,
+"composer": "J.S. Bach",
+"title": "Concerto in D Minor, BWV 1052: III. Allegro",
+"motion_s": 485.8
+},
+{
+"id": 5,
+"composer": "Ludwig van Beethoven",
+"title": "Concerto No. 5 in E-Flat Major, Op. 73: I. Allegro (excerpt)",
+"motion_s": 366.7
+},
+{
+"id": 6,
+"composer": "Maurice Ravel",
+"title": "Miroirs: III. Une Barque sur l’Océan",
+"motion_s": 462.5
+},
+{
+"id": 7,
+"composer": "Miles Davis",
+"title": "All Blues",
+"motion_s": 121.7
+},
+{
+"id": 8,
+"composer": "Other",
+"title": "Slow Boat to China",
+"motion_s": 200.0
+},
+{
+"id": 9,
+"composer": "Stephen Prutsman",
+"title": "Black Pearl",
+"motion_s": 287.0
+},
+{
+"id": 10,
+"composer": "Other",
+"title": "Bewitched Bothered and Bewildered",
+"motion_s": 135.0
+},
+{
+"id": 11,
+"composer": "Other",
+"title": "What is this thing called love",
+"motion_s": 230.0
+},
+{
+"id": 12,
+"composer": "J.S. Bach",
+"title": "Prelude in C Sharp Major, BWV 872",
+"motion_s": 114.6
+},
+{
+"id": 13,
+"composer": "Stephen Prutsman",
+"title": "Going up Yonder Improvisation",
+"motion_s": 190.7
+},
+{
+"id": 14,
+"composer": "Stephen Prutsman",
+"title": "Chopin Freddie",
+"motion_s": 170.9
+},
+{
+"id": 15,
+"composer": "Wolfgang Amadeus Mozart",
+"title": "Ah, vous dirai-je, maman Variations, K. 265",
+"motion_s": 524.6
+},
+{
+"id": 16,
+"composer": "Johannes Brahms",
+"title": "Intermezzo in A Major, Op. 118, No. 2: Andante teneramente",
+"motion_s": 350.0
+},
+{
+"id": 17,
+"composer": "Frédéric Chopin",
+"title": "Ballade No. 3 in A-Flat Major, Op. 47",
+"motion_s": 527.0
+},
+{
+"id": 18,
+"composer": "Wolfgang Amadeus Mozart",
+"title": "Sonata in B-Flat Major, K. 333: III. Allegretto grazioso",
+"motion_s": 442.0
+},
+{
+"id": 19,
+"composer": "Robert Schumann",
+"title": "Novellette No. 1 in F Major, Op. 21",
+"motion_s": 294.0
+},
+{
+"id": 20,
+"composer": "Wolfgang Amadeus Mozart",
+"title": "Sonata in B-Flat Major, K. 333: I. Allegro",
+"motion_s": 384.0
+},
+{
+"id": 21,
+"composer": "Ludwig van Beethoven",
+"title": "Sonata in C Major, Op. 2, No. 3: I. Allegro con brio",
+"motion_s": 738.0
+},
+{
+"id": 22,
+"composer": "Frédéric Chopin",
+"title": "Waltz in A-Flat Major, Op. 34, No. 1",
+"motion_s": 305.7
+},
+{
+"id": 23,
+"composer": "Others",
+"title": "Scales",
+"motion_s": 68.8
+},
+{
+"id": 24,
+"composer": "Modest Mussorgsky",
+"title": "Pictures at an Exhibition, Mvt. 1: Promenade",
+"motion_s": 104.0
+},
+{
+"id": 25,
+"composer": "Camille Saint-Saëns",
+"title": "Concerto No. 5 in F Major, Op. 103, \"Egyptian\": I. Allegro animato",
+"motion_s": 707.3
+},
+{
+"id": 26,
+"composer": "Camille Saint-Saëns",
+"title": "Concerto No. 5 in F Major, Op. 103, \"Egyptian\": II. Andante",
+"motion_s": 627.0
+},
+{
+"id": 27,
+"composer": "Camille Saint-Saëns",
+"title": "Concerto No. 5 in F Major, Op. 103, \"Egyptian\": III. Molto Allegro",
+"motion_s": 370.3
+},
+{
+"id": 28,
+"composer": "Modest Mussorgsky",
+"title": "Pictures at an Exhibition, Mvt. 10: The Great Gate of Kiev",
+"motion_s": 334.6
+},
+{
+"id": 29,
+"composer": "Johannes Brahms",
+"title": "Theme and Var 1-6 from Johannes Brahms Variations",
+"motion_s": 465.7
+},
+{
+"id": 30,
+"composer": "J.S. Bach",
+"title": "Concerto in D Minor, BWV 974: II. Adagio",
+"motion_s": 238.2
+},
+{
+"id": 31,
+"composer": "Sergei Rachmaninoff",
+"title": "Barcarolle in G minor, Op. 10, No. 3",
+"motion_s": 315.7
+},
+{
+"id": 32,
+"composer": "Frédéric Chopin",
+"title": "Nocturne in D-flat major, Op. 27, No. 2",
+"motion_s": 385.0
+},
+{
+"id": 33,
+"composer": "Frédéric Chopin",
+"title": "Fantaisie-Impromptu in C-Sharp Minor, Op. 66",
+"motion_s": 346.4
+},
+{
+"id": 34,
+"composer": "Ludwig van Beethoven",
+"title": "Piano Trio No. 7 in B-Flat Major, Op. 11, \"Gassenhauer\": I. Allegro con brio",
+"motion_s": 401.7
+},
+{
+"id": 35,
+"composer": "Frédéric Chopin",
+"title": "Sonata No. 3 in B Minor, Op. 58: IV. Finale: Presto, non tanto",
+"motion_s": 290.8
+},
+{
+"id": 36,
+"composer": "Claude Debussy",
+"title": "Trois Chanson de Bilitis",
+"motion_s": 502.9
+},
+{
+"id": 37,
+"composer": "Alma Mahler",
+"title": "Die stille Stadt",
+"motion_s": 162.4
+},
+{
+"id": 38,
+"composer": "Alma Mahler",
+"title": "Bei dir ist es traut",
+"motion_s": 95.0
+},
+{
+"id": 39,
+"composer": "Alma Mahler",
+"title": "Laue Sommernacht",
+"motion_s": 104.0
+},
+{
+"id": 40,
+"composer": "Alma Mahler",
+"title": "In meines Vaters Garten",
+"motion_s": 304.7
+},
+{
+"id": 41,
+"composer": "Jennifer Higdon",
+"title": "Summer Hue",
+"motion_s": 326.1
+},
+{
+"id": 42,
+"composer": "Gustav Mahler",
+"title": "Ich atmet einen Lindenduft",
+"motion_s": 293.8
+},
+{
+"id": 43,
+"composer": "Scott Ordway",
+"title": "Expanse of my Soul",
+"motion_s": 375.0
+},
+{
+"id": 44,
+"composer": "Michael Tilson Thomas",
+"title": "Not Everyone Thinks That I'm Beautiful",
+"motion_s": 134.7
+},
+{
+"id": 45,
+"composer": "Michael Tilson Thomas",
+"title": "Grace",
+"motion_s": 265.9
+},
+{
+"id": 46,
+"composer": "Others",
+"title": "Scales",
+"motion_s": 246.1
+},
+{
+"id": 47,
+"composer": "George Frideric Handel",
+"title": "Suite No. 5 in E Major: I. Prelude",
+"motion_s": 124.6
+},
+{
+"id": 48,
+"composer": "George Frideric Handel",
+"title": "Suite No. 5 in E Major: II. Allemande",
+"motion_s": 289.7
+},
+{
+"id": 49,
+"composer": "George Frideric Handel",
+"title": "Suite No. 5 in E Major: III. Courante",
+"motion_s": 172.0
+},
+{
+"id": 50,
+"composer": "George Frideric Handel",
+"title": "Air \"The Harmonious Blacksmith\"",
+"motion_s": 472.2
+},
+{
+"id": 51,
+"composer": "Frédéric Chopin",
+"title": "Prelude in C Major, Op. 28, No. 1, \"Agitato\"",
+"motion_s": 41.4
+},
+{
+"id": 52,
+"composer": "Frédéric Chopin",
+"title": "Prelude in A Minor, Op. 28, No. 2, \"Lento\"",
+"motion_s": 153.2
+},
+{
+"id": 53,
+"composer": "Frédéric Chopin",
+"title": "Prelude in G Major, Op. 28, No. 3, \"Vivace\"",
+"motion_s": 76.7
+},
+{
+"id": 54,
+"composer": "Frédéric Chopin",
+"title": "Prelude in E Minor, Op. 28, No. 4, \"Largo\"",
+"motion_s": 121.7
+},
+{
+"id": 55,
+"composer": "Frédéric Chopin",
+"title": "Prelude in D Major, Op. 28, No. 5, \"Allegro molto\"",
+"motion_s": 49.7
+},
+{
+"id": 56,
+"composer": "Frédéric Chopin",
+"title": "Prelude in B Minor, Op. 28, No. 6, \"Lento assai\"",
+"motion_s": 126.5
+},
+{
+"id": 57,
+"composer": "Frédéric Chopin",
+"title": "Prelude in A Major, Op. 28, No. 7, \"Andantino\"",
+"motion_s": 57.8
+},
+{
+"id": 58,
+"composer": "Frédéric Chopin",
+"title": "Prelude in F-Sharp Minor, Op. 28, No. 8, \"Molto agitato\"",
+"motion_s": 150.9
+},
+{
+"id": 59,
+"composer": "Frédéric Chopin",
+"title": "Prelude in E Major, Op. 28, No. 9, \"Largo\"",
+"motion_s": 89.9
+},
+{
+"id": 60,
+"composer": "Frédéric Chopin",
+"title": "Prelude in C-Sharp Minor, Op. 28, No. 10, \"Allegro molto\"",
+"motion_s": 31.6
+},
+{
+"id": 61,
+"composer": "Frédéric Chopin",
+"title": "Prelude in B Major, Op. 28, No. 11, \"Vivace\"",
+"motion_s": 52.7
+},
+{
+"id": 62,
+"composer": "Frédéric Chopin",
+"title": "Prelude in G-Sharp Minor, Op. 28, No. 12, \"Presto\"",
+"motion_s": 89.7
+},
+{
+"id": 63,
+"composer": "Leslie Adams",
+"title": "Andantino Cantabile",
+"motion_s": 222.0
+},
+{
+"id": 64,
+"composer": "Florence Price",
+"title": "Clouds",
+"motion_s": 420.3
+},
+{
+"id": 65,
+"composer": "Margaret Bonds",
+"title": "Troubled Waters",
+"motion_s": 112.9
+},
+{
+"id": 66,
+"composer": "H. Leslie Adams",
+"title": "Twenty-six Etudes (2007) Part II: No. 10 Andantino Cantabile",
+"motion_s": 358.5
+},
+{
+"id": 67,
+"composer": "Claude Debussy",
+"title": "Images, Book I: III. Mouvement",
+"motion_s": 237.9
+},
+{
+"id": 68,
+"composer": "Frédéric Chopin",
+"title": "Mazurka in A Minor, Op. 59, No. 1",
+"motion_s": 268.0
+},
+{
+"id": 69,
+"composer": "J.S. Bach",
+"title": "Prelude in D Minor, BWV 875",
+"motion_s": 130.2
+},
+{
+"id": 70,
+"composer": "Frédéric Chopin",
+"title": "Andante Spianato",
+"motion_s": 283.5
+},
+{
+"id": 71,
+"composer": "Frédéric Chopin",
+"title": "Grande Polonaise Brilliante",
+"motion_s": 611.8
+},
+{
+"id": 72,
+"composer": "Frédéric Chopin",
+"title": "Concerto No. 1 in E Minor, Op. 11: I. Allegro maestoso",
+"motion_s": 574.7
+},
+{
+"id": 73,
+"composer": "Frédéric Chopin",
+"title": "Concerto No. 1 in E Minor, Op. 11: II. Romance - Larghetto",
+"motion_s": 591.3
+},
+{
+"id": 74,
+"composer": "Frédéric Chopin",
+"title": "Concerto No. 1 in E Minor, Op. 11: III. Rondo - Vivace",
+"motion_s": 575.8
+},
+{
+"id": 75,
+"composer": "Frédéric Chopin",
+"title": "Ballade No. 4 in F Minor, Op. 52",
+"motion_s": 685.3
+},
+{
+"id": 76,
+"composer": "J.S. Bach",
+"title": "Fugue in D Minor, BWV 875",
+"motion_s": 144.4
+},
+{
+"id": 77,
+"composer": "Frédéric Chopin",
+"title": "Étude in F Major, Op. 10, No. 8",
+"motion_s": 194.2
+},
+{
+"id": 78,
+"composer": "Frédéric Chopin",
+"title": "Étude in G-Sharp Minor, Op. 25, No. 6",
+"motion_s": 137.6
+},
+{
+"id": 79,
+"composer": "Frédéric Chopin",
+"title": "Étude in A-Flat Major, Op. 25, No. 1",
+"motion_s": 176.4
+},
+{
+"id": 80,
+"composer": "Franz Schubert",
+"title": "Impromptu in G-Flat Major, Op. 90, No. 3, D. 899",
+"motion_s": 328.0
+},
+{
+"id": 81,
+"composer": "Claude Debussy",
+"title": "Clair de Lune from Suite Bergamasque",
+"motion_s": 272.1
+},
+{
+"id": 82,
+"composer": "Claude Debussy",
+"title": "Arabesque No. 1 in E Major",
+"motion_s": 194.1
+},
+{
+"id": 83,
+"composer": "Federico Mompou",
+"title": "Prelude No. 8 \"On a Drop of Water\"",
+"motion_s": 455.5
+},
+{
+"id": 84,
+"composer": "Alexander Scriabin",
+"title": "Excerpt of Nocturne for the Left Hand, Op. 9, No. 2",
+"motion_s": 122.0
+},
+{
+"id": 85,
+"composer": "Federico Mompou",
+"title": "Excerpt of Prelude No. 7",
+"motion_s": 61.8
+},
+{
+"id": 86,
+"composer": "Others",
+"title": "Scales in 2nds, other exercises",
+"motion_s": 56.7
+},
+{
+"id": 87,
+"composer": "J.S. Bach",
+"title": "Goldberg Variations, BWV 988: I. Aria",
+"motion_s": 155.6
+},
+{
+"id": 88,
+"composer": "Johannes Brahms",
+"title": "Intermezzo in A Minor, Op. 116, No. 2: Andante",
+"motion_s": 337.2
+},
+{
+"id": 89,
+"composer": "Johannes Brahms",
+"title": "Intermezzo in A Minor, Op. 116, No. 2: Andante",
+"motion_s": 206.4
+},
+{
+"id": 90,
+"composer": "J.S. Bach",
+"title": "Prelude in C Minor, BWV 847",
+"motion_s": 78.7
+},
+{
+"id": 91,
+"composer": "Frédéric Chopin",
+"title": "Prelude in D-Flat Major, Op. 28, No. 15, \"Raindrop\"",
+"motion_s": 295.7
+},
+{
+"id": 92,
+"composer": "Frédéric Chopin",
+"title": "Waltz in D-Flat Major, Op. 64, No. 1, \"Minute Waltz\"",
+"motion_s": 99.9
+},
+{
+"id": 93,
+"composer": "J.S. Bach",
+"title": "Prelude in E Major, BWV 854",
+"motion_s": 77.8
+},
+{
+"id": 94,
+"composer": "Frédéric Chopin",
+"title": "Étude in E Major, Op. 10, No. 3",
+"motion_s": 243.2
+},
+{
+"id": 95,
+"composer": "George Gershwin",
+"title": "Preludes, Nos. 1, 2, 3",
+"motion_s": 468.2
+},
+{
+"id": 96,
+"composer": "Ernő Dohnányi",
+"title": "Piano Quintet No. 1 in C Minor, Op. 1: I. Allegro",
+"motion_s": 513.7
+},
+{
+"id": 97,
+"composer": "Ernő Dohnányi",
+"title": "Piano Quintet No. 1 in C Minor, Op. 1: II. Scherzo (Allegro vivace)",
+"motion_s": 359.0
+},
+{
+"id": 98,
+"composer": "Ernő Dohnányi",
+"title": "Piano Quintet No. 1 in C Minor, Op. 1: III. Adagio, quasi andante",
+"motion_s": 471.0
+},
+{
+"id": 99,
+"composer": "Ernő Dohnányi",
+"title": "Piano Quintet No. 1 in C Minor, Op. 1 IV. Finale: Allegro moderato",
+"motion_s": 511.0
+},
+{
+"id": 100,
+"composer": "Frédéric Chopin",
+"title": "Piano Sonata No. 2 in B-Flat Minor, Op. 35: I. Grave – Doppio movimento",
+"motion_s": 341.2
+},
+{
+"id": 101,
+"composer": "Frédéric Chopin",
+"title": "Piano Sonata No. 2 in B-Flat Minor, Op. 35: II. Scherzo",
+"motion_s": 391.2
+},
+{
+"id": 102,
+"composer": "Frédéric Chopin",
+"title": "Piano Sonata No. 2 in B-Flat Minor, Op. 35: III. Marche funèbre: Lento",
+"motion_s": 546.8
+},
+{
+"id": 103,
+"composer": "Frédéric Chopin",
+"title": "Piano Sonata No. 2 in B-Flat Minor, Op. 35: IV. Finale: Presto",
+"motion_s": 95.3
+},
+{
+"id": 104,
+"composer": "George Gershwin",
+"title": "Rhapsody in Blue",
+"motion_s": 888.3
+},
+{
+"id": 105,
+"composer": "Others",
+"title": "Scales, Arpeggios and Chords",
+"motion_s": 472.8
+},
+{
+"id": 106,
+"composer": "Others",
+"title": "Hanon No. 21 & 22 from The Virtuoso Pianist Pt II",
+"motion_s": 138.7
+},
+{
+"id": 107,
+"composer": "Others",
+"title": "Czerny No. 1-3 from the School of Velocity",
+"motion_s": 121.5
+},
+{
+"id": 108,
+"composer": "Ludwig van Beethoven",
+"title": "Piano Sonata in B-flat Major, Op. 22: I. Allegro con brio",
+"motion_s": 399.6
+},
+{
+"id": 109,
+"composer": "Robert Schumann",
+"title": "Kinderszenen, Op. 15 No.1: Von fremden Ländern und Menschen",
+"motion_s": 117.0
+},
+{
+"id": 110,
+"composer": "Robert Schumann",
+"title": "Kinderszenen, Op. 15 No.2: Kuriose Geschichte",
+"motion_s": 69.4
+},
+{
+"id": 111,
+"composer": "Robert Schumann",
+"title": "Kinderszenen, Op. 15 No.3: Hasche-Mann",
+"motion_s": 33.6
+},
+{
+"id": 112,
+"composer": "Robert Schumann",
+"title": "Kinderszenen, Op. 15 No.4: Bittendes Kind",
+"motion_s": 60.0
+},
+{
+"id": 113,
+"composer": "Robert Schumann",
+"title": "Kinderszenen, Op. 15 No.5: Glückes genug",
+"motion_s": 59.2
+},
+{
+"id": 114,
+"composer": "Robert Schumann",
+"title": "Kinderszenen, Op. 15 No.6: Wichtige Begebenheit",
+"motion_s": 72.3
+},
+{
+"id": 115,
+"composer": "Robert Schumann",
+"title": "Kinderszenen, Op. 15 No.7: Träumerei",
+"motion_s": 208.5
+},
+{
+"id": 116,
+"composer": "Robert Schumann",
+"title": "Kinderszenen, Op. 15 No.8: Am Kamin",
+"motion_s": 72.3
+},
+{
+"id": 117,
+"composer": "Robert Schumann",
+"title": "Kinderszenen, Op. 15 No.9: Ritter vom Steckenpferd",
+"motion_s": 38.0
+},
+{
+"id": 118,
+"composer": "Robert Schumann",
+"title": "Kinderszenen, Op. 15 No.10: Fast zu ernst",
+"motion_s": 104.1
+},
+{
+"id": 119,
+"composer": "Robert Schumann",
+"title": "Kinderszenen, Op. 15 No.11: Fürchtenmachen",
+"motion_s": 96.6
+},
+{
+"id": 120,
+"composer": "Robert Schumann",
+"title": "Kinderszenen, Op. 15 No.12: Kind im Einschlummern",
+"motion_s": 102.0
+},
+{
+"id": 121,
+"composer": "Robert Schumann",
+"title": "Kinderszenen, Op. 15 No.13: Der Dichter spricht",
+"motion_s": 148.1
+},
+{
+"id": 122,
+"composer": "Edvard Grieg",
+"title": "Lyric Pieces, Op. 38: No. 1 Berceuse",
+"motion_s": 161.2
+},
+{
+"id": 123,
+"composer": "Edvard Grieg",
+"title": "Lyric Pieces, Op. 62: No. 4 Bächlein",
+"motion_s": 107.0
+},
+{
+"id": 124,
+"composer": "Edvard Grieg",
+"title": "Lyric Pieces, Op. 62: No. 6 Heimwärts",
+"motion_s": 200.0
+},
+{
+"id": 125,
+"composer": "Edvard Grieg",
+"title": "Lyric Pieces, Op. 43: No. 1 Schmetterling",
+"motion_s": 113.0
+},
+{
+"id": 126,
+"composer": "Edvard Grieg",
+"title": "Lyric Pieces, Op. 71: No. 2 Sommerabend",
+"motion_s": 179.0
+},
+{
+"id": 127,
+"composer": "Edvard Grieg",
+"title": "Lyric Pieces, Op. 54: No.3 Zug der Zwerge",
+"motion_s": 172.7
+},
+{
+"id": 128,
+"composer": "Debussy",
+"title": "Images, Book II: I. Cloches à travers les feuilles",
+"motion_s": 236.8
+},
+{
+"id": 129,
+"composer": "Debussy",
+"title": "Images, Book II: II. Et la lune descend sur le temple qui fut",
+"motion_s": 278.0
+},
+{
+"id": 130,
+"composer": "Debussy",
+"title": "Images, Book II: III. Poissons d'or",
+"motion_s": 236.6
+},
+{
+"id": 131,
+"composer": "Ludwig van Beethoven",
+"title": "Piano Sonata No. 32 in C Minor, Op. 111: I. Maestoso – Allegro con brio ed appassionato",
+"motion_s": 562.4
+},
+{
+"id": 132,
+"composer": "Ludwig van Beethoven",
+"title": "Piano Sonata No. 32 in C Minor, Op. 111: II. Arietta: Adagio molto semplice e cantabile",
+"motion_s": 1082.6
+},
+{
+"id": 133,
+"composer": "J.S. Bach",
+"title": "English Suite No. 3 in g minor, BWV 808: I. Prelude",
+"motion_s": 205.6
+},
+{
+"id": 134,
+"composer": "J.S. Bach",
+"title": "English Suite No. 3 in g minor, BWV 808: II. Allemande",
+"motion_s": 237.0
+},
+{
+"id": 135,
+"composer": "J.S. Bach",
+"title": "English Suite No. 3 in g minor, BWV 808: III. Courante",
+"motion_s": 139.0
+},
+{
+"id": 136,
+"composer": "J.S. Bach",
+"title": "English Suite No. 3 in g minor, BWV 808: IV. Sarabande",
+"motion_s": 474.5
+},
+{
+"id": 137,
+"composer": "J.S. Bach",
+"title": "English Suite No. 3 in g minor, BWV 808: V. Gavotte I",
+"motion_s": 97.9
+},
+{
+"id": 138,
+"composer": "J.S. Bach",
+"title": "English Suite No. 3 in g minor, BWV 808: VI. Gavotte II (ou la musette)",
+"motion_s": 180.2
+},
+{
+"id": 139,
+"composer": "J.S. Bach",
+"title": "English Suite No. 3 in g minor, BWV 808: VII. Gigue",
+"motion_s": 162.7
+},
+{
+"id": 140,
+"composer": "Lili Boulanger",
+"title": "Trois morceaux pour piano: D’un vieux jardin",
+"motion_s": 169.9
+},
+{
+"id": 141,
+"composer": "Lili Boulanger",
+"title": "Trois morceaux pour piano: D’un jardin clair",
+"motion_s": 125.6
+},
+{
+"id": 142,
+"composer": "Lili Boulanger",
+"title": "Trois morceaux pour piano: Cortège",
+"motion_s": 122.9
+},
+{
+"id": 143,
+"composer": "Sergei Rachmaninoff",
+"title": "Études-Tableaux, Op. 39: IV. Allegro assai in b minor",
+"motion_s": 245.0
+},
+{
+"id": 144,
+"composer": "Sergei Rachmaninoff",
+"title": "Études-Tableaux, Op. 39: VI. Allegro in a minor",
+"motion_s": 180.3
+},
+{
+"id": 145,
+"composer": "Sergei Rachmaninoff",
+"title": "Études-Tableaux, Op. 39: VII. Lento lugubre in c minor",
+"motion_s": 435.7
+},
+{
+"id": 146,
+"composer": "Robert Schumann",
+"title": "Fantasie in C major, Op. 17: I. Durchaus phantastisch und leidenschaftlich vorzutragen",
+"motion_s": 868.8
+},
+{
+"id": 147,
+"composer": "Robert Schumann",
+"title": "Fantasie in C major, Op. 17: II. Mäßig. Durchaus energisch",
+"motion_s": 499.0
+},
+{
+"id": 148,
+"composer": "Robert Schumann",
+"title": "Fantasie in C major, Op. 17: III. Langsam getragen. Durchweg leise zu halten",
+"motion_s": 651.0
+},
+{
+"id": 149,
+"composer": "Robert Schumann",
+"title": "Piano Sonata No. 1 in F-sharp minor, Op. 11: I. Introduzione. Un poco adagio – Allegro vivace",
+"motion_s": 873.2
+},
+{
+"id": 150,
+"composer": "Robert Schumann",
+"title": "Piano Sonata No. 1 in F-sharp minor, Op. 11: II. Aria",
+"motion_s": 190.9
+},
+{
+"id": 151,
+"composer": "Robert Schumann",
+"title": "Piano Sonata No. 1 in F-sharp minor, Op. 11: III. Scherzo e Intermezzo. Allegrissimo",
+"motion_s": 345.7
+},
+{
+"id": 152,
+"composer": "Robert Schumann",
+"title": "Piano Sonata No. 1 in F-sharp minor, Op. 11: IV. Finale. Allegro un poco maestoso",
+"motion_s": 431.0
+}
+]

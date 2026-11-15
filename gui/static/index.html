@@ -15,7 +15,7 @@
   <span id="crumb" class="crumb"></span>
   <span class="grow"></span>
   <button id="stopall" class="pill danger big" hidden>■ Stop the hand</button>
-  <span id="modechip" class="chip mode" title="Which hand the Play, Teach and Camera pages use. Click to change."></span>
+  <select id="handsel" class="handsel" title="Which hand Play and Camera use"></select>
 </header>
 <div id="middle">
   <nav id="sidebar"></nav>
@@ -31,7 +31,6 @@
   <pre id="logtext"></pre>
 </section>
 <footer id="statusbar">
-  <span class="st" id="st-sim"><i class="dot"></i><span class="k">Simulation</span><b></b></span>
   <span class="st" id="st-hand"><i class="dot"></i><span class="k">Hand</span><b></b></span>
   <span class="st" id="st-compute"><i class="dot"></i><span class="k">Optimiser</span><b></b></span>
   <span class="st" id="st-camera"><i class="dot"></i><span class="k">Camera</span><b></b></span>

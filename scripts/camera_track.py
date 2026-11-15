@@ -10,7 +10,8 @@ The tracking (MediaPipe hand landmarks) and the angle retargeting are Sebas's, i
 
 stdout: T <seconds> <20 joint targets in rad>   one line per tracked frame (nothing while paused or while no hand is seen)
         # ...                                    status
-stdin : one JSON object per line: {"pause": true} {"calibrate": true} {"thumb": false} {"flip_spread": true} {"alpha": 0.4} {"quit": true}
+stdin : one JSON object per line: {"pause": true} {"calibrate": true} {"thumb": false} {"flip_spread": true} {"alpha": 0.4} {"driving": true} {"quit": true}
+        ("driving" only changes the picture's label: whether a hand follows is up to whoever reads the T lines)
 --record DIR saves every frame's landmarks next to the joint targets (landmarks.npz + meta.json): the pairs a learned
 retargeting would be trained on.
 Needs: pip install -r requirements-camera.txt   (mediapipe, opencv)"""
@@ -104,14 +105,14 @@ def main():
     landmarker = vision.HandLandmarker.create_from_options(vision.HandLandmarkerOptions(
         base_options=BaseOptions(model_asset_path=MODEL), running_mode=vision.RunningMode.VIDEO, num_hands=1,
         min_hand_detection_confidence=0.6, min_tracking_confidence=0.5))
-    opt = dict(pause=False, thumb=not A.no_thumb, flip_spread=A.flip_spread, alpha=float(np.clip(A.alpha, 0.05, 1.0)), quit=False, calibrate=False)
+    opt = dict(pause=False, thumb=not A.no_thumb, flip_spread=A.flip_spread, alpha=float(np.clip(A.alpha, 0.05, 1.0)), quit=False, calibrate=False, driving=False)
     state = dict(tracked=False, paused=False, fps=0.0, frames=0, q=[0.0] * 20, thumb=opt["thumb"], flip_spread=opt["flip_spread"], alpha=opt["alpha"],
                  calibrated=False, source=A.source or f"camera {A.camera}", seen=0.0)
     def control():
         for line in sys.stdin:
             try: c = json.loads(line)
             except ValueError: continue
-            for k in ("pause", "thumb", "flip_spread", "quit", "calibrate"):
+            for k in ("pause", "thumb", "flip_spread", "quit", "calibrate", "driving"):
                 if k in c: opt[k] = bool(c[k])
             if "alpha" in c: opt["alpha"] = float(np.clip(float(c["alpha"]), 0.05, 1.0))
     threading.Thread(target=control, daemon=True).start()
@@ -148,7 +149,7 @@ def main():
             state.update(tracked=lm is not None, paused=paused, frames=n, q=[round(float(v), 4) for v in q_f], thumb=opt["thumb"], flip_spread=opt["flip_spread"],
                          alpha=opt["alpha"], seen=round(n_tracked / max(n, 1), 3))
             if srv is not None:
-                pic = T.draw(frame, lm, q_f, paused, True); h, w = pic.shape[:2]
+                pic = T.draw(frame, lm, q_f, paused, opt["driving"]); h, w = pic.shape[:2]
                 if w > A.width: pic = cv2.resize(pic, (A.width, int(h * A.width / w)))
                 ok, jpg = cv2.imencode(".jpg", pic, [cv2.IMWRITE_JPEG_QUALITY, 72])
                 if ok: frames.put(jpg.tobytes())

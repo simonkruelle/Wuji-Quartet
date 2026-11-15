@@ -20,20 +20,23 @@ Starting it needs Python only. Pages that need more say so: MuJoCo to optimise, 
 
 **Status, 15 Nov 2026: every page was tested with the fake hand in a browser. No page has moved the real hand yet.**
 
-## The path
-
-**Pick a piece → Listen → Retarget → Play.** The bar on top of those pages shows the four steps.
+## Pages
 
 | Page | What you do there |
 |---|---|
-| **Pieces** | every MIDI piece with a sound preview; import your own `.mid` |
-| **Plans** | every plan with its score on ten simulated setups, its video, how it was made |
-| **Retarget** | choose piece, hand and position, then how detailed the search is. The time estimate changes as you move the sliders. One run at a time, the rest wait |
-| **One hand · Two hands** | play a plan. Notes fall onto a keyboard in step with the hand |
-| **Teach** | a lesson: phrase, speed, repeats. The hand sits higher and presses your fingers |
+| **Library** | pieces on the left, the chosen one on the right: listen, its plans (▶ Play), Retarget ›. Tabs: Ours · Duets · Pianists (the 153 FürElise performances) · Excerpts |
+| **Retarget** | piece, hand, wrist; then Reuse / Draft / Standard / Fine, with the time before you start. Everything else under More |
+| **Play** | One hand · Two hands · Teach (one phrase or all, slower, several times). Notes fall onto a keyboard in step with the hand |
 | **Camera** | the hand follows your hand in front of the webcam (Sebas's tracking) |
-| **Arm and hand** | not built. Shows the plans with a moving wrist and what an arm driver needs |
 | **Settings** | which hand, the robot computer, default current limits |
+
+The hand (fake, this computer, robot computer) is chosen at the top right and holds for every page.
+
+### A piece from the FürElise dataset
+
+The 153 performances are minutes long and use both hands across the whole keyboard; one robot hand learns an excerpt. Library › Pianists › a piece: choose where to start, 10, 20 or 40 seconds, and the right-hand melody (the highest note of each chord, from middle C up) or all notes. **Make the excerpt › Retarget** saves it to `assets/library/` and opens Retarget. Most excerpts span more than five keys, so the wrist has to move: simulation only until there is an arm.
+
+Tested: K.265 from 0:30, 20 s, melody: 152 notes, a tiny search (8 tries × 1 round) took 56 s and hit 75 to 81 of 152 on the training setups. A useful plan needs Standard or more and a slower excerpt.
 
 ## How detailed is the search
 
@@ -48,6 +51,9 @@ Starting it needs Python only. Pages that need more say so: MuJoCo to optimise, 
 The estimate starts from the reference computer (an 8-core desktop) and uses this computer's own speed after the first search here. Measured: estimate 53 s, run 38 s (Saints, 16 × 1); the committed Ode run of Standard size took 17 min.
 
 ## Which hand
+
+Chosen at the top right.
+
 
 | Choice | What moves | Needs |
 |---|---|---|
