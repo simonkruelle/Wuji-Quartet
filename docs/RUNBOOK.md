@@ -6,6 +6,8 @@ Before you start: [RDK_X5_SETUP.md](RDK_X5_SETUP.md) is done and `./wq hand pyth
 
 Commands are written for the RDK X5. With a native install (Mac, Linux laptop) drop the `./wq hand` prefix.
 
+Prefer buttons? `python gui/app.py` opens the studio: the same scripts behind Play, Teach and Stop ([STUDIO.md](STUDIO.md)). It has been tested with the fake hand only, so the first real runs belong in a terminal, as below.
+
 | Step | Goal | Hand is | Time |
 |---|---|---|---|
 | 0 | Dry run, no hardware | off | 1 min |

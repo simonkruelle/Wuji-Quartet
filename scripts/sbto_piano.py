@@ -275,7 +275,10 @@ class Plan:
 
 # ------------------------------------------------------------------ workers
 G = {}
-def w_init(plants, plan, keys, default_q):
+def w_init(plants, plan, keys, default_q, cfg=None):
+    for k_, v_ in (cfg or {}).items():      # the run's settings (mount, side, stroke times ...): a spawned worker (macOS) starts from the module defaults
+        if isinstance(v_, dict) and isinstance(globals().get(k_), dict): globals()[k_].clear(); globals()[k_].update(v_)      # BASE, PRESS_X_F: changed in place
+        else: globals()[k_] = v_
     G["plan"] = plan; G["keys"] = keys; G["default_q"] = default_q; G["m"] = []; G["d"] = []
     for p in plants:
         m = mujoco.MjModel.from_xml_string(scene_xml(p.get("gain", 5.0), keys, plan.wrist, p.get("dx", 0), p.get("dy", 0), p.get("dz", 0), p.get("dth", 0)))
@@ -381,8 +384,10 @@ def main():
     ap.add_argument("--also", default=None, help="with --five: further keys for a finger as key:finger pairs (finger 0 = thumb .. 4 = pinky), e.g. 67:0 lets the thumb also play G4")
     ap.add_argument("--side", default="right", choices=["right", "left"], help="which hand; left = mirrored mount, thumb on the treble side, --five from the thumb's (highest) key down. Fixed wrist only")
     ap.add_argument("--center", type=int, default=76, help="MIDI number of the key the mount's sideways offset is measured from (default 76 = E5); for a five-finger position use the middle finger's key")
+    ap.add_argument("--knot-dt", type=float, default=None, help="moving wrist: seconds between wrist knots (default 0.2; smaller = finer wrist corrections, more numbers to search)")
     ap.add_argument("--seed", type=int, default=0); A = ap.parse_args()
-    global LIMITS, T_DOWN, T_UP, T_MOVE, START_HOVER, SIDE, CENTER, V_CROSS
+    global LIMITS, T_DOWN, T_UP, T_MOVE, START_HOVER, SIDE, CENTER, V_CROSS, KNOT_DT
+    if A.knot_dt: KNOT_DT = A.knot_dt
     if A.stroke: T_DOWN = T_UP = A.stroke; T_MOVE = max(T_MOVE, 1.5 * A.stroke)      # a finger crossing to another key takes its time too
     if A.move: T_MOVE = A.move
     if A.stroke and A.stroke >= 0.06: V_CROSS = 10.0
@@ -442,10 +447,13 @@ def main():
         say(f"lead iter {it}: lead ms {[round(l*1e3) for l in lead]} -> nominal F1 {s['f1']:.3f} ({s['n_matched']}/{nN}, {len(s['extra'])} wrong)")
         if it < 2: lead = [max(0.0, lead[f] + (float(np.median(per[f])) if per[f] else 0.03)) for f in range(5)]
     plan.lead = np.asarray(lead, float); P_ref = P.copy()      # the CEM is pulled gently toward its start parameters (zeros unless --init-from / --from-npz)
-    from multiprocessing import Pool
+    import multiprocessing
+    Pool = multiprocessing.get_context(os.environ.get("WQ_MP_START") or None).Pool      # WQ_MP_START=spawn|fork forces a start method (tests)
+    cfg = dict(LIMITS=LIMITS, T_DOWN=T_DOWN, T_UP=T_UP, T_MOVE=T_MOVE, START_HOVER=START_HOVER, SIDE=SIDE, CENTER=CENTER, V_CROSS=V_CROSS,
+               U_BASE=U_BASE, KNOT_DT=KNOT_DT, BASE=dict(BASE), PRESS_X_F=dict(PRESS_X_F))
     dr = A.dr or ("wide" if A.wrist == "fixed" else "mild"); plants = TRAIN_PLANTS if dr == "wide" else MILD_PLANTS; K = len(plants)
     say(f"DR set {dr}: {plants}")
-    with Pool(A.workers, initializer=w_init, initargs=(plants + TEST_PLANTS, plan, keys, default_q)) as pool:
+    with Pool(A.workers, initializer=w_init, initargs=(plants + TEST_PLANTS, plan, keys, default_q, cfg)) as pool:
         base_eval = evaluate(pool, K + len(TEST_PLANTS), np.zeros_like(P), np.zeros_like(WK), plan, keys)
         say("baseline (no CEM) train plants:", [f"{e[0]['n_matched']}/{nN} w{len(e[0]['extra'])}" for e in base_eval[:K]], " test:", [f"{e[0]['n_matched']}/{nN} w{len(e[0]['extra'])}" for e in base_eval[K:]])
         if A.init_from:
@@ -514,7 +522,7 @@ def main():
         json.dump(dict(piece=A.piece, title=title, wrist=A.wrist, wrist_info=winfo, notes=nN, lead_ms=[round(l * 1e3, 1) for l in lead],
                        fingers={pc.SHORT[f]: fing.count(f) for f in range(5)}, dr=dr, train_plants=plants, test_plants=TEST_PLANTS,
                        baseline_train=summ(base_eval[:K]), baseline_test=summ(base_eval[K:]), cem_train=summ(fin[:K]), cem_test=summ(fin[K:]),
-                       cem=dict(samples=A.samples, elites=A.elites, iters=A.iters, commit_s=A.commit, windows=win), wall_s=round(time.time() - T_)),
+                       cem=dict(samples=A.samples, elites=A.elites, iters=A.iters, commit_s=A.commit, windows=win, knot_dt_s=KNOT_DT if moving else None, seed=A.seed, workers=A.workers), wall_s=round(time.time() - T_)),
                   open(os.path.join(A.out, "report.json"), "w"), indent=1)
         say(f"total {time.time()-T_:.0f} s -> {A.out}")
 

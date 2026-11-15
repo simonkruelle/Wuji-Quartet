@@ -10,6 +10,10 @@ venv/
 *.swp
 .idea/
 .vscode/
+# the studio: this computer's settings, the downloaded hand model (8 MB, scripts/camera_track.py --fetch-model)
+gui/settings.local.json
+assets/mediapipe/
 # by-products of rendering inside a plan folder (shared videos live in docs/media)
+plans/**/duet_*.mp4
 plans/**/test_frame.png
 plans/**/theme_sim.mp4

@@ -26,6 +26,33 @@ The plan is optimised in simulation on five slightly different pianos at once, s
 
 > **The numbers on this page are simulation.** On 14 and 15 Nov the real right hand played Ode to Joy, Jingle Bells and When the Saints at full speed and 1.0 A. No keyboard recording has confirmed the notes yet. **Two hands: simulation only**, the second hand arrives on 15 Nov. What we measured is in [docs/RUNBOOK.md](docs/RUNBOOK.md).
 
+## The studio
+
+<p align="center"><img src="docs/studio/retarget.png" width="880" alt="The studio's Retarget page: piece, hand position, search detail, a time estimate of 16 minutes and a running search"></p>
+
+**Pick a piece → listen → retarget → play, in one window.** `python gui/app.py` opens it in the browser.
+
+<table>
+  <tr>
+    <td width="50%"><img src="docs/studio/play.png" alt="Play page: notes fall onto a keyboard in step with the hand, coloured by finger"></td>
+    <td width="50%"><img src="docs/studio/teach.png" alt="Teach page: phrase 3 of 7 at half speed, three rounds"></td>
+  </tr>
+  <tr>
+    <td><strong>Play</strong>: one hand or two. The fake hand first, with sound; the real hand after one question.</td>
+    <td><strong>Teach</strong>: the hand sits higher and presses your fingers through a phrase, slowly, several times.</td>
+  </tr>
+</table>
+
+| Page | What it does |
+|---|---|
+| Library | 17 pieces with a sound preview · every plan with its scores and video |
+| Retarget | the search, as detailed as you have time for: tries per round, rounds, wrist knots. The time estimate comes before you start |
+| Play · Teach | the plan on the hand, with Stop always in the top bar |
+| Camera | the hand follows your hand in front of the webcam (Sebas's tracking, our hand limits) |
+| Arm and hand | not built yet |
+
+> **Tested on 15 Nov in a browser with the fake hand only.** No page has moved the real hand yet, and the camera page has not seen a live webcam. Details: [docs/STUDIO.md](docs/STUDIO.md).
+
 ## Watch it play
 
 Click a clip for the video with sound. The sound is synthesised from the keys the simulation pressed, wrong notes included.
@@ -184,8 +211,8 @@ The claim we cannot make yet: that any of this works on the real hand.
 
 | You have | Do | You get |
 |---|---|---|
-| Docker (Mac, Linux, Windows with WSL) | `./wq build && ./wq check` | optimise, simulate, render videos |
-| Apple-silicon Mac or Linux, without Docker | native install below | the same, plus the interactive 3D viewer; can drive the hand |
+| Docker (Mac, Linux, Windows with WSL) | `./wq build && ./wq check`, then `./wq gui` | the studio: optimise, simulate, render videos |
+| Apple-silicon Mac or Linux, without Docker | native install below, then `python gui/app.py` | the same, plus the interactive 3D viewer, the camera page, and it can drive the hand |
 | The RDK X5 | [docs/RDK_X5_SETUP.md](docs/RDK_X5_SETUP.md) | drives the hand |
 
 ```bash
@@ -205,11 +232,13 @@ pip install -r requirements.txt
 python scripts/play_on_hand.py plans/k265_fixed/theme_q_1khz.npz --dry-run --yes --end 3
 ```
 
-Videos also need `ffmpeg` (`brew install ffmpeg`). The pinned packages have builds for Apple silicon; nobody has run this on a Mac yet.
+Videos also need `ffmpeg` (`brew install ffmpeg`). The camera page also needs `pip install -r requirements-camera.txt`. The pinned packages have builds for Apple silicon; nobody has run this on a Mac yet.
 
 </details>
 
 ## Run
+
+Everything below is also a button in the studio (`python gui/app.py`, [docs/STUDIO.md](docs/STUDIO.md)).
 
 ```bash
 # video with sound of a plan → plans/k265_fixed/theme_sim.mp4
@@ -300,7 +329,8 @@ Joint order everywhere is Wuji's: thumb 0 to 3, index 4 to 7, middle 8 to 11, ri
 
 <pre>
 Wuji-Quartet/
-├── <a href="wq">wq</a>                      Docker helper: build · sim · hand · shell · check
+├── <a href="wq">wq</a>                      Docker helper: build · sim · hand · shell · check · gui
+├── <a href="gui/">gui/</a>                    the studio: <a href="gui/app.py">app.py</a> (server) · jobs · library · planner · static/ (the pages). Guide: <a href="docs/STUDIO.md">docs/STUDIO.md</a>
 ├── <a href="Dockerfile">Dockerfile</a> · <a href="requirements.txt">requirements.txt</a>   one image for PCs (amd64) and the RDK X5 (arm64), versions pinned
 ├── <a href="scripts/">scripts/</a>
 │   ├── <a href="scripts/sbto_piano.py">sbto_piano.py</a>       the optimiser: notes → fingering → plan → 5-setup search → plan folder
@@ -315,6 +345,8 @@ Wuji-Quartet/
 │   ├── <a href="scripts/hand_info.py">hand_info.py</a> · <a href="scripts/hand_net.sh">hand_net.sh</a>     read-only hand check · network to the hand
 │   ├── <a href="scripts/rdk_setup.sh">rdk_setup.sh</a>        one-time setup of the RDK X5: Docker with the fixes its kernel needs
 │   ├── <a href="scripts/wuji_hw.py">wuji_hw.py</a>          SDK session, fake hand, raw MIDI input
+│   ├── <a href="scripts/teleop.py">teleop.py</a>           Sebas's webcam teleop (needs his handlib module, not in this repo)
+│   ├── <a href="scripts/camera_track.py">camera_track.py</a> · <a href="scripts/hand_follow.py">hand_follow.py</a>   the same tracking as two halves: camera → joint targets · targets → hand
 │   ├── <a href="scripts/sweep_mount.py">sweep_mount.py</a>      mount search (108 mounts) · <a href="scripts/score_midi.py">score_midi.py</a> recorded MIDI vs plan
 │   └── <a href="scripts/run_sbto_all.sh">run_sbto_all.sh</a>     the three reference runs in a row
 ├── <a href="plans/">plans/</a>                  finished plans (see above)
@@ -333,8 +365,8 @@ Wuji-Quartet/
 
 | Limit | Detail |
 |---|---|
-| Right hand only | the scene builder refuses a left hand; left-hand meshes are not in this repo |
-| Melody only | one hand, one note at a time; the left-hand part is not played |
+| Left hand | simulation only: the left model is an exact mirror of the right one; no real left hand has confirmed it |
+| One line per hand | each hand plays one melodic line; a piece for two hands is two plans |
 | Fixed wrist reaches seven white keys | B4 to A5, no black keys; anything wider needs `--wrist plan` (a moving wrist, so an arm) |
 | Moving wrist is an ideal arm | three stiff sliding axes stand in for the arm; no real arm model |
 | Für Elise "wrong" notes | about half of the 8 are the right key, 50 to 70 ms off |
@@ -352,6 +384,7 @@ Wuji-Quartet/
 |---|---|---|
 | The pianist's full motion capture (K.265) | 590 MB | `python scripts/furelise_peek.py assets/furelise`. Only needed to recompute the wrist path; the result is already in `assets/furelise/15/wrist_u.npz` |
 | Left-hand meshes, USD files, full-hand STEP files | 400 MB | `git clone --depth 1 https://github.com/wuji-technology/wuji-description` |
+| MediaPipe hand model for the camera page | 8 MB | the button on the Camera page, or `python scripts/camera_track.py --fetch-model` |
 
 </details>
 
@@ -364,8 +397,9 @@ Wuji-Quartet/
 | `assets/fur_elise_beethoven/fur_elise.mid` | [Mutopia Project](https://www.mutopiaproject.org/) | public domain |
 | Piano key model | constants from [RoboPianist](https://github.com/google-research/robopianist) | Apache 2.0 |
 | Hand control | [wuji-sdk](https://github.com/wuji-technology/wuji-sdk) · [Wuji Hand 2 docs](https://docs.wuji.tech/docs/en/wuji-hand/latest/) | |
+| Hand tracking in the camera page | [MediaPipe Hand Landmarker](https://ai.google.dev/edge/mediapipe/solutions/vision/hand_landmarker), downloaded on first use | Apache 2.0 |
 | Our code | this repo | no licence chosen yet; private |
 
 </details>
 
-<div align="center"><sub>Updated 14 Nov 2026 · every result number comes from <code>plans/*/report.json</code></sub></div>
+<div align="center"><sub>Updated 15 Nov 2026 · every result number comes from <code>plans/*/report.json</code></sub></div>

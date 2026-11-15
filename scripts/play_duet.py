@@ -16,6 +16,7 @@ ap = argparse.ArgumentParser(); ap.add_argument("plan_a"); ap.add_argument("plan
 ap.add_argument("--sn-a", default=None); ap.add_argument("--sn-b", default=None)
 ap.add_argument("--effort", type=float, default=0.5, help="current limit for both hands, A (first try 0.5; hard limit 1.5)")
 ap.add_argument("--tempo", type=float, default=1.0, help="0.5 = half speed"); ap.add_argument("--countdown", type=float, default=15.0, help="seconds from launch to the first command of the piece")
+ap.add_argument("--start-at", type=float, default=None, help="wall-clock time (time.time()) of the first command, instead of --countdown; the studio uses it to show the notes in step")
 ap.add_argument("--only", default=None, choices=["a", "b"], help="play one of the two parts alone"); ap.add_argument("--yes", action="store_true"); ap.add_argument("--dry-run", action="store_true")
 A = ap.parse_args()
 npz = lambda p: p if p.endswith(".npz") else os.path.join(p, "theme_q_1khz.npz")
@@ -28,8 +29,9 @@ if P["a"]["side"] == P["b"]["side"] and not (A.sn_a and A.sn_b) and not A.dry_ru
 t00 = min(P["a"]["t0"], P["b"]["t0"]); use = [k for k in ("a", "b") if A.only in (None, k)]
 for k in use: print(f"  {k.upper()}: {P[k]['name']} · {P[k]['side']} hand{' ' + P[k]['sn'] if P[k]['sn'] else ''} · {P[k]['notes']} notes · enters {(P[k]['t0'] - t00) / A.tempo:.2f} s after the start")
 print(f"  current limit {A.effort} A, tempo x{A.tempo}, first command {A.countdown:.0f} s after launch")
-if not (A.yes or A.dry_run): input("hands clear of both robots? Enter = start, Ctrl-C = abort ")
-T0 = time.time() + A.countdown; procs = {}; off = {}; played = {}; hit = []
+if not (A.yes or A.dry_run or A.start_at): input("hands clear of both robots? Enter = start, Ctrl-C = abort ")
+T0 = A.start_at or (time.time() + A.countdown); procs = {}
+print(f"start time {T0:.3f}", flush=True); off = {}; played = {}; hit = []
 
 
 def once(*_):          # the first Ctrl-C stops both hands; more of them change nothing

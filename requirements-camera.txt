@@ -1,0 +1,4 @@
+# Camera page and scripts/camera_track.py (webcam teleop). Optional: everything else runs without it.
+#   pip install -r requirements-camera.txt
+# Tested 2026-11-15 with Python 3.13.5 on Linux x86_64. mediapipe brings its own OpenCV (opencv-contrib-python).
+mediapipe==1.2.3
