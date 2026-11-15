@@ -7,6 +7,15 @@ python gui/app.py        # opens http://127.0.0.1:8770
 ./wq gui                 # the same inside the Docker image (Linux: can drive the hand; Mac: simulation only)
 ```
 
+From another of your devices (MacBook, phone) over Tailscale:
+
+```bash
+python gui/app.py --tailscale    # prints a link with a token: open that link on the other device
+```
+
+- It listens on this computer and on its Tailscale address only: the Wi-Fi it is on cannot reach it.
+- The other device is only the screen. The search, the camera and the connection to the hand all run where the studio runs.
+
 Starting it needs Python only. Pages that need more say so: MuJoCo to optimise, `wuji-sdk` to drive a hand from this computer, `pip install -r requirements-camera.txt` for the camera.
 
 **Status, 15 Nov 2026: every page was tested with the fake hand in a browser. No page has moved the real hand yet.**
@@ -55,7 +64,7 @@ With a real hand the top bar turns red and every start asks first.
 - Current limit: 1.5 A at most, here and again in `scripts/wuji_hw.py`.
 - One hand run at a time. A second start is refused.
 - A real hand needs a yes in a dialog that opens on Cancel; Enter never confirms it.
-- The server listens on this computer only. With `--host` it asks for a token. Requests from other web pages are refused.
+- The server listens on this computer only. With `--tailscale` or `--host` every other computer needs the token link. Requests from other web pages are refused.
 - Closing the studio stops running hand jobs the same way as Stop.
 
 ## Camera: how Sebas's code is used
@@ -102,5 +111,6 @@ Can the search improve the camera mode? Partly. It does not make the camera see 
 | Any real hand from the studio | the tests used the fake hand only |
 | The camera with a live webcam | the test computer has none: tested with a picture file |
 | The robot computer over real SSH | tested against a stand-in on one computer |
+| A second device over Tailscale | tested through the Tailscale address from the same computer, not from another device |
 | Teaching: current limit and mount height | the defaults (1.0 A, 50 % speed) are a guess. Set them to what you used |
 | macOS and Windows | written for them, run on Linux only |

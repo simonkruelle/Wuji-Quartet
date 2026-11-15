@@ -705,24 +705,29 @@ class Handler(BaseHTTPRequestHandler):
         self.send(code, dict(error=text))
 
     def allowed(self, url):
-        """Requests must name this server as their host (a foreign web page cannot reach the hand through the browser),
-        and when the server is open to the network they must carry the token."""
-        host = (self.headers.get("Host") or "").split(":")[0]
-        if host not in self.server.hosts:
-            self.fail(403, "unexpected Host header")
-            return False
+        """Who may talk to the studio.
+        A browser on this computer: no token, but the request must name this computer (so a foreign web page cannot reach
+        the hand through the browser by pointing its own name at 127.0.0.1).
+        Any other computer: the token, as a cookie that the printed link sets.
+        Always: a request that says which page sent it must come from the studio's own page."""
+        host_hdr = self.headers.get("Host") or ""
+        host = host_hdr.rsplit(":", 1)[0].strip("[]")
         origin = self.headers.get("Origin")
-        if origin and urlparse(origin).hostname not in self.server.hosts:
+        if origin and urlparse(origin).netloc != host_hdr:
             self.fail(403, "cross-site request refused")
             return False
-        if TOKEN:
-            q = parse_qs(url.query)
-            if q.get("token", [""])[0] == TOKEN:
-                self.send(302, b"", "text/plain", {"Location": "/", "Set-Cookie": f"wq={TOKEN}; Path=/; HttpOnly; SameSite=Strict"})
+        if self.client_address[0] in ("127.0.0.1", "::1") or not TOKEN:
+            if host not in self.server.hosts:
+                self.fail(403, "unexpected Host header")
                 return False
-            if f"wq={TOKEN}" not in (self.headers.get("Cookie") or ""):
-                self.send(403, b"This studio is open to the network: open the link with the token that the terminal printed.", "text/plain")
-                return False
+            return True
+        q = parse_qs(url.query)
+        if q.get("token", [""])[0] == TOKEN:
+            self.send(302, b"", "text/plain", {"Location": "/", "Set-Cookie": f"wq={TOKEN}; Path=/; HttpOnly; SameSite=Strict"})
+            return False
+        if f"wq={TOKEN}" not in (self.headers.get("Cookie") or ""):
+            self.send(403, b"This studio is open to other computers: open the link with the token that its terminal printed.", "text/plain")
+            return False
         return True
 
     def body(self):
@@ -919,17 +924,32 @@ class Server(ThreadingHTTPServer):
     allow_reuse_address = True
 
 
+def tailscale_address():
+    """This computer's address in the tailnet, and its name there (None if Tailscale is not running)."""
+    try:
+        ip = subprocess.run(["tailscale", "ip", "-4"], capture_output=True, text=True, timeout=5).stdout.split()[0]
+    except Exception:
+        return None, None
+    name = None
+    try:
+        name = json.loads(subprocess.run(["tailscale", "status", "--json"], capture_output=True, text=True, timeout=5).stdout)["Self"]["DNSName"].rstrip(".")
+    except Exception:
+        pass
+    return ip, name
+
+
 def main():
     global TOKEN
     ap = argparse.ArgumentParser(description="Wuji Quartet Studio")
     ap.add_argument("--port", type=int, default=8770)
-    ap.add_argument("--host", default="127.0.0.1", help="address to listen on (default: this computer only). Anything else asks for a token")
+    ap.add_argument("--tailscale", action="store_true", help="also reachable from your other Tailscale devices (and only from those); they need the token link that is printed")
+    ap.add_argument("--host", default="127.0.0.1", help="address to listen on (default: this computer only). Anything else asks other computers for a token")
     ap.add_argument("--no-token", action="store_true", help="with --host: no token (only behind a port that is itself private, as ./wq gui on a Mac)")
     ap.add_argument("--no-browser", action="store_true")
     A = ap.parse_args()
     probe_env()
     local = A.host in ("127.0.0.1", "localhost", "::1")
-    if not local and not A.no_token:
+    if (A.tailscale or not local) and not A.no_token:
         TOKEN = secrets.token_urlsafe(12)
     srv = Server((A.host, A.port), Handler)
     names = {"127.0.0.1", "localhost"}
@@ -944,7 +964,19 @@ def main():
                 names.add(extra.strip())
     srv.hosts = names
     url = f"http://127.0.0.1:{A.port}/"
-    print(f"Wuji Quartet Studio: {url}" + ("" if local else f"\n  from another computer: http://<this computer>:{A.port}/" + (f"?token={TOKEN}" if TOKEN else "")), flush=True)
+    print(f"Wuji Quartet Studio: {url}", flush=True)
+    tok = f"?token={TOKEN}" if TOKEN else ""
+    if A.tailscale:
+        ip, name = tailscale_address()
+        if not ip:
+            sys.exit("--tailscale: Tailscale is not running on this computer (`tailscale ip -4` gave no address)")
+        if local:                  # a second listener on the tailnet address only: not reachable from the Wi-Fi this computer is on
+            ts = Server((ip, A.port), Handler)
+            ts.hosts = names
+            threading.Thread(target=ts.serve_forever, daemon=True).start()
+        print(f"  from your other Tailscale devices: http://{ip}:{A.port}/{tok}" + (f"\n                                 or: http://{name}:{A.port}/{tok}" if name else ""), flush=True)
+    elif not local:
+        print(f"  from another computer: http://<this computer's address>:{A.port}/{tok}", flush=True)
     print(f"  python {ENV['python']} · " + " · ".join(f"{k} {'ok' if ENV[k] else 'missing'}" for k in ("mujoco", "sdk", "mediapipe", "ffmpeg")), flush=True)
     if not (A.no_browser or ENV["docker"]):
         threading.Timer(0.6, lambda: webbrowser.open(url)).start()
