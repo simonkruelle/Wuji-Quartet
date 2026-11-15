@@ -147,13 +147,12 @@ def need_real_ok(req, target):
 
 
 def note_hand_line(line):
-    """Keep the last word on whether the hand is off."""
+    """Keep the last word on whether the hand is off. hand_off.py prints one line per hand ('<SN>: off, all joints limp'):
+    start_util counts those, since with two hands one limp hand must not confirm the other."""
     if "switched off: confirmed" in line:
         M.set_hand("confirmed", "off, confirmed")
-    elif "NOT CONFIRMED" in line or "STILL SWITCHED ON" in line or "STILL ON" in line:
+    elif "NOT CONFIRMED" in line or "STILL SWITCHED ON" in line or "STILL ON" in line or "no answer after switching off" in line:
         M.set_hand("not_confirmed", "switch-off NOT confirmed")
-    elif "all joints limp" in line:
-        M.set_hand("confirmed", "off, confirmed")
 
 
 # ------------------------------------------------------------------ is the real hand there? (reads only, never a command to the hand)
@@ -553,6 +552,8 @@ def start_util(req, which):
     meta = dict(target=target, hands=[])
 
     def run(job):
+        off = dict(limp=0, bad=0)                 # hand_off.py: one line per hand it found
+
         def on_line(line):
             note_hand_line(line)
             note_link_line(target, line)
@@ -564,7 +565,18 @@ def start_util(req, which):
                 for h in meta["hands"]:
                     if h["sn"] == m.group(1):
                         h["joints"] = int(m.group(2))
-        return job.exec(hand_argv(target, [script]), on_line) == 0
+            if re.match(r"\S+: off, all joints limp", line):
+                off["limp"] += 1
+            elif re.match(r"\S+: (no answer after switching off|\d+ joints STILL ON)", line):
+                off["bad"] += 1
+        ok = job.exec(hand_argv(target, [script]), on_line) == 0
+        if which == "off":                        # confirmed only when every hand found said limp and the script ended cleanly
+            if ok and off["limp"] and not off["bad"]:
+                M.set_hand("confirmed", "off, confirmed")
+            else:
+                M.set_hand("not_confirmed", "switch-off NOT confirmed")
+                job.say(f"[studio] switch-off NOT confirmed: {off['limp']} hand(s) limp, {off['bad']} not; look at the hands, unplug the power if one holds a pose")
+        return ok
 
     return M.submit(J.Job("hand_" + which, title, "util", run, meta))
 
