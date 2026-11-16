@@ -25,10 +25,12 @@ The finger plan is found in simulation, rehearsed on five slightly different pia
 | on an acoustic upright piano | played with both real hands on 15 Nov | per hand, from a new tune to a plan (8 to 17 min with a full search) | notes of Ode to Joy in simulation, 0 wrong, on all ten test setups |
 
 <p align="center">
-  <a href="docs/media/real_ode_two_hands.mp4"><img src="docs/media/real_two_hands.gif" width="720" alt="Two Wuji Hand 2 on an upright piano, seen from above, playing Ode to Joy with both hands"></a>
+  <a href="https://simonkruelle.github.io/Wuji-Quartet/media/real_ode_two_hands.mp4"><img src="docs/media/real_two_hands.gif" width="720" alt="Two Wuji Hand 2 on an upright piano, seen from above, playing Ode to Joy with both hands"></a>
   <br>
-  <sub>15 Nov 2026. Both real hands play Ode to Joy: melody right, accompaniment left. The wrists stay where they are; every finger motion comes from the plan. Click for the video with sound.</sub>
+  <sub>15 Nov 2026. Both real hands play Ode to Joy: melody right, accompaniment left. The wrists stay where they are; every finger motion comes from the plan.</sub>
 </p>
+
+<p align="center"><strong><a href="https://simonkruelle.github.io/Wuji-Quartet/">▶ Watch every video with sound</a></strong> · or click any clip on this page</p>
 
 ## Three things it does
 
@@ -58,8 +60,8 @@ The finger plan is found in simulation, rehearsed on five slightly different pia
 
 <table>
   <tr>
-    <td width="50%" align="center"><a href="docs/media/real_teach.mp4"><img src="docs/media/real_teach.gif" width="420" alt="The robot hand lies on a learner's hand and presses the learner's fingers onto the keys"></a></td>
-    <td width="50%" align="center"><a href="docs/media/real_teach_ode.mp4"><img src="docs/media/real_teach_ode.gif" width="420" alt="Sebas at the piano with his hand under the robot hand"></a></td>
+    <td width="50%" align="center"><a href="https://simonkruelle.github.io/Wuji-Quartet/media/real_teach.mp4"><img src="docs/media/real_teach.gif" width="420" alt="The robot hand lies on a learner's hand and presses the learner's fingers onto the keys"></a></td>
+    <td width="50%" align="center"><a href="https://simonkruelle.github.io/Wuji-Quartet/media/real_teach_ode.mp4"><img src="docs/media/real_teach_ode.gif" width="420" alt="Sebas at the piano with his hand under the robot hand"></a></td>
   </tr>
   <tr>
     <td>The robot hand lies on the learner's hand and plays the tune through their fingers.</td>
@@ -202,12 +204,12 @@ Click a picture for the video with sound.
     <th width="50%">Jingle Bells, both hands</th>
   </tr>
   <tr>
-    <td align="center"><a href="docs/media/real_ode_two_hands.mp4"><img src="docs/media/real_ode_two_hands.jpg" alt="Both real hands playing Ode to Joy: melody right, accompaniment left; seen from above"></a></td>
-    <td align="center"><a href="docs/media/real_jingle_two_hands.mp4"><img src="docs/media/real_jingle_two_hands.jpg" alt="Both real hands playing Jingle Bells; seen from above"></a></td>
+    <td align="center"><a href="https://simonkruelle.github.io/Wuji-Quartet/media/real_ode_two_hands.mp4"><img src="docs/media/real_ode_two_hands.jpg" alt="Both real hands playing Ode to Joy: melody right, accompaniment left; seen from above"></a></td>
+    <td align="center"><a href="https://simonkruelle.github.io/Wuji-Quartet/media/real_jingle_two_hands.mp4"><img src="docs/media/real_jingle_two_hands.jpg" alt="Both real hands playing Jingle Bells; seen from above"></a></td>
   </tr>
 </table>
 
-More: [a lesson, close](docs/media/real_teach.mp4) · [Sebas's lesson](docs/media/real_teach_ode.mp4)
+More: [a lesson, close](https://simonkruelle.github.io/Wuji-Quartet/media/real_teach.mp4) · [Sebas's lesson](https://simonkruelle.github.io/Wuji-Quartet/media/real_teach_ode.mp4)
 
 | When | What |
 |---|---|
@@ -245,8 +247,8 @@ Two hands in one simulation, 0 wrong notes: Ode to Joy 62 + 127, Jingle Bells 51
     <th width="50%">Für Elise, opening</th>
   </tr>
   <tr>
-    <td align="center"><a href="docs/media/ode_duet.mp4"><img src="docs/media/ode_duet.gif" width="430" alt="Two simulated hands playing Ode to Joy: melody and accompaniment"></a></td>
-    <td align="center"><a href="docs/media/furelise_plan.mp4"><img src="docs/media/furelise_plan.gif" width="430" alt="Simulated hand playing the opening of Für Elise"></a></td>
+    <td align="center"><a href="https://simonkruelle.github.io/Wuji-Quartet/media/ode_duet.mp4"><img src="docs/media/ode_duet.gif" width="430" alt="Two simulated hands playing Ode to Joy: melody and accompaniment"></a></td>
+    <td align="center"><a href="https://simonkruelle.github.io/Wuji-Quartet/media/furelise_plan.mp4"><img src="docs/media/furelise_plan.gif" width="430" alt="Simulated hand playing the opening of Für Elise"></a></td>
   </tr>
   <tr>
     <td>Melody right, accompaniment left, both wrists fixed.</td>
@@ -254,7 +256,7 @@ Two hands in one simulation, 0 wrong notes: Ode to Joy 62 + 127, Jingle Bells 51
   </tr>
 </table>
 
-More clips, with sound: [Ode to Joy, one hand](docs/media/ode_level.mp4) · [Korobeiniki](docs/media/korobeiniki_duet.mp4) · [Jingle Bells](docs/media/jingle_two_hands.mp4) · [Pachelbel's Canon](docs/media/canon_duet.mp4) · [When the Saints](docs/media/saints_dmajor.mp4) · [K.265](docs/media/k265_fixed.mp4) · [the recorded pianist and the robot in one picture](docs/media/k265_pianist_robot_overlay.mp4) · [and side by side](docs/media/k265_pianist_and_robot.mp4). The sound is synthesised from the keys the simulation pressed, wrong notes included.
+More clips, with sound: [Ode to Joy, one hand](https://simonkruelle.github.io/Wuji-Quartet/media/ode_level.mp4) · [Korobeiniki](https://simonkruelle.github.io/Wuji-Quartet/media/korobeiniki_duet.mp4) · [Jingle Bells](https://simonkruelle.github.io/Wuji-Quartet/media/jingle_two_hands.mp4) · [Pachelbel's Canon](https://simonkruelle.github.io/Wuji-Quartet/media/canon_duet.mp4) · [When the Saints](https://simonkruelle.github.io/Wuji-Quartet/media/saints_dmajor.mp4) · [K.265](https://simonkruelle.github.io/Wuji-Quartet/media/k265_fixed.mp4) · [the recorded pianist and the robot in one picture](https://simonkruelle.github.io/Wuji-Quartet/media/k265_pianist_robot_overlay.mp4) · [and side by side](https://simonkruelle.github.io/Wuji-Quartet/media/k265_pianist_and_robot.mp4). The sound is synthesised from the keys the simulation pressed, wrong notes included.
 
 ## Next
 
@@ -390,15 +392,15 @@ Two facts that save an hour: the hand has the fixed address **192.168.1.111** (r
 |---|---|---|:--:|---|
 | [`plans/ode_level_stroke90_s0`](plans/ode_level_stroke90_s0) | Ode to Joy, 62 notes | fixed and level, five keys C5 to G5, 90 ms key strokes | 62 / 62, 0 wrong | **played, 15 Nov, many times. Try this first; [duet notes](assets/ode_to_joy/README.md)** |
 | [`plans/jingle_level_bpm120_s0`](plans/jingle_level_bpm120_s0) | Jingle Bells chorus, 51 notes, 120 bpm | same mount and keys as Ode to Joy; stroke parameters taken over from the Ode plan, no new optimisation | 51 / 51, 0 wrong | played 15 Nov, full speed, 1.0 A |
-| [`plans/saints_dmajor_bpm120_s0`](plans/saints_dmajor_bpm120_s0) | When the Saints Go Marching In, 32 notes, D major | **black-key position**: fixed and level, keys D5 E5 F♯5 G5 A5, the middle finger plays F♯; mount 6 cm above the keys, 11 cm in front, 3 cm right of E5 | 32 / 32, 0 wrong | played 15 Nov, twice, full speed, 1.0 A; [video](docs/media/saints_dmajor.mp4) |
+| [`plans/saints_dmajor_bpm120_s0`](plans/saints_dmajor_bpm120_s0) | When the Saints Go Marching In, 32 notes, D major | **black-key position**: fixed and level, keys D5 E5 F♯5 G5 A5, the middle finger plays F♯; mount 6 cm above the keys, 11 cm in front, 3 cm right of E5 | 32 / 32, 0 wrong | played 15 Nov, twice, full speed, 1.0 A; [video](https://simonkruelle.github.io/Wuji-Quartet/media/saints_dmajor.mp4) |
 | [`plans/ode_dmajor_bpm108_s0`](plans/ode_dmajor_bpm108_s0) | Ode to Joy in D major (Beethoven's key), 62 notes | black-key position | 62 / 62, 0 wrong | not yet |
 | [`plans/jingle_dmajor_bpm120_s0`](plans/jingle_dmajor_bpm120_s0) | Jingle Bells chorus in D major, 51 notes | black-key position | 51 / 51, 0 wrong | not yet |
-| [`plans/korobeiniki_melody_right_s0`](plans/korobeiniki_melody_right_s0) + [`plans/korobeiniki_accomp_left_s0`](plans/korobeiniki_accomp_left_s0) | **Two hands:** Korobeiniki, first phrase four times, 120 → 200 bpm, 78 + 123 notes | fixed and level, keys D5 to A5 and D3 to A3 (one key right of the Ode position) | 78 / 78 and 123 / 123, 0 wrong | **played with both hands, 15 Nov, twice**; the melody alone before that; [video](docs/media/korobeiniki_duet.mp4) |
+| [`plans/korobeiniki_melody_right_s0`](plans/korobeiniki_melody_right_s0) + [`plans/korobeiniki_accomp_left_s0`](plans/korobeiniki_accomp_left_s0) | **Two hands:** Korobeiniki, first phrase four times, 120 → 200 bpm, 78 + 123 notes | fixed and level, keys D5 to A5 and D3 to A3 (one key right of the Ode position) | 78 / 78 and 123 / 123, 0 wrong | **played with both hands, 15 Nov, twice**; the melody alone before that; [video](https://simonkruelle.github.io/Wuji-Quartet/media/korobeiniki_duet.mp4) |
 | [`plans/korobeiniki_melody_right_cem_s0`](plans/korobeiniki_melody_right_cem_s0) + [`plans/korobeiniki_accomp_left_cem_s0`](plans/korobeiniki_accomp_left_cem_s0) | the same piece, with its own search (9 min per hand) | same | 78 / 78 and 123 / 123, 0 wrong | not yet |
-| [`plans/ode_accomp_left_s0`](plans/ode_accomp_left_s0) · [`_right_`](plans/ode_accomp_right_s0) | **Two hands:** accompaniment for Ode to Joy, 127 notes, for a left hand · for a second right hand | fixed and level, five keys C3 to G3, mirrored mount for the left hand | 127 / 127, 0 wrong; with `ode_level_stroke90_s0` in one simulation: all notes of both | the piece was played with both hands on 15 Nov, from a pair the studio made from the same MIDI files; [video](docs/media/ode_duet.mp4), [setup](docs/RUNBOOK.md#two-hands) |
+| [`plans/ode_accomp_left_s0`](plans/ode_accomp_left_s0) · [`_right_`](plans/ode_accomp_right_s0) | **Two hands:** accompaniment for Ode to Joy, 127 notes, for a left hand · for a second right hand | fixed and level, five keys C3 to G3, mirrored mount for the left hand | 127 / 127, 0 wrong; with `ode_level_stroke90_s0` in one simulation: all notes of both | the piece was played with both hands on 15 Nov, from a pair the studio made from the same MIDI files; [video](https://simonkruelle.github.io/Wuji-Quartet/media/ode_duet.mp4), [setup](docs/RUNBOOK.md#two-hands) |
 | [`plans/jingle_accomp_left_s0`](plans/jingle_accomp_left_s0) · [`_right_`](plans/jingle_accomp_right_s0) | **Two hands:** accompaniment for Jingle Bells, 123 notes | same position as the Ode accompaniment | 123 / 123, 0 wrong | as for Ode to Joy |
 | [`plans/korobeiniki_accomp_right_s0`](plans/korobeiniki_accomp_right_s0) | Korobeiniki accompaniment for a second right hand | keys D3 to A3 | 123 / 123, 0 wrong | not yet: our second hand is a left hand |
-| [`plans/canon_melody_right_s0`](plans/canon_melody_right_s0) + [`plans/canon_bass_left_s0`](plans/canon_bass_left_s0) | **Two hands:** Pachelbel's Canon in C, simplified, 72 bpm, 26 + 26 notes | each thumb reaches one key beyond the five-finger position; right hand centred on C5, left hand on G3 | 26 / 26 and 26 / 26, 0 wrong; optimised | not yet; [video](docs/media/canon_duet.mp4) |
+| [`plans/canon_melody_right_s0`](plans/canon_melody_right_s0) + [`plans/canon_bass_left_s0`](plans/canon_bass_left_s0) | **Two hands:** Pachelbel's Canon in C, simplified, 72 bpm, 26 + 26 notes | each thumb reaches one key beyond the five-finger position; right hand centred on C5, left hand on G3 | 26 / 26 and 26 / 26, 0 wrong; optimised | not yet; [video](https://simonkruelle.github.io/Wuji-Quartet/media/canon_duet.mp4) |
 | [`plans/ode_level_s0`](plans/ode_level_s0) | Ode to Joy, 62 notes | same as the first row, strokes as fast as the joints allow | 62 / 62, 0 wrong | jerky when it plays alone; used for the Teach lessons on 16 Nov |
 | [`plans/k265_fixed`](plans/k265_fixed) | K.265 theme | fixed, first mount | 76 / 80, 1 wrong | not yet: on the real hand the thumb cannot reach from this mount |
 | [`plans/ode_fixed`](plans/ode_fixed) | Ode to Joy, 62 notes | fixed, first mount | 61 / 62, 0 wrong | in the air only (14 Nov); same thumb problem |
