@@ -195,6 +195,21 @@ canvas.stage { width: 100%; height: 420px; display: block; }
 .banner.warn { background: #fff5e2; color: #7a4a00; }
 .banner.bad { background: #ffeceb; color: #a8211a; }
 .banner.ok { background: #e7f9ec; color: #176a2f; }
+.cam-wrap { position: relative; }
+.cal-guide { position: absolute; top: 10px; left: 10px; width: 250px; max-width: calc(100% - 20px); background: rgba(255,255,255,.95); border-radius: 10px;
+  padding: 12px 14px; box-shadow: 0 4px 18px rgba(0,0,0,.25); display: flex; flex-direction: column; gap: 7px; }
+.cal-guide[hidden] { display: none; }
+.cal-guide svg.pose { width: 120px; height: 130px; align-self: center; fill: #f1c9a5; stroke: #8a5a3c; stroke-width: 1.5; }
+.cal-guide svg.pose .th { fill: #f4b183; }
+.cal-step { font-size: 12px; color: var(--subtle); }
+.cal-title { font-size: 18px; font-weight: 700; }
+.cal-text { font-size: 13px; line-height: 1.35; }
+.cal-phase { font-size: 13px; font-weight: 600; margin-right: auto; }
+.cal-bar { height: 8px; background: var(--track); border-radius: 4px; overflow: hidden; }
+.cal-bar i { display: block; height: 100%; width: 0; background: #b8c4d0; }
+.cal-bar i.hold { background: var(--blue); }
+.cal-res { display: grid; grid-template-columns: 48px minmax(0,1fr); gap: 2px 8px; align-items: center; font-size: 13px; }
+.cal-res .hint { grid-column: 2; font-size: 12px; }
 img.cam { width: 100%; height: 62vh; background: #12161c; border-radius: 6px; display: block; object-fit: contain; }
 .joints { display: grid; grid-template-columns: 54px repeat(4, minmax(0, 1fr)); gap: 5px 8px; align-items: center; font-size: 12px; }
 .joints .jb { height: 12px; background: var(--track); border-radius: 3px; position: relative; overflow: hidden; }

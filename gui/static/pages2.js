@@ -246,13 +246,40 @@ App.pages.play = {
 };
 
 // ---------------------------------------------------------------- Camera (Sebas's webcam teleop)
+// Guided calibration: each pose is shown, then held while the camera collects it (scripts/teleop.py CAL_POSES).
+const CAL_STEPS = [
+  {pose: 'open', title: 'Open hand', text: 'Hand flat, fingers together, thumb next to the index finger. Palm to the camera.'},
+  {pose: 'fist', title: 'Fist', text: 'Curl all four fingers as far as they go. Thumb resting on the side.'},
+  {pose: 'spread', title: 'Spread wide', text: 'Fingers and thumb as far apart as they go. Hand flat.'},
+  {pose: 'thumb', title: 'Thumb across', text: 'Thumb tip on the base of your little finger. Other fingers straight.'},
+];
+const CAL_PREP = 1.5, CAL_HOLD = 3.0;        // seconds to get into the pose, seconds it is recorded
+
+function poseSvg(pose) {                      // palm to the camera, mirrored view: index on the left, thumb at the far left
+  const NS = 'http://www.w3.org/2000/svg', svg = document.createElementNS(NS, 'svg');
+  svg.setAttribute('viewBox', '0 0 120 130'); svg.setAttribute('class', 'pose');
+  const el = (tag, a) => { const e = document.createElementNS(NS, tag); for (const k in a) e.setAttribute(k, a[k]); svg.append(e); return e; };
+  const base = [[41, 38], [54, 42], [67, 39], [80, 31]];            // x of each finger's base, straight length
+  const ang = {open: [0, 0, 0, 0], fist: [0, 0, 0, 0], spread: [-20, -5, 9, 22], thumb: [0, 0, 0, 0]}[pose];
+  const thumb = {open: [-22, 32], fist: [-12, 26], spread: [-68, 34], thumb: [98, 40]}[pose];   // angle from up, length
+  base.forEach(([x, len], i) => {
+    const l = pose === 'fist' ? 11 : len;
+    el('rect', {x: x - 5.5, y: 62 - l, width: 11, height: l + 6, rx: 5.5, transform: `rotate(${ang[i]} ${x} 62)`});
+  });
+  el('rect', {x: 34, y: 58, width: 53, height: 52, rx: 11});
+  el('rect', {x: 31, y: 92 - thumb[1], width: 12, height: thumb[1] + 6, rx: 6, transform: `rotate(${thumb[0]} 37 92)`, class: 'th'});
+  return svg;
+}
+
 App.pages.camera = {
   build(el) {
     this.img = h('img', {class: 'cam', alt: 'Camera picture with the tracked hand'});
     this.need = h('div', {});
     this.chips = h('div', {class: 'row tight', style: {marginTop: '8px'}});
     this.camBtn = h('button', {class: 'pill primary', onclick: () => this.toggleCamera()});
-    this.calBtn = h('button', {class: 'pill', text: 'Calibrate', title: 'Hold your hand flat and open, then press', onclick: () => this.cmd({calibrate: true}, 'Calibrated: this pose is "open".')});
+    this.calBtn = h('button', {class: 'pill', text: 'Calibrate', title: 'Four poses, about 5 s each: the camera learns your hand\'s range', onclick: () => this.guided()});
+    this.quickCal = h('button', {class: 'pill', text: 'Open hand only', title: 'Hold your hand flat and open, then press: sets only the zero pose', onclick: () => this.cmd({calibrate: true}, 'Calibrated: this pose is "open".')});
+    this.guide = h('div', {class: 'cal-guide', hidden: true});
     this.driveBtn = h('button', {class: 'pill big', onclick: () => this.toggleDrive()});
     this.camNo = h('input', {type: 'number', min: 0, max: 9, value: App.state.settings.camera});
     this.source = h('input', {type: 'text', placeholder: 'video or picture file', style: {width: '100%'}});
@@ -265,18 +292,74 @@ App.pages.camera = {
     this.status = h('div', {});
     el.append(...pageHead('Camera'), this.need,
       h('div', {class: 'cols main-side'},
-        card(null, this.img, this.chips),
+        card(null, h('div', {class: 'cam-wrap'}, this.img, this.guide), this.chips),
         h('div', {},
           card(null, h('div', {class: 'ctrl-col'}, h('div', {class: 'row'}, this.camBtn, this.calBtn), this.driveBtn, this.status),
             h('details', {class: 'disclosure'}, h('summary', {text: 'More'}), h('div', {class: 'form', style: {gridTemplateColumns: '96px minmax(0,1fr)'}},
               ...field('Camera', this.camNo), ...field('File', this.source), ...field('Smoothing', this.alpha),
               ...field('Current limit', this.effort), ...field('Fastest', this.vmax),
+              ...field('Calibrate', this.quickCal),
               ...field('', h('label', {class: 'check'}, this.thumb, h('span', {text: 'thumb follows'}))), ...field('', h('label', {class: 'check'}, this.flip, h('span', {text: 'mirror finger spread'})))))),
           card(null, this.joints))));
     this.timer = setInterval(() => this.tick(), 250);
   },
   onTarget() { if (this.effort) this.effort.setDisabled(!targetInfo().real); },
   async cmd(c, msg) { const r = await act(() => api('/api/camera/cmd', c)); if (r && msg) flash(msg); },
+  async guided() {
+    if (this.calRun) return;
+    const run = this.calRun = {cancel: false}, sleep = ms => new Promise(r => setTimeout(r, ms));
+    const send = c => api('/api/camera/cmd', c);
+    const cancelBtn = h('button', {class: 'pill', text: 'Cancel', onclick: () => { run.cancel = true; }});
+    this.guide.hidden = false;
+    try {
+      for (let i = 0; i < CAL_STEPS.length && !run.cancel; i++) {
+        const st = CAL_STEPS[i], bar = h('i'), label = h('div', {class: 'cal-phase'}), seen = h('span', {class: 'chip plain'});
+        clear(this.guide).append(h('div', {class: 'cal-step', text: `Pose ${i + 1} of ${CAL_STEPS.length}`}), poseSvg(st.pose),
+          h('div', {class: 'cal-title', text: st.title}), h('div', {class: 'cal-text', text: st.text}),
+          h('div', {class: 'cal-bar'}, bar), h('div', {class: 'row tight'}, label, seen), cancelBtn);
+        const t0 = performance.now();
+        let capturing = false;
+        while (!run.cancel) {
+          const t = (performance.now() - t0) / 1000;
+          if (t >= CAL_PREP + CAL_HOLD) break;
+          if (!capturing && t >= CAL_PREP) { capturing = true; await send({capture: st.pose}); }
+          bar.style.width = (capturing ? (t - CAL_PREP) / CAL_HOLD : t / CAL_PREP) * 100 + '%';
+          bar.className = capturing ? 'hold' : '';
+          label.textContent = capturing ? 'Hold it …' : 'Get into the pose';
+          const c = this.cs || {}, n = (c.captured || {})[st.pose];
+          seen.className = 'chip ' + (c.tracked ? 'ok' : 'bad');
+          seen.textContent = c.tracked ? (capturing && n != null ? `hand seen · ${n} frames` : 'hand seen') : 'no hand';
+          await sleep(50);
+        }
+        await send({capture: null});
+      }
+      if (run.cancel) { flash('Calibration cancelled: the previous one still applies.'); return; }
+      const repOf = () => JSON.stringify(((this.cs || {}).calibration || {}).report || null), before = repOf();
+      await send({fit: true});
+      clear(this.guide).append(h('div', {class: 'cal-title', text: 'Working it out …'}));
+      for (let k = 0; k < 20 && repOf() === before; k++) await sleep(150);     // the state poll brings the new report
+      this.showReport(repOf() === before ? null : JSON.parse(repOf()));
+    } catch (e) {
+      flash(e.message || String(e), true);
+      try { await send({capture: null}); } catch (_) {}
+    } finally {
+      this.calRun = null;
+      if (run.cancel) this.guide.hidden = true;
+    }
+  },
+  showReport(rep) {
+    const rows = CAL_STEPS.map(st => {
+      const r = (rep || {})[st.pose] || {}, few = (r.frames || 0) < 15, weak = r.weak || 0;
+      const ok = !few && weak <= (r.joints || 0) / 3;
+      return h('div', {class: 'cal-res'}, h('span', {class: 'chip ' + (ok ? 'ok' : 'warn'), text: ok ? 'good' : 'redo'}), h('b', {text: st.title}),
+        h('span', {class: 'hint', text: few ? `hand seen in ${r.frames || 0} frames only` : weak ? `${weak} of ${r.joints} joints not fitted (barely moved, or implausible): left as before` : `${r.frames} frames`}));
+    });
+    const bad = rows.some(r => r.firstChild.textContent === 'redo');
+    clear(this.guide).append(h('div', {class: 'cal-title', text: rep ? (bad ? 'Calibrated, with gaps' : 'Calibrated') : 'No answer from the camera'}),
+      ...rows, h('div', {class: 'cal-text', text: rep ? 'Saved: the camera starts with it next time.' : 'Try again.'}),
+      h('div', {class: 'row tight'}, h('button', {class: 'pill', text: 'Again', onclick: () => this.guided()}),
+        h('button', {class: 'pill primary', text: 'Done', onclick: () => { this.guide.hidden = true; }})));
+  },
   async toggleCamera() {
     const job = App.state.jobs.find(j => j.kind === 'camera' && j.state === 'running');
     if (job) return act(() => api('/api/stop', {id: job.id}));
@@ -302,7 +385,8 @@ App.pages.camera = {
     clear(this.chips).append(
       h('span', {class: 'chip ' + (c.starting ? 'warn' : c.tracked ? 'ok' : 'bad'), text: c.starting ? 'starting' : c.paused ? 'paused' : c.tracked ? 'hand seen' : 'no hand'}),
       c.fps != null ? h('span', {class: 'chip plain', text: c.fps + ' fps'}) : null,
-      h('span', {class: 'chip ' + (c.calibrated ? 'ok' : 'plain'), text: c.calibrated ? 'calibrated' : 'not calibrated'}));
+      h('span', {class: 'chip ' + (c.calibrated ? 'ok' : 'plain'), text: c.calibrated ? 'calibrated' + (c.calibration && c.calibration.saved ? ' · ' + c.calibration.saved : '') : 'not calibrated',
+        title: c.calibration ? 'guided calibration of ' + c.calibration.saved : null}));
     const lo = [0, -1.0, 0, 0], hi = [1.3, 0.3, 1.4, 1.4], q = c.q || [], a = c.actual;
     clear(this.joints).append(h('span'), ...['base', 'side', 'middle', 'tip'].map(t => h('span', {class: 'hd', text: t})));
     FINGERS.forEach((f, i) => {
@@ -329,7 +413,8 @@ App.pages.camera = {
     this.camBtn.textContent = running ? 'Stop camera' : 'Start camera';
     this.camBtn.className = 'pill ' + (running ? '' : 'primary');
     this.camBtn.disabled = !(e.cv2 && e.mediapipe && e.hand_model) && !running;
-    this.calBtn.disabled = !running;
+    this.calBtn.disabled = !running; this.quickCal.disabled = !running;
+    if (!running && this.calRun) this.calRun.cancel = true;
     if (running && !this.img.dataset.on) { this.img.dataset.on = '1'; setTimeout(() => { if (App.state.camera.running) this.img.src = '/api/camera/stream?t=' + Date.now(); }, 1500); }
     if (!running && this.img.dataset.on) { this.img.removeAttribute('src'); delete this.img.dataset.on; clear(this.chips); clear(this.joints); }
     const fj = App.state.jobs.find(j => j.kind === 'follow'), driving = fj && (fj.state === 'running' || fj.state === 'queued'), t = targetInfo();

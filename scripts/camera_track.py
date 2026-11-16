@@ -12,6 +12,9 @@ stdout: T <seconds> <20 joint targets in rad>   one line per tracked frame (noth
         # ...                                    status
 stdin : one JSON object per line: {"pause": true} {"calibrate": true} {"thumb": false} {"flip_spread": true} {"alpha": 0.4} {"driving": true} {"quit": true}
         ("driving" only changes the picture's label: whether a hand follows is up to whoever reads the T lines)
+        guided calibration: {"capture": "open"|"fist"|"spread"|"thumb"} collects that pose's frames, {"capture": null} stops,
+        {"fit": true} sets the neutral and per-joint gains from them (teleop.fit_calibration) and saves --calibration
+--calibration FILE loads a saved guided calibration at start and saves the next one there.
 --record DIR saves every frame's landmarks next to the joint targets (landmarks.npz + meta.json): the pairs a learned
 retargeting would be trained on.
 Needs: pip install -r requirements-camera.txt   (mediapipe, opencv)"""
@@ -88,6 +91,7 @@ def main():
     ap.add_argument("--alpha", type=float, default=0.4, help="smoothing, 0..1 (1 = none)"); ap.add_argument("--no-mirror", action="store_true")
     ap.add_argument("--width", type=int, default=640, help="width of the served picture"); ap.add_argument("--fps", type=float, default=30.0, help="frame rate for --source")
     ap.add_argument("--record", default=None, help="folder for landmarks.npz + meta.json"); ap.add_argument("--seconds", type=float, default=0, help="stop after this time (tests)")
+    ap.add_argument("--calibration", default=None, help="JSON: load at start, save after a guided calibration")
     ap.add_argument("--fetch-model", action="store_true"); A = ap.parse_args()
     if A.fetch_model: fetch_model(); return
     try: import cv2, mediapipe as mp
@@ -105,9 +109,10 @@ def main():
     landmarker = vision.HandLandmarker.create_from_options(vision.HandLandmarkerOptions(
         base_options=BaseOptions(model_asset_path=MODEL), running_mode=vision.RunningMode.VIDEO, num_hands=1,
         min_hand_detection_confidence=0.6, min_tracking_confidence=0.5))
-    opt = dict(pause=False, thumb=not A.no_thumb, flip_spread=A.flip_spread, alpha=float(np.clip(A.alpha, 0.05, 1.0)), quit=False, calibrate=False, driving=False)
+    opt = dict(pause=False, thumb=not A.no_thumb, flip_spread=A.flip_spread, alpha=float(np.clip(A.alpha, 0.05, 1.0)), quit=False, calibrate=False, driving=False,
+               capture=None, fit=False)
     state = dict(tracked=False, paused=False, fps=0.0, frames=0, q=[0.0] * 20, thumb=opt["thumb"], flip_spread=opt["flip_spread"], alpha=opt["alpha"],
-                 calibrated=False, source=A.source or f"camera {A.camera}", seen=0.0)
+                 calibrated=False, source=A.source or f"camera {A.camera}", seen=0.0, capture=None, captured={}, calibration=None)
     def control():
         for line in sys.stdin:
             try: c = json.loads(line)
@@ -115,9 +120,18 @@ def main():
             for k in ("pause", "thumb", "flip_spread", "quit", "calibrate", "driving"):
                 if k in c: opt[k] = bool(c[k])
             if "alpha" in c: opt["alpha"] = float(np.clip(float(c["alpha"]), 0.05, 1.0))
+            if "capture" in c: opt["capture"] = c["capture"] if c["capture"] in T.CAL_POSES else None
+            if c.get("fit"): opt["fit"] = True
     threading.Thread(target=control, daemon=True).start()
     frames = Frames(); srv = serve(A.port, frames, state) if A.port else None
     neutral = dict(T.DEFAULT_NEUTRAL); raw = None; q_f = np.zeros(20); thumb_hold = np.zeros(4)
+    captures = {}; capturing = None
+    if A.calibration and os.path.exists(A.calibration):
+        try:
+            saved = json.load(open(A.calibration)); neutral.update(saved["neutral"])
+            state.update(calibrated=True, calibration=dict(saved=saved.get("date"), report=saved.get("report")))
+            print(f"# guided calibration loaded from {A.calibration} ({saved.get('date')})", flush=True)
+        except (ValueError, KeyError, OSError) as e: print(f"# calibration file not used: {e}", flush=True)
     rec = dict(t=[], world=[], image=[], q=[]) if A.record else None
     t0 = time.monotonic(); n = 0; n_tracked = 0; last_ts = -1; t_fps = t0; n_fps = 0
     print(f"# tracking {state['source']}" + (f", picture at http://127.0.0.1:{A.port}/stream" if A.port else ""), flush=True)
@@ -137,6 +151,7 @@ def main():
             if lm is not None:
                 world = np.array([[p.x, p.y, p.z] for p in res.hand_world_landmarks[0]]); raw = T.features(world)
                 if opt["calibrate"]: neutral.update({k: raw[k] for k in T.DEFAULT_NEUTRAL}); opt["calibrate"] = False; state["calibrated"] = True; print("# neutral pose calibrated", flush=True)
+                if capturing: captures[capturing].append(raw)
                 if not paused:
                     q = T.retarget(raw, neutral, opt["flip_spread"], opt["thumb"], thumb_hold)
                     q_f = opt["alpha"] * q + (1 - opt["alpha"]) * q_f; n_tracked += 1
@@ -144,10 +159,25 @@ def main():
                     if rec is not None:
                         rec["t"].append(now); rec["world"].append(world); rec["image"].append([[p.x, p.y, p.z] for p in lm]); rec["q"].append(q_f.copy())
             elif opt["calibrate"]: opt["calibrate"] = False
+            if opt["capture"] != capturing:                       # a new pose starts: forget its earlier frames
+                capturing = opt["capture"]
+                if capturing: captures[capturing] = []
+            if opt["fit"]:
+                opt["fit"] = False
+                neutral, report = T.fit_calibration(captures, opt["flip_spread"], neutral)
+                state.update(calibrated=True, calibration=dict(saved=time.strftime("%Y-%m-%d %H:%M"), report=report))
+                print("# guided calibration: " + json.dumps(report), flush=True)
+                if A.calibration:
+                    os.makedirs(os.path.dirname(os.path.abspath(A.calibration)), exist_ok=True)
+                    json.dump(dict(date=time.strftime("%Y-%m-%d %H:%M"), source=state["source"], mirror=not A.no_mirror, report=report,
+                                   targets={p: {str(i): t for i, t in d.items()} for p, d in T.CAL_POSES.items()}, neutral=neutral),
+                              open(A.calibration, "w"), indent=1)
+                captures = {}
             n += 1; n_fps += 1
             if now + t0 - t_fps >= 1.0: state["fps"] = round(n_fps / (now + t0 - t_fps), 1); t_fps = now + t0; n_fps = 0
             state.update(tracked=lm is not None, paused=paused, frames=n, q=[round(float(v), 4) for v in q_f], thumb=opt["thumb"], flip_spread=opt["flip_spread"],
-                         alpha=opt["alpha"], seen=round(n_tracked / max(n, 1), 3))
+                         alpha=opt["alpha"], seen=round(n_tracked / max(n, 1), 3),
+                         capture=capturing, captured={p: len(v) for p, v in captures.items()})
             if srv is not None:
                 pic = T.draw(frame, lm, q_f, paused, opt["driving"]); h, w = pic.shape[:2]
                 if w > A.width: pic = cv2.resize(pic, (A.width, int(h * A.width / w)))

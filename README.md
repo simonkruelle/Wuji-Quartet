@@ -452,7 +452,7 @@ Wuji-Quartet/
 │   ├── <a href="scripts/hand_net.sh">hand_net.sh</a> · <a href="scripts/hand_adapter.sh">hand_adapter.sh</a>   network to the hand · to the second hand
 │   ├── <a href="scripts/rdk_setup.sh">rdk_setup.sh</a>        one-time setup of the RDK X5: Docker with the fixes its kernel needs
 │   ├── <a href="scripts/wuji_hw.py">wuji_hw.py</a>          SDK session, current limit, confirmed switch-off, fake hand
-│   ├── <a href="scripts/teleop.py">teleop.py</a>           Sebas's webcam teleop (needs his handlib module, not in this repo)
+│   ├── <a href="scripts/teleop.py">teleop.py</a>           Sebas's webcam teleop, standalone (needs his handlib module, not in this repo) · <a href="scripts/hand_features.py">hand_features.py</a> its angle maths
 │   ├── <a href="scripts/camera_track.py">camera_track.py</a> · <a href="scripts/hand_follow.py">hand_follow.py</a>   the same tracking as two halves: camera → joint targets · targets → hand
 │   └── <a href="scripts/score_midi.py">score_midi.py</a> · <a href="scripts/run_sbto_all.sh">run_sbto_all.sh</a>   recorded MIDI vs plan · the three reference runs in a row
 ├── <a href="plans/">plans/</a>                  finished plans (see above)

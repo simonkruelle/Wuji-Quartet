@@ -186,8 +186,28 @@ webcam ─► scripts/camera_track.py ─► "T <time> <20 joint angles>" per fr
           from scripts/teleop.py
 ```
 
-- `scripts/teleop.py` is Sebas's file, unchanged. It needs his `handlib` module and a model under `scripts/models/`, which are not in this repo, so it does not run here by itself.
+- `scripts/teleop.py` is Sebas's file, updated 2026-11-15. The angle maths moved to `scripts/hand_features.py`, which needs no Wuji SDK.
+  `c` now also calibrates MediaPipe's straight-finger bend offset. Spread is measured between neighbouring fingers. The ring-follows-middle coupling is reduced, and the thumb tip moving across the palm now counts.
+  The finger spread sign was reversed (spreading drove the robot fingers into each other); fixed the same day.
+  Run on its own, it still needs his `handlib` module from the folder above the repo. It uses the same model in `assets/mediapipe/`.
 - `camera_track.py` imports his tracking and mapping functions and replaces his window with a picture stream for the page.
+
+### Calibrate (guided)
+
+**Calibrate** shows four poses over the camera picture. Each pose gives you 1.5 s to get into it, then records it for 3 s:
+
+| Pose | What you do | What it sets |
+|---|---|---|
+| Open hand | flat, fingers together, thumb next to the index finger | the zero point of every joint (as the old one-press calibration did) |
+| Fist | all four fingers curled as far as they go | finger base, middle and tip: your full curl gives the robot's full curl (1.3 / 1.4 / 1.1 rad) |
+| Spread wide | fingers and thumb as far apart as they go | finger spread (index 0.4, ring −0.3, pinky −0.5 rad) and thumb swing (−1.0 rad) |
+| Thumb across | thumb tip on the base of the little finger | thumb base (1.2 rad) |
+
+- Each joint gets one gain: the robot angle the pose should reach, divided by the angle your hand gave in that pose (the median of its frames). This is `fit_calibration()` and `CAL_POSES` in `scripts/teleop.py`.
+- A gain outside 0.5–3 is treated as a pose not held, or as a tracking error: that joint keeps gain 1, and the result says **redo** for its pose.
+- The result is saved to `out/camera_calibration.json`, with the raw medians of each pose. The camera loads it at the next start.
+- **More › Open hand only** is the old one-press calibration: it resets only the zero point.
+- Tested with a recorded video (not a live person): the steps, the recording, the fit and the save work. Whether the gains improve the mapping is not checked yet.
 - `hand_follow.py` replaces his hand connection with ours, so the camera mode has the same current limit and switch-off check as playing.
 - Anything that prints `T` lines can drive the hand: a recorded session, or a learned mapping later.
 - The hand can be on another computer: the page pipes the lines through SSH.

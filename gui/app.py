@@ -768,6 +768,7 @@ def start_camera(req):
         argv += ["--camera", str(int(req.get("camera", S["camera"])))]
     if record:
         argv += ["--record", record]
+    argv += ["--calibration", "out/camera_calibration.json"]     # the last guided calibration, reused at the next start
     if req.get("no_thumb"): argv += ["--no-thumb"]
     if req.get("flip_spread"): argv += ["--flip-spread"]
     meta = dict(port=port, record=record, source=src or f"camera {int(req.get('camera', S['camera']))}")
@@ -813,7 +814,9 @@ def camera_cmd(cmd):
     job = CAM["job"]
     if not job or not job.proc or job.proc.poll() is not None:
         raise ValueError("the camera is not running")
-    allowed = {k: cmd[k] for k in ("pause", "calibrate", "thumb", "flip_spread", "alpha", "quit", "driving") if k in cmd}
+    allowed = {k: cmd[k] for k in ("pause", "calibrate", "thumb", "flip_spread", "alpha", "quit", "driving", "capture", "fit") if k in cmd}
+    if allowed.get("capture") not in (None, "open", "fist", "spread", "thumb"):
+        raise ValueError("unknown calibration pose")
     job.proc.stdin.write(json.dumps(allowed) + "\n")
     job.proc.stdin.flush()
 
