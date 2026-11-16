@@ -51,6 +51,8 @@ def widx(m): return pc.key_y(m) / pc.PITCH
 
 # ------------------------------------------------------------------ scene
 PRESS_X_F = {}      # finger -> contact point along the key (m from the hinge); empty = pc.PRESS_X for all (--press-x)
+PRESS_D = -0.0085   # press target: fingertip pad this far below the key top (m); a key bottoms out near -0.010, the rest is push
+PRESS_D_F = {}      # finger -> its own press target (--press-d), e.g. a deeper thumb: its stroke ends closer to the key bottom than the fingers'
 LIMITS = None       # joint ranges narrower than the shipped model, e.g. pc.REAL_LIMITS (--real-limits)
 SIDE = "right"      # --side left: the left-hand model at the mirrored mount (thumb on the treble side); fixed wrist only
 CENTER = 76         # --center: the key the mount is measured from (the middle finger's key in a five-finger position)
@@ -186,7 +188,7 @@ def note_keyframes(notes, fing, u_note, wrist, gain=5.0):
                 fx = {fixed_j["x"]: 0.0, fixed_j["y"]: (u - U_BASE) * pc.PITCH, fixed_j["z"]: 0.0}
                 kf = kfr.keyframes([(f, m)], fixed=fx, hover_h=0.016)[(f, m)]
             else:
-                kf = kfr.keyframes([(f, m)], press_overrides={(4, 81): -0.013}, press_x=PRESS_X_F.get(f, pc.PRESS_X))[(f, m)]
+                kf = kfr.keyframes([(f, m)], press_overrides={(4, 81): -0.013}, press_x=PRESS_X_F.get(f, pc.PRESS_X), press_d=PRESS_D_F.get(f, PRESS_D))[(f, m)]
             cache[key] = kf
         out.append(cache[key])
     return out, kr, len(cache)
@@ -372,6 +374,9 @@ def main():
     ap.add_argument("--gain", type=float, default=5.0, help="identified stiffness (sysid_step.py); every plant's gain is scaled by gain/5")
     ap.add_argument("--from-npz", default=None, help="re-export a finished run: reuse its lead, P, WK (no CEM)")
     ap.add_argument("--press-x", default=None, help="contact point per finger, m from the key hinge: thumb,index,middle,ring,pinky (front edge = 0.15; default 0.115 for all)")
+    ap.add_argument("--press-d", default=None, help="press target per finger, m below the key top: thumb,index,middle,ring,pinky (default -0.0085 for all; -0.0135 = 5 mm deeper)")
+    ap.add_argument("--black-depth", type=float, default=None, help="stroke length on black keys as a multiple of hover -> press (at most 1.6), e.g. 1.5: from a level mount the "
+                    "finger reaches a black key stretched out and its press pose ends 4-5 mm down instead of 7, on the key bottom with no push left")
     ap.add_argument("--real-limits", action="store_true", help="use the joint stops measured on the real hand (pc.REAL_LIMITS)")
     ap.add_argument("--stroke", type=float, default=None, help="time of one key stroke, down or up, in s (default 0.03 = as fast as the joints allow; 0.09 = gentle)")
     ap.add_argument("--move", type=float, default=None, help="time a lifted finger takes to cross to another key, in s (default 0.08, or 1.5 x --stroke)")
@@ -395,6 +400,7 @@ def main():
     if SIDE == "left" and (A.wrist != "fixed" or not A.five): raise SystemExit("--side left needs --wrist fixed and --five (thumb..pinky, from the highest key down)")
     if A.real_limits: LIMITS = pc.real_limits(SIDE)
     if A.press_x: PRESS_X_F.update({f: float(v) for f, v in enumerate(A.press_x.split(","))})
+    if A.press_d: PRESS_D_F.update({f: -abs(float(v)) for f, v in enumerate(A.press_d.split(","))})
     if A.mount: x, z, th, dy = (float(v) for v in A.mount.split(",")); BASE.update(x=x, z=z, theta=th, dy=dy)
     global U_BASE; U_BASE = pc.key_y(CENTER) / pc.PITCH + BASE["dy"] / pc.PITCH
     if A.gain != 5.0:
@@ -437,6 +443,9 @@ def main():
         for f in range(5):
             if (fi == f).any() and (fa == f).any(): P[fa == f] = np.median(Zi["P"][fi == f], axis=0)
         say("start parameters: lead and per-finger medians from", A.init_from)
+    if A.black_depth and Zr is None:
+        bk = [i for i, n in enumerate(notes) if pc.is_black(n["pitch"])]
+        if bk: P[bk, 2] = math.log(min(max(A.black_depth, 0.7), 1.6)); say(f"black keys: {len(bk)} strokes x{A.black_depth:g} deep")
     if Zr is not None: lead = list(Zr["lead"]); P = Zr["P"].copy(); WK = Zr["WK"].copy(); say("re-export: lead, P, WK from", A.from_npz)
     for it in range(3 if (Zr is None or A.recal_lead) else 0):
         plan.lead = np.asarray(lead, float)
@@ -450,7 +459,7 @@ def main():
     import multiprocessing
     Pool = multiprocessing.get_context(os.environ.get("WQ_MP_START") or None).Pool      # WQ_MP_START=spawn|fork forces a start method (tests)
     cfg = dict(LIMITS=LIMITS, T_DOWN=T_DOWN, T_UP=T_UP, T_MOVE=T_MOVE, START_HOVER=START_HOVER, SIDE=SIDE, CENTER=CENTER, V_CROSS=V_CROSS,
-               U_BASE=U_BASE, KNOT_DT=KNOT_DT, BASE=dict(BASE), PRESS_X_F=dict(PRESS_X_F))
+               U_BASE=U_BASE, KNOT_DT=KNOT_DT, BASE=dict(BASE), PRESS_X_F=dict(PRESS_X_F), PRESS_D_F=dict(PRESS_D_F))
     dr = A.dr or ("wide" if A.wrist == "fixed" else "mild"); plants = TRAIN_PLANTS if dr == "wide" else MILD_PLANTS; K = len(plants)
     say(f"DR set {dr}: {plants}")
     with Pool(A.workers, initializer=w_init, initargs=(plants + TEST_PLANTS, plan, keys, default_q, cfg)) as pool:
@@ -513,7 +522,7 @@ def main():
                             mount=np.array([BASE["x"], BASE["dy"], BASE["z"], BASE["theta"]]), approach="front", rev="hand2_2", wrist=A.wrist,
                             home_hover=C[0, :20], notes=np.array([[n["on"], n["off"], n["pitch"]] for n in notes]), pre_roll=PRE, tempo=1.0,
                             fing=np.array([[n["pitch"], f] for n, f in zip(notes, fing)]), title=title,
-                            press_x=np.array([PRESS_X_F.get(f, pc.PRESS_X) for f in range(5)]), real_limits=bool(LIMITS), stroke_s=T_DOWN, move_s=T_MOVE, start_hover=START_HOVER,
+                            press_x=np.array([PRESS_X_F.get(f, pc.PRESS_X) for f in range(5)]), press_d=np.array([PRESS_D_F.get(f, PRESS_D) for f in range(5)]), real_limits=bool(LIMITS), stroke_s=T_DOWN, move_s=T_MOVE, start_hover=START_HOVER,
                             side=SIDE, center=CENTER, piece_t0=t0, **calib)
         pc.write_scene(os.path.join(A.out, "scene.xml"), scene_xml(5.0, range(21, 109), moving))
         write_notes(os.path.join(A.out, "target.mid"), [dict(on=n["on"] + PRE, off=n["off"] + PRE, pitch=n["pitch"], vel=70) for n in notes])
