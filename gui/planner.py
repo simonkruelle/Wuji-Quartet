@@ -81,16 +81,19 @@ def positions(piece_id, side="right"):
     need = set(keys)
     out, seen = [], set()
 
-    def add(five, also, mount, press_x, center, source, proven, legacy=False, note=""):
+    def add(five, also, mount, press_x, center, source, proven, legacy=False, note="", press_d=None):
         covered = set(five) | {int(a.split(":")[0]) for a in also}
         if not need <= covered:
             return
-        sig = (tuple(five), tuple(sorted(also)), tuple(round(mount[k], 4) for k in ("x", "z", "theta", "dy")), center)
+        deep = [round((-0.0085 - v) * 1000) for v in press_d] if press_d else [0] * 5      # mm each finger presses deeper than the usual 8.5 mm
+        if not any(deep): press_d = None
+        elif not note: note = "Presses deeper: " + ", ".join(f"{lib_finger(f)} {d} mm" for f, d in enumerate(deep) if d) + "."
+        sig = (tuple(five), tuple(sorted(also)), tuple(round(mount[k], 4) for k in ("x", "z", "theta", "dy")), center, tuple(deep))
         if sig in seen:
             return
         seen.add(sig)
         level = abs(mount["theta"]) < 0.5 and abs(mount["z"] - 0.06) < 0.005
-        out.append(dict(id=f"pos{len(out)}", side=side, five=five, also=also, mount=mount, press_x=press_x, center=center, source=source,
+        out.append(dict(id=f"pos{len(out)}", side=side, five=five, also=also, mount=mount, press_x=press_x, press_d=press_d, center=center, source=source,
                         proven=proven, legacy=legacy, level=level, text=_describe(five, also, side), note=note,
                         reuse_from=REF_PLAN if level and os.path.exists(os.path.join(REPO, REF_PLAN, lib.PLAN_FILE)) else None))
 
@@ -103,7 +106,7 @@ def positions(piece_id, side="right"):
             continue
         legacy = not p["level"]
         add(fa[0], fa[1], p["mount"], p["press_x"] or [0.115] * 5, p["center"], f"as in {p['name']}", proven=p["shared"],
-            legacy=legacy, note="First mount, tilted 25 degrees: on the real hand the thumb cannot reach from here." if legacy else "")
+            legacy=legacy, note="First mount, tilted 25 degrees: on the real hand the thumb cannot reach from here." if legacy else "", press_d=p.get("press_d"))
     # 2. the rule those plans follow: five neighbouring white keys, level mount centred on the middle finger's key
     if keys and not any(lib.is_black(k) for k in keys) and lib.white_index(keys[-1]) - lib.white_index(keys[0]) <= 4:
         whites = [k for k in range(21, 109) if not lib.is_black(k)]
@@ -143,10 +146,17 @@ def suggest_name(req):
     side = "left" if req.get("side") == "left" else "right"
     wrist = req.get("wrist", "fixed")
     part = side if wrist == "fixed" else ("wristplan" if wrist == "plan" else "wristhuman")
+    m = re.match(r"^(.*)_(right|left)$", stem)          # a part of a two-hand piece: runaway_right on the right hand -> runaway_right_...
+    if m and wrist == "fixed":
+        stem = m.group(1) if m.group(2) == side else f"{m.group(1)}_{m.group(2)}_on"
     d = DETAIL.get(req.get("detail", ""), None)
     s, i = (int(req.get("samples", 0)), int(req.get("iters", 0))) if not d or req.get("detail") == "custom" else (d["samples"], d["iters"])
     search = "reuse" if req.get("detail") == "reuse" else f"n{s}x{i}"
     return f"{stem}_{part}_{search}_s{int(req.get('seed', 0))}"
+
+
+def lib_finger(f):
+    return ("thumb", "index", "middle", "ring", "pinky")[f]
 
 
 def build_command(req, python):
@@ -174,8 +184,13 @@ def build_command(req, python):
     workers = max(1, min(int(req.get("workers") or default_workers()), os.cpu_count() or 1))
     seed = int(req.get("seed") or 0)
     name = re.sub(r"[^A-Za-z0-9_.-]+", "_", (req.get("name") or suggest_name(dict(req, samples=samples, iters=iters))).strip()).strip("._") or "run"
+    taken = lambda n: os.path.exists(os.path.join(REPO, "out", n, lib.PLAN_FILE)) or os.path.exists(os.path.join(REPO, "plans", n)) or n in set(req.get("_busy") or ())
+    if not req.get("name"):                       # a name the page suggested: the next free one (runaway_right_reuse_s0_2, _3 ...)
+        base, k = name, 2
+        while taken(name):
+            name, k = f"{base}_{k}", k + 1
     out_rel = f"out/{name}"
-    if os.path.exists(os.path.join(REPO, out_rel, lib.PLAN_FILE)) or os.path.exists(os.path.join(REPO, "plans", name)):
+    if taken(name):
         raise ValueError(f"a plan named {name} exists already: choose another name")
     argv = [python, "-u", "scripts/sbto_piano.py", "--piece", piece, "--wrist", wrist, "--out", out_rel, "--workers", str(workers), "--seed", str(seed)]
     used = dict(piece=piece, wrist=wrist, detail=detail, samples=samples, iters=iters, elites=elites, commit=commit, workers=workers, seed=seed, name=name)
@@ -195,6 +210,7 @@ def build_command(req, python):
             if pos.get("also"): argv += ["--also", ",".join(pos["also"])]
         argv += ["--mount", ",".join(_fmt(float(m[k])) for k in ("x", "z", "theta", "dy"))]
         if pos.get("press_x") and pos.get("level"): argv += ["--press-x", ",".join(_fmt(float(v)) for v in pos["press_x"])]
+        if pos.get("press_d") and pos.get("level"): argv += ["--press-d", ",".join(_fmt(abs(float(v))) for v in pos["press_d"])]
         side = pos.get("side", "right")
         if side == "left": argv += ["--side", "left"]
         if int(pos.get("center", 76)) != 76 or side == "left": argv += ["--center", str(int(pos["center"]))]

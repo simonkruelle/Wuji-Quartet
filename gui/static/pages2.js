@@ -81,6 +81,10 @@ App.pages.play = {
   build(el) {
     const s = App.state.settings;
     this.view = runView(() => true);
+    this.v3 = PlanViewer({compact: true});         // Notes | 3D: the plan's hand in simulation, following the run while it plays
+    this.v3.el.hidden = true;
+    this.showSeg = seg([['notes', 'Notes'], ['3d', '3D']], 'notes', v => this.setShow(v));
+    this.legend = fingerLegend();
     this.modeSeg = seg([['one', 'One hand'], ['two', 'Two hands'], ['teach', 'Teach']], this.mode, v => this.setMode(v));
     this.plan = h('select', {onchange: () => this.changed()});
     this.pair = h('select', {onchange: () => this.changed()});
@@ -102,18 +106,43 @@ App.pages.play = {
       ...field('Current limit', this.effort, 'never above 1.5 A'), ...field('Fingers', this.fingers), ...field('Lead time', this.lead, 'from Start to the first note'),
       ...field('Serial numbers', h('div', {}, this.snA, this.snB), 'two hands of the same side only'), ...field('Two hands', h('div', {class: 'row'}, this.checkBtn, this.checkEl))));
     el.append(...pageHead('Play'),
-      card(null, h('div', {class: 'bar-row'}, this.modeSeg, this.plan, this.pair, this.tempoSeg, h('span', {class: 'grow'}), this.btn), this.posLine = h('div', {}), this.teachRow, this.more),
-      card(null, this.view.stage.el, fingerLegend()), this.view.status);
+      card(null, h('div', {class: 'bar-row'}, this.modeSeg, this.plan, this.pair, this.tempoSeg, h('span', {class: 'grow'}), this.btn), this.posLine = h('div', {}), this.teachRow, this.more,
+        (this.pose = startPoseView()).el),
+      card(null, h('div', {class: 'bar-row', style: {marginBottom: '8px'}}, this.showSeg), this.view.stage.el, this.v3.el, this.legend), this.view.status);
     this.onLibrary(); this.setMode(this.mode);
   },
   show(arg) {
+    if (arg && arg.pair) {                        // a two-hand pair from the Library
+      this.setMode('two');
+      if ([...this.pair.options].some(o => o.value === arg.pair)) { this.pair.value = arg.pair; this.changed(); }
+    }
     if (arg && arg.plan) {
       if (this.mode === 'two') this.setMode('one');
       this.want = arg.plan;                       // a run that just finished may not be in the library yet: keep asking for it
       this.fill(arg.plan); this.changed();
       if (!planById(arg.plan)) loadLibrary();
     }
-    this.view.stage.redraw();
+    this.view.stage.redraw(); this.v3.redraw();
+  },
+  hide() { if (this.v3) this.v3.pause(); },
+  setShow(v) {
+    this.show3d = v === '3d';
+    this.view.stage.el.hidden = this.legend.hidden = this.show3d; this.v3.el.hidden = !this.show3d;
+    if (this.show3d) { this.k3 = null; this.load3d(); this.sync3d(); } else { this.v3.pause(); this.v3.follow(null); this.k3 = null; this.view.stage.redraw(); }
+  },
+  ids3d() {
+    if (this.mode === 'two') { const d = this.duet(); return d ? [d.a, d.b] : null; }
+    return planById(this.plan.value) ? [this.plan.value] : null;
+  },
+  load3d() { const ids = this.ids3d(); if (this.show3d && ids && !this.k3) this.v3.load(ids); },
+  sync3d() {
+    // while a run plays (fake or real hand), the 3D view runs on its clock; afterwards it shows the chosen plan again
+    if (!this.show3d) return;
+    const j = this.view.job(), tl = j && (j.state === 'running' || j.state === 'queued') && j.meta.timeline;
+    if (tl && !tl.next_in) {
+      const key = j.id + ':' + tl.start_at;
+      if (key !== this.k3) { this.k3 = key; this.v3.load([j.meta.plan, j.meta.plan_b].filter(Boolean)); this.v3.follow(tl); }
+    } else if (this.k3) { this.k3 = null; this.v3.follow(null); this.load3d(); }
   },
   duet() { return (App.lib.duets || []).find(d => d.id === this.pair.value); },
   fill(keep) {
@@ -123,13 +152,13 @@ App.pages.play = {
     clear(this.plan);
     for (const [label, sh] of [['Shared', true], ['This computer', false]]) {
       const g = h('optgroup', {label});
-      for (const p of ps.filter(p => p.shared === sh)) g.append(h('option', {value: p.id, text: p.name + ' · ' + scoreText(p) + (p.center ? ' · middle finger ' + noteName(p.center) : '')}));
+      for (const p of ps.filter(p => p.shared === sh)) g.append(h('option', {value: p.id, text: p.name + ' · ' + scoreText(p) + (p.center ? ' · middle finger ' + noteName(midKey(p)) : '')}));
       if (g.children.length) this.plan.append(g);
     }
     this.plan.value = ps.some(p => p.id === cur) ? cur : (ps.some(p => p.id === App.lib.ref_plan) ? App.lib.ref_plan : (ps[0] || {}).id);
     const pk = this.pair.value;
     clear(this.pair);
-    for (const d of App.lib.duets || []) this.pair.append(h('option', {value: d.id, text: `${d.title} · ${d.sides[0]} + ${d.sides[1]}` + (d.gentle ? '' : ' · fast strokes') + (d.shared ? '' : ' · this computer')}));
+    for (const d of App.lib.duets || []) this.pair.append(h('option', {value: d.id, text: duetLabel(d)}));
     if ([...this.pair.options].some(o => o.value === pk)) this.pair.value = pk;
   },
   onLibrary() { if (this.plan) { this.fill(); this.changed(); } },
@@ -147,11 +176,12 @@ App.pages.play = {
       const d = this.duet();
       this.view.stage.select = null; this.view.stage.idle = 0;
       if (d) this.view.setRest([planTrack(planById(d.a)), planTrack(planById(d.b))]);
-      this.csig = null; this.update();
+      clear(this.posLine); this.pose.show(d ? [d.a, d.b] : []);
+      this.csig = null; this.update(); this.load3d();
       return;
     }
     const p = planById(this.plan.value); if (!p) return;
-    this.paintPos(p);
+    this.paintPos(p); this.pose.show([p.id]);
     if (this.mode === 'teach') {
       this.ph = phrases(p.notes, 8); if (this.sel >= this.ph.length) this.sel = 0;
       clear(this.phr).append(h('button', {class: 'pill' + (this.sel < 0 ? ' primary' : ''), text: 'All', onclick: () => { this.sel = -1; this.changed(); }}),
@@ -162,19 +192,16 @@ App.pages.play = {
     this.view.stage.idle = sec ? sec.start + 0.6 : 0;
     this.view.setRest([planTrack(p, this.fingers.value)]);
     this.view.stage.redraw();
+    this.load3d();
   },
   paintPos(p) {
     // where the hand has to sit for this plan; a warning when that is not where it plays Ode to Joy
     const ref = planById(App.lib.ref_plan);
     clear(this.posLine);
     if (!p.center) return;
-    const here = `${p.side} hand, middle finger on ${noteName(p.center)}`;
-    if (!ref || p.side !== ref.side || samePlace(p, ref)) return this.posLine.append(h('div', {class: 'oneline', text: here + (samePlace(p, ref) ? ': where it plays Ode to Joy' : '')}));
-    const d = whiteIdx(p.center) - whiteIdx(ref.center);
-    const dy = p.mount.dy - ref.mount.dy;
-    const move = d ? `${Math.abs(d)} white key${Math.abs(d) > 1 ? 's' : ''} to the ${d < 0 ? 'left' : 'right'} of where it plays Ode to Joy`
-      : Math.abs(dy) > 0.002 ? `${Math.round(Math.abs(dy) * 1000)} mm further ${dy > 0 ? 'right' : 'left'} than for Ode to Joy` : 'at another height or angle than for Ode to Joy';
-    this.posLine.append(h('div', {class: 'banner warn', style: {marginTop: '8px'}, text: `This plan needs the ${here}: ${move}. Move the hand first, or pick a plan for the Ode position.`}));
+    if (!ref || p.side !== ref.side || samePlace(p, ref)) return;           // the 'Where the hand goes' box below says it
+    this.posLine.append(h('div', {class: 'banner warn', style: {marginTop: '8px'},
+      text: `This plan needs the ${p.side} hand ${fromOde(p)} (middle finger ${noteName(midKey(p))}). Move the hand first: where to, below.`}));
   },
   section() { return this.mode === 'teach' && this.sel >= 0 && this.ph ? this.ph[this.sel] : null; },
   async start() {
@@ -201,7 +228,7 @@ App.pages.play = {
   },
   update() {
     if (!this.view) return;
-    this.view.sync();
+    this.view.sync(); this.sync3d();
     const t = targetInfo(), busy = handBusy();
     this.btn.textContent = busy ? 'Playing …' : (this.mode === 'teach' ? 'Start the lesson' : 'Play') + (t.real ? ' on the real hand' : '');
     this.btn.className = 'pill big ' + (t.real ? 'real' : 'primary');
@@ -328,16 +355,13 @@ App.pages.settings = {
     const text = (k, ph) => h('input', {type: 'text', value: s[k] || '', placeholder: ph, style: {width: '100%'}, onchange: e => save(k, e.target.value.trim())});
     const sl = (k, a, b, st, fmt) => { const x = slider(a, b, st, s[k], fmt); x.input.addEventListener('change', () => save(k, x.value)); return x; };
     this.targets = h('div', {class: 'list'});
-    this.found = h('div', {});
     this.envEl = h('div', {});
     el.append(...pageHead('Settings'),
       h('div', {class: 'cols c2'},
         h('div', {},
           card('Hand', this.targets,
             h('div', {class: 'row', style: {marginTop: '10px'}},
-              h('button', {class: 'pill', text: 'Find the hand', title: 'Reads only, never moves', onclick: () => act(async () => { const r = await api('/api/hand/info', {target: App.target}); openLog(r.job.id); })}),
-              h('button', {class: 'pill danger', text: 'Switch the hand off', onclick: () => act(async () => { const r = await api('/api/hand/off', {target: App.target}); openLog(r.job.id); })})),
-            this.found),
+              h('button', {class: 'pill', text: 'Hands ›', onclick: () => show('hands')}), h('span', {class: 'subtle small', text: 'both hands: connected?, serial numbers, joints, first motion'}))),
           card('Robot computer', h('div', {class: 'form', style: {gridTemplateColumns: '90px minmax(0,1fr)'}},
             ...field('SSH', text('ssh_host', 'user@address')), ...field('Folder', text('ssh_repo', '~/Wuji-Quartet')), ...field('Python', text('ssh_python', '~/wq-venv/bin/python'))),
             h('div', {class: 'row', style: {marginTop: '10px'}}, h('button', {class: 'pill', text: 'Copy scripts and plans there', onclick: () => act(async () => { const r = await api('/api/sync', {}); openLog(r.job.id); })})))),
@@ -353,7 +377,7 @@ App.pages.settings = {
     clear(this.targets);
     for (const t of App.state.targets) {
       const l = linkOf(t.id), k = linkKind(l);
-      const chip = t.real && !(t.ok === false) ? h('span', {class: 'chip ' + (k === 'unknown' ? 'plain' : k), text: k === 'ok' ? 'connected' : linkHead(l).toLowerCase(), title: linkDetail(l)}) : null;
+      const chip = t.real && !(t.ok === false) ? h('span', {class: 'chip ' + (k === 'unknown' ? 'plain' : k), text: linkHead(l).toLowerCase(), title: linkDetail(l)}) : null;
       this.targets.append(h('div', {class: 'opt' + (t.id === App.target ? ' on' : ''), onclick: () => { if (t.real && t.ok === false) return flash(t.help, true); setTarget(t.id); }},
         h('span', {class: 'radio'}), h('div', {style: {flex: 1}}, h('div', {class: 't'}, t.label, chip ? ' ' : null, chip), h('div', {class: 'd', text: t.help}))));
     }
@@ -363,14 +387,10 @@ App.pages.settings = {
   update() {
     if (this.targets && linkSigOf() !== this.linkSig) this.paintTargets();
     const e = App.state.env, yes = (b, y, n) => h('span', {class: 'chip ' + (b ? 'ok' : 'plain'), text: b ? y : n});
-    const sig = JSON.stringify(e) + App.state.jobs.filter(j => j.kind === 'hand_info').map(j => j.id + j.state).join();
+    const sig = JSON.stringify(e);
     if (sig === this.sig) return;
     this.sig = sig;
     clear(this.envEl).append(h('div', {class: 'row tight'}, yes(e.mujoco, 'MuJoCo', 'no MuJoCo'), yes(e.sdk, 'wuji-sdk', 'no wuji-sdk'), yes(e.cv2 && e.mediapipe, 'MediaPipe', 'no MediaPipe'),
       yes(e.ffmpeg, 'ffmpeg', 'no ffmpeg'), h('span', {class: 'chip plain', text: `Python ${e.python} · ${e.cores} threads${e.docker ? ' · Docker' : ''} · ${e.rev || ''}`})));
-    const j = App.state.jobs.find(j => j.kind === 'hand_info' && j.state === 'done');
-    clear(this.found);
-    if (j && j.meta.hands.length) this.found.append(h('table', {class: 't', style: {marginTop: '10px'}}, h('tr', {}, h('th', {text: 'Serial number'}), h('th', {text: 'Side'}), h('th', {text: 'Address'}), h('th', {text: 'Firmware'}), h('th', {class: 'n', text: 'Joints'})),
-      j.meta.hands.map(x => h('tr', {}, h('td', {class: 'mono', text: x.sn}), h('td', {text: x.side}), h('td', {class: 'mono', text: x.ip}), h('td', {text: x.firmware}), h('td', {class: 'n', text: (x.joints != null ? x.joints : '?') + '/20'})))));
   },
 };

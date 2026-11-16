@@ -18,15 +18,17 @@ python gui/app.py --tailscale    # prints a link with a token: open that link on
 
 Starting it needs Python only. Pages that need more say so: MuJoCo to optimise, `wuji-sdk` to drive a hand from this computer, `pip install -r requirements-camera.txt` for the camera.
 
-**Status, 15 Nov 2026: every page was tested with the fake hand in a browser. Play has driven the real right hand through the robot computer (one hand, from the Ode position); Two hands, Teach and Camera have not yet.**
+**Status, 16 Nov 2026: Play has driven the real hands through the robot computer, one hand and two hands (five pieces with both hands on 15 Nov). Teach has run lessons on the real right hand (Ode to Joy, 16 Nov, current limit 1.0 A down to 0.3 A). Camera has not moved the real hand from the studio yet.**
 
 ## Pages
 
 | Page | What you do there |
 |---|---|
 | **Library** | pieces on the left, the chosen one on the right: listen, its plans (▶ Play), Retarget ›. Tabs: Ours · Duets · Christmas (14 songs, `assets/songs/`) · Pianists (the 153 FürElise performances) · Mine (what you imported or cut on this computer, in `assets/library/`; the tab appears once there is something). **+ Import a MIDI file** under the list |
-| **Retarget** | piece, hand, wrist; then Reuse / Draft / Standard / Fine, with the time before you start. Everything else under More |
-| **Play** | One hand · Two hands · Teach (one phrase or all, slower, several times). Notes fall onto a keyboard in step with the hand |
+| **3D view** | any plan, or two plans for two hands (pick it at the top, or **3D** next to ▶ Play in the Library): the robot hand(s) in simulation over the keyboard (drag to turn, scroll to zoom, 25-100 % speed, sound), the SBTO search that made the plan (cost per 0.5 s step before/after, notes before → after on ten setups, or which plan's search it reuses), and where the hand sits and which finger plays which key. When the piece comes from a FürElise recording whose hands are prepared (`assets/furelise/<id>/hands.npz`; today K.265 = piece 15), the pianist's two hands play on the same keyboard and clock (Pianist / Robot / Both) with a wrist chart. The robot takes the notes, their timing and (wrist "like the pianist") the wrist path from the pianist; SBTO finds the finger motion. The server simulates a plan once (`scripts/plan_view.py`, 3-6 s) and keeps it in `out/gui/views/` |
+| **Retarget** | piece, hand (**Both hands** for a two-hand piece: the melody on the right hand and the accompaniment on the left, each at its own place, two runs from one Start, then ▶ Play both hands; also from Library › Duets › Retarget both hands), wrist; then Reuse / Draft / Standard / Fine, with the time before you start. Everything else under More. While a search runs, its cost per step (before / after the tries) is drawn under the runs |
+| **Hands** | both real hands side by side: does each answer (pinged from the robot computer every 10 s), through which port, serial number, firmware, joints online. The robot computer has one Ethernet port: the second hand goes through a USB-Ethernet adapter in a USB-A port (not USB-C), and **Set up the adapter** routes it (`scripts/hand_adapter.sh`; again after a reboot or replug). **Move one finger** per hand (index finger 9° and back, 0.5 A) as the first motion. *Ready for two hands?* lists what is left before Play › Two hands. *Where the hands go, song by song* groups every playable plan by where its hand sits (songs on one line need no move), with the move from the Ode to Joy position |
+| **Play** | One hand · Two hands · Teach (one phrase or all, slower, several times). **Where the hand goes** (one or two hands): the keyboard from above as you stand in front of it, the flange centre (sideways, cm in front of the key fronts, cm above the keys, tilt), each finger's key, and the fingertips at the plan's first frame, the start pose the hand moves to before it plays (mm above the key under each tip, mm behind its front edge; `gui/startpose.py`, MuJoCo), plus the move from the Ode to Joy position. Notes fall onto a keyboard in step with the hand; **Notes \| 3D** shows the plan's hand in 3D instead, following the run on the same clock |
 | **Camera** | the hand follows your hand in front of the webcam (Sebas's tracking) |
 | **Settings** | which hand, the robot computer, default current limits |
 
@@ -216,9 +218,8 @@ Can the search improve the camera mode? Partly. It does not make the camera see 
 
 | What | Why |
 |---|---|
-| Any real hand from the studio | the tests used the fake hand only |
 | The camera with a live webcam | the test computer has none: tested with a picture file |
 | The robot computer over real SSH | tested against a stand-in on one computer |
 | A second device over Tailscale | tested through the Tailscale address from the same computer, not from another device |
-| Teaching: current limit and mount height | the defaults (1.0 A, 50 % speed) are a guess. Set them to what you used |
+| Teaching: what a learner gains | lessons ran on the real hand at 1.0 A down to 0.3 A; nobody has measured the effect. The defaults (1.0 A, 50 % speed) are still a guess |
 | macOS and Windows | written for them, run on Linux only |

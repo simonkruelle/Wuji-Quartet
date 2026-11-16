@@ -81,7 +81,7 @@ def save_settings(new):
         elif k == "sound":
             v = bool(v)
         if k == "ssh_host" and v != S.get(k):
-            LINK["board"] = dict(state="unknown", text="not checked yet", time=None, found=None, checking=True)
+            LINK["board"] = dict(new_link(), checking=True)
         S[k] = v
         if k in ("target", "ssh_host"):
             LINK_KICK.set()                   # check the hand now, not in a minute
@@ -155,38 +155,79 @@ def note_hand_line(line):
         M.set_hand("not_confirmed", "switch-off NOT confirmed")
 
 
-# ------------------------------------------------------------------ is the real hand there? (reads only, never a command to the hand)
-# The robot computer pings the hand's fixed address every few seconds (only while a page is open and no hand job runs), and every job
-# on a real hand reports what it found. The hand on this computer is never pinged: a home Wi-Fi on 192.168.1.x would answer for it.
-LINK = {t: dict(state="unknown", text="not checked yet", time=None, found=None, checking=False) for t in ("local", "board")}
+# ------------------------------------------------------------------ are the real hands there? (reads only, never a command to a hand)
+# The robot computer pings both hands' fixed addresses every few seconds (only while a page is open and no hand job runs), and every
+# job on a real hand reports what it found (serial number, firmware, joints online). The hand on this computer is never pinged: a home
+# Wi-Fi on 192.168.1.x would answer for it. The robot computer has one Ethernet port: the second hand comes in through a USB-Ethernet
+# adapter, which the probe lists so the Hands page can say when it is plugged in but not set up (scripts/hand_adapter.sh).
+SIDES = (("right", "192.168.1.111"), ("left", "192.168.1.110"))
+HAND_SIDE = {ip: s for s, ip in SIDES}
+
+
+def new_link():
+    return dict(state="unknown", text="not checked yet", time=None, checking=False, adapters=[],
+                hands={s: dict(ip=ip, up=None, dev=None, wifi=False, sn=None, firmware=None, joints=None, read=None) for s, ip in SIDES})
+
+
+LINK = {t: new_link() for t in ("local", "board")}
 LINK_KICK = threading.Event()
 SEEN = [0.0]                                        # when a page last asked for /api/state
-HAND_SIDE = {"192.168.1.111": "right", "192.168.1.110": "left"}
 PROBE = ("for a in 192.168.1.111 192.168.1.110; do d=$(ip -o route get $a 2>/dev/null | sed -n 's/.* dev \\([^ ]*\\).*/\\1/p'); "
-         "if ping -c 1 -W 1 $a >/dev/null 2>&1; then echo \"up $a $d\"; else echo \"down $a $d\"; fi; done")
+         "if ping -c 1 -W 1 $a >/dev/null 2>&1; then echo \"up $a $d\"; else echo \"down $a $d\"; fi; done; "
+         "for n in /sys/class/net/*; do i=${n##*/}; case $i in enx*|eth[1-9]*) "
+         "echo \"nic $i $(cat $n/carrier 2>/dev/null || echo -) $(ip -4 -o addr show dev $i | awk '{print $4}' | paste -sd, -)\";; esac; done")
 SSH_DOWN = re.compile(r"ssh: |Connection timed out|Could not resolve|No route to host|Connection refused|Permission denied \(|does not answer")
+DOWN = "the robot computer does not answer: is it on, and on Tailscale?"
 
 
-def set_link(target, state, text, found=None):
-    old = LINK[target]
-    keep = old["found"] if state == "ok" and found is None else found
-    LINK[target] = dict(state=state, text=text, time=time.time(), found=keep, checking=False)
+def link_says(target, down=None):
+    """The one line over the page, from what is known about each hand."""
+    L, now = LINK[target], time.time()
+    hs = L["hands"]
+    up = [s for s, _ in SIDES if hs[s]["up"]]
+    off = [s for s, _ in SIDES if hs[s]["up"] is False]
+    if down:
+        state, text = "down", down
+    elif up:
+        state = "ok"
+        text = "both hands answer" if len(up) == 2 else f"{up[0]} hand answers" + (f", the {off[0]} hand does not" if off else "")
+    elif off:
+        state = "no_hand"
+        text = ("the robot computer sends 192.168.1.x through Wi-Fi, not the cable to the hands" if any(hs[s]["wifi"] for s in off)
+                else "no hand answers: power on? network cable in?")
+    else:
+        state, text = "unknown", "not checked yet"
+    L.update(state=state, text=text, time=now, checking=False)
 
 
 def note_link_line(target, line):
-    """What a job on a real hand learnt about the connection."""
+    """What a job on a real hand learnt about the connection (hand_info.py, hand_off.py and wuji_hw print 'found SN=...')."""
     if target not in LINK:
         return
-    m = re.search(r"found\s+SN=(\S+)\s+\(?(\w+)", line)
-    if m:
-        side = m.group(2).lower() if m.group(2).lower() in ("left", "right") else ""
-        set_link(target, "ok", f"{side or 'a'} hand found", dict(sn=m.group(1), side=side, joints=None))
-    elif (m := re.search(r"(\S+): joints online: (\d+) of 20", line)) and LINK[target]["found"]:
-        LINK[target]["found"]["joints"] = int(m.group(2))
-    elif "no Wuji Hand 2 found" in line:
-        set_link(target, "no_hand", "the hand does not answer: power on? network cable in?")
+    hs, now = LINK[target]["hands"], time.time()
+    m = re.search(r"found\s+SN=(\S+)\s+\(?(LEFT|RIGHT|left|right|side unknown)\)?(?:\s+hand)?\s+ip=([\d.]+)\S*\s+(?:firmware|fw)=(\S*)", line)
+    if m:                                         # at scan time the SDK may not know the firmware yet: it comes with 'Discovered device'
+        side = m.group(2).lower() if m.group(2).lower() in hs else HAND_SIDE.get(m.group(3))
+        if side:
+            old = hs[side]
+            same = old["sn"] == m.group(1)
+            hs[side].update(up=True, wifi=False, sn=m.group(1), firmware=m.group(4) or (old["firmware"] if same else None), read=now,
+                            joints=old["joints"] if same else None)
+            link_says(target)
+    elif m := re.search(r"Discovered device: (\S+) \(IP: [^,]*, FW: ([^)\s]+)\)", line):
+        for h in hs.values():
+            if h["sn"] == m.group(1):
+                h["firmware"] = m.group(2)
+    elif m := re.search(r"(\S+): joints online: (\d+) of 20", line):
+        for h in hs.values():
+            if h["sn"] == m.group(1):
+                h.update(joints=int(m.group(2)), read=now)
+    elif m := re.search(r"no Wuji Hand 2 found(?: for: (left|right) hand)?", line):
+        for s in ([m.group(1)] if m.group(1) else hs):
+            hs[s]["up"] = False
+        link_says(target)
     elif target == "board" and SSH_DOWN.search(line):
-        set_link(target, "down", "the robot computer does not answer: is it on, and on Tailscale?")
+        link_says(target, DOWN)
 
 
 def probe_board():
@@ -196,19 +237,17 @@ def probe_board():
     except Exception:
         rc, out, err = 255, "", "timeout"
     if rc != 0 and not out:
-        return set_link("board", "down", "the robot computer does not answer: is it on, and on Tailscale?")
-    up, wifi = [], False
+        return link_says("board", DOWN)
+    hs, adapters = LINK["board"]["hands"], []
     for parts in (ln.split() for ln in out.splitlines()):
-        if len(parts) >= 2 and parts[0] == "up":
-            if len(parts) > 2 and parts[2].startswith("wl"):
-                wifi = True                       # 192.168.1.x leaves through Wi-Fi: that is not the cable to the hand
-            else:
-                up.append(HAND_SIDE.get(parts[1], parts[1]))
-    if up:
-        return set_link("board", "ok", " and ".join(up) + " hand answer" + ("" if len(up) > 1 else "s"))
-    if wifi:
-        return set_link("board", "no_hand", "the robot computer reaches 192.168.1.x over Wi-Fi, not over the cable to the hand")
-    set_link("board", "no_hand", "the robot computer answers, the hand does not: power on? network cable in?")
+        if len(parts) >= 2 and parts[0] in ("up", "down") and parts[1] in HAND_SIDE:
+            dev = parts[2] if len(parts) > 2 else None
+            wifi = bool(dev and dev.startswith("wl"))    # 192.168.1.x leaves through Wi-Fi: a stranger there may answer, not the hand
+            hs[HAND_SIDE[parts[1]]].update(up=parts[0] == "up" and not wifi, dev=dev, wifi=wifi)
+        elif len(parts) >= 3 and parts[0] == "nic":
+            adapters.append(dict(name=parts[1], link=parts[2] == "1", addrs=parts[3].split(",") if len(parts) > 3 else []))
+    LINK["board"]["adapters"] = adapters
+    link_says("board")
 
 
 def link_loop():
@@ -232,12 +271,15 @@ def link_loop():
 def start_retarget(req):
     if not ENV.get("mujoco"):
         raise ValueError("optimising needs MuJoCo and mink on this computer: pip install -r requirements.txt, or ./wq gui")
-    argv, out_rel, used = planner.build_command(req, PY)
+    busy = [os.path.basename(j.meta.get("plan", "")) for j in M.active(kind="retarget")]   # queued runs have no folder yet
+    argv, out_rel, used = planner.build_command(dict(req, _busy=busy), PY)
     est = planner.estimate(dict(req, **{k: used[k] for k in ("samples", "iters", "commit", "workers") if k in used}))
     notes = lib.piece_notes(used["piece"])
     t_first, t_last = min(n[0] for n in notes), max(n[0] for n in notes)
     p = lib.piece(used["piece"]) or {}
     meta = dict(plan=out_rel, used=used, estimate=est, windows=[], piece_title=p.get("title", used["piece"]), n_notes=len(notes), command=" ".join(J._show(a) for a in argv[1:]))
+    if req.get("pair"):                           # one of two runs started together by 'Both hands': the duet's stem and the hand
+        meta["pair"] = dict(stem=str(req["pair"]), side=used.get("side", "right"))
 
     def run(job):
         t_search = [None]
@@ -311,6 +353,50 @@ def gl_env():
             pass
     _GL["env"] = None
     return None
+
+
+# ------------------------------------------------------------------ the 3D view of a plan (scripts/plan_view.py, cached in out/gui/views)
+VIEW_LOCKS = {}
+VIEW_LOCK = threading.Lock()
+
+
+def plan_view(ids):
+    """The 3D view's data for one plan or a pair: simulated once, rebuilt when a plan, the script or a pianist's hands change."""
+    if not 1 <= len(ids) <= 2:
+        raise ValueError("one plan, or two for two hands")
+    ps = [lib.plan(i) for i in ids]
+    if any(not p or p.get("error") for p in ps):
+        raise ValueError("unknown plan")
+    if not ENV.get("mujoco"):
+        raise ValueError("the 3D view simulates the plan: it needs MuJoCo on this computer (./wq gui)")
+    key = "+".join(re.sub(r"[^A-Za-z0-9._-]+", "~", p["id"]) for p in ps)
+    out = os.path.join(REPO, "out/gui/views", key + ".json")
+    deps = [os.path.join(REPO, p["id"], f) for p in ps for f in (lib.PLAN_FILE, "report.json", "scene.xml", "log.txt")]
+    deps += [os.path.join(REPO, "scripts/plan_view.py")] + [os.path.join(REPO, "assets/furelise", d, "hands.npz")
+                                                           for d in os.listdir(os.path.join(REPO, "assets/furelise")) if d.isdigit()]
+    newest = max((os.path.getmtime(f) for f in deps if os.path.exists(f)), default=0)
+    fresh = lambda: os.path.exists(out) and os.path.getmtime(out) >= newest
+    if fresh():
+        return out
+    with VIEW_LOCK:
+        lock = VIEW_LOCKS.setdefault(key, threading.Lock())
+    with lock:                                   # two pages asking at once: one simulation
+        if not fresh():
+            r = subprocess.run([PY, "-B", "scripts/plan_view.py", *[p["id"] for p in ps], "--out", out], cwd=REPO, capture_output=True, text=True, timeout=900)
+            if r.returncode != 0 or not os.path.exists(out):
+                raise RuntimeError("plan_view.py failed: " + ((r.stderr or r.stdout).strip().splitlines() or ["no output"])[-1])
+    return out
+
+
+def start_pose_of(plan_id):
+    """Where the plan's hand goes and its fingertips at the first frame (gui/startpose.py; needs MuJoCo for the fingertips)."""
+    p = lib.plan(plan_id)
+    if not p or p.get("error"):
+        raise ValueError("unknown plan")
+    if not ENV.get("mujoco"):
+        raise ValueError("the start pose is computed with MuJoCo: run the studio where MuJoCo is installed (./wq gui)")
+    import startpose
+    return startpose.start_pose(p["id"])
 
 
 def start_render(req):
@@ -557,7 +643,7 @@ def start_util(req, which):
         def on_line(line):
             note_hand_line(line)
             note_link_line(target, line)
-            m = re.match(r"found\s+SN=(\S+)\s+(LEFT|RIGHT|side unknown) hand\s+ip=(\S+)\s+firmware=(\S+)", line)
+            m = re.match(r"found\s+SN=(\S+)\s+(LEFT|RIGHT|side unknown) hand\s+ip=(\S+)\s+firmware=(\S*)", line)
             if m:
                 meta["hands"].append(dict(sn=m.group(1), side=m.group(2).lower(), ip=m.group(3), firmware=m.group(4)))
             m = re.match(r"(\S+): joints online: (\d+) of 20", line)
@@ -579,6 +665,63 @@ def start_util(req, which):
         return ok
 
     return M.submit(J.Job("hand_" + which, title, "util", run, meta))
+
+
+def start_adapter(req):
+    """The second hand through a USB-Ethernet adapter on the robot computer: scripts/hand_adapter.sh, sent over SSH (no copy needed)."""
+    target = req.get("target") or S["target"]
+    if target != "board" or not S["ssh_host"]:
+        raise ValueError("the adapter is set up on the robot computer: choose it first")
+    if not SAFE.match(S["ssh_host"]):
+        raise ValueError("check the SSH settings")
+    if M.active("hand"):
+        raise ValueError("a hand is moving: set the adapter up after it")
+
+    def run(job):
+        ok = job.exec(["sh", "-c", f"ssh -T -o BatchMode=yes -o ConnectTimeout=8 {S['ssh_host']} 'bash -s' < scripts/hand_adapter.sh"],
+                      lambda line: note_link_line(target, line)) == 0
+        LINK_KICK.set()                           # the hands page shows the result of a fresh ping, not the script's word
+        return ok
+
+    return M.submit(J.Job("hand_adapter", "Set up the USB adapter for the second hand", "util", run, dict(target=target)))
+
+
+def start_hello(req):
+    """First motion on one hand: scripts/hand_hello.py (index finger base joint 9 deg and back, twice, 0.5 A)."""
+    target, side = req.get("target") or S["target"], req.get("side")
+    if side not in ("left", "right"):
+        raise ValueError("which hand: left or right")
+    if target == "fake":
+        raise ValueError("the fake hand has nothing to wave")
+    need_real_ok(req, target)
+    meta = dict(target=target, side=side, real=True)
+
+    def run(job):
+        got = dict(on=False, off=False)
+
+        def on_line(line):
+            note_hand_line(line)
+            note_link_line(target, line)
+            if "enabled and holding" in line:
+                got["on"] = True
+                job.phase = f"{side.capitalize()} hand: index finger 9° and back"
+            elif "switched off: confirmed" in line:
+                got["off"] = True
+
+        job.phase = f"Finding the {side} hand"
+        M.set_hand("on", "in use")
+        ok = job.exec(hand_argv(target, ["scripts/hand_hello.py", "--side", side, "--yes"], tty=True), on_line, ctrl_c_on_stdin=(target == "board")) == 0
+        if got["off"]:
+            M.set_hand("confirmed", "off, confirmed")
+        elif got["on"]:
+            M.set_hand("not_confirmed", "switch-off not seen")
+            job.say("[studio] the switch-off was not confirmed: press 'Switch the hand off'")
+            return False
+        else:
+            M.set_hand("unknown", "never switched on")
+        return ok
+
+    return M.submit(J.Job("hello", f"{side.capitalize()} hand: one finger, 9° and back", "hand", run, meta))
 
 
 def start_sync(req):
@@ -912,8 +1055,12 @@ class Handler(BaseHTTPRequestHandler):
                 if pc and pc.get("group") != "dataset":
                     pc["fits"] = planner.fits_fixed(pc["id"], "right") or planner.fits_fixed(pc["id"], "left")
                 return self.send(200, pc) if pc else self.fail(404, "no such piece")
+            if p == "/api/startpose":
+                return self.send(200, dict(hands=[start_pose_of(i) for i in q.get("plan", [])[:2]]))
             if p == "/api/positions":
                 return self.send(200, planner.positions(q["piece"][0], q.get("side", ["right"])[0]))
+            if p == "/api/view":
+                return self.file(plan_view(q.get("plan", [])), "application/json")
             if p == "/api/job":
                 job = M.get(q["id"][0])
                 start = int(q.get("from", ["0"])[0])
@@ -987,7 +1134,8 @@ class Handler(BaseHTTPRequestHandler):
             if p == "/api/estimate":
                 out = planner.estimate(req)
                 try:
-                    argv, out_rel, used = planner.build_command(req, "python")
+                    busy = [os.path.basename(j.meta.get("plan", "")) for j in M.active(kind="retarget")]
+                    argv, out_rel, used = planner.build_command(dict(req, _busy=busy), "python")
                     out.update(command=" ".join(J._show(a) for a in argv), name=used["name"], ok=True)
                 except ValueError as ex:
                     out.update(ok=False, why=str(ex), name=planner.suggest_name(req) if req.get("piece") else "")
@@ -999,6 +1147,8 @@ class Handler(BaseHTTPRequestHandler):
             if p == "/api/play": return self.job(start_play(req))
             if p == "/api/hand/off": return self.job(start_util(req, "off"))
             if p == "/api/hand/info": return self.job(start_util(req, "info"))
+            if p == "/api/hand/adapter": return self.job(start_adapter(req))
+            if p == "/api/hand/hello": return self.job(start_hello(req))
             if p == "/api/hand/link":
                 if (req.get("target") or S["target"]) == "board":
                     LINK["board"]["checking"] = True

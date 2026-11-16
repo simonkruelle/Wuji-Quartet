@@ -100,17 +100,35 @@ App.pages.library = {
     this.detail.append(card(null,
       h('div', {class: 'page-head'}, h('div', {}, h('h2', {class: 'pt', text: p.title}), h('div', {class: 'facts', text: facts + (p.human_wrist ? ' · pianist\'s wrist path known' : '')}),
         p.lyrics ? h('div', {class: 'facts', style: {fontStyle: 'italic'}, text: '“' + p.lyrics + ' …”'}) : null),
-        h('div', {class: 'actions'}, listenButton(async () => p.notes, t => { cursor = t; rl.draw(); }), h('button', {class: 'pill primary', text: 'Retarget ›', onclick: () => show('retarget', {piece: p.id})}))),
-      rl, h('h3', {text: 'Plans', style: {margin: '16px 0 0', fontSize: '15px'}}), list,
+        h('div', {class: 'actions'}, listenButton(async () => p.notes, t => { cursor = t; rl.draw(); }),
+          h('button', {class: 'pill primary', text: 'Retarget ›', onclick: () => show('retarget', {piece: p.id})}))),
+      rl, this.pairsBox(p), h('h3', {text: 'Plans', style: {margin: '16px 0 0', fontSize: '15px'}}), list,
       p.fits === false ? h('details', {class: 'disclosure', open: !plans.some(x => x.playable)},
         h('summary', {text: 'Too wide for one hand in place: simplify it for one hand'}), h('div', {}, ...this.cutPanel(p, false))) : null));
+  },
+  pairsBox(p) {
+    // a part of a two-hand piece: its pairs (this part's plan + a plan of the other part), playable together on two hands
+    const pairs = (App.lib.duets || []).filter(d => p.plans.includes(d.a) || p.plans.includes(d.b));
+    if (!pairs.length && !p.duet) return null;
+    const lo = d => Math.min(...[d.a, d.b].map(i => { const x = planById(i); return x && x.train ? x.train.lo / Math.max(1, x.n_notes || 1) : 0; }));
+    pairs.sort((a, b) => (b.shared - a.shared) || (lo(b) - lo(a)) || a.id.localeCompare(b.id));
+    return h('div', {},
+      h('div', {class: 'row', style: {margin: '16px 0 0'}}, h('h3', {text: 'Both hands', style: {margin: 0, fontSize: '15px'}}), h('span', {class: 'grow'}),
+        h('button', {class: 'pill', text: 'Retarget both hands ›', onclick: () => show('retarget', {piece: p.id, side: 'both'})})),
+      pairs.length ? null : h('div', {class: 'oneline', text: 'No pair of plans yet: Retarget both hands makes one.'}),
+      pairs.map((d, i) => { const A = planById(d.a), B = planById(d.b);
+        return h('div', {class: 'prow'},
+          h('span', {class: 'nm', text: duetLabel(d).slice(d.title.length + 3), title: d.a + ' + ' + d.b}),
+          h('span', {class: 'row tight'}, h('span', {class: 'chip plain', text: d.sides.join(' + ')}), h('span', {class: 'sc', text: [A, B].map(x => x ? scoreText(x) : '?').join(' + ')})),
+          h('button', {class: 'pill' + (i === 0 ? ' primary' : ''), text: '▶ Play both hands', onclick: () => show('play', {pair: d.id})})); }));
   },
   planRow(x) {
     const open = this.open === x.id;
     const row = h('div', {class: 'prow'},
       h('span', {class: 'nm', text: (open ? '▾ ' : '▸ ') + x.name, title: x.title, onclick: () => { this.open = open ? null : x.id; this.paintDetail(); }}),
       h('span', {class: 'row tight'}, h('span', {class: 'chip plain', text: x.side}), !x.playable ? h('span', {class: 'chip warn', text: 'needs an arm'}) : null, h('span', {class: 'sc', text: scoreText(x)})),
-      h('button', {class: 'pill' + (x.playable ? ' primary' : ''), text: '▶ Play', disabled: !x.playable, onclick: () => show('play', {plan: x.id})}));
+      h('span', {class: 'row tight'}, h('button', {class: 'pill', text: '3D', title: 'The hand in simulation, the SBTO search and, for a recorded piece, the pianist', onclick: () => show('view', {plan: x.id})}),
+        h('button', {class: 'pill' + (x.playable ? ' primary' : ''), text: '▶ Play', disabled: !x.playable, onclick: () => show('play', {plan: x.id})})));
     if (open) {
       const v = x.video ? h('video', {class: 'preview', controls: true, preload: 'metadata', src: '/media/' + x.video + '?v=' + Math.round(x.mtime)})
         : h('button', {class: 'pill', text: 'Film it in simulation', disabled: !(App.state.env.mujoco && App.state.env.ffmpeg), onclick: () => act(async () => { await api('/api/render', {plan: x.id}); flash('Filming: the video appears here when done.'); })});
@@ -219,7 +237,8 @@ App.pages.retarget = {
     this.pieceSel = h('select', {onchange: () => { f.piece = this.pieceSel.value; f.nameEdited = false; this.userWrist = false; this.pieceChanged(); }});
     this.rollEl = h('div', {style: {marginTop: '10px'}});
     this.listen = listenButton(async () => (await getPiece(f.piece)).notes, t => { cursor = t; if (this.rl) this.rl.draw(); });
-    this.sideSeg = seg([['right', 'Right hand'], ['left', 'Left hand']], f.side, v => { f.side = v; this.loadPositions(); });
+    this.sideEl = h('span', {});
+    this.paintSide();
     this.wristEl = h('span', {});
     this.posEl = h('div', {class: 'oneline'});
     this.detailEl = h('span', {});
@@ -241,7 +260,7 @@ App.pages.retarget = {
     this.startBtn = h('button', {class: 'pill primary big', text: 'Start', onclick: () => this.start()});
     this.runs = h('div', {});
     el.append(...pageHead('Retarget'),
-      card(null, h('div', {class: 'bar-row'}, this.pieceSel, this.listen, this.sideSeg, this.wristEl), this.rollEl, this.posEl),
+      card(null, h('div', {class: 'bar-row'}, this.pieceSel, this.listen, this.sideEl, this.wristEl), this.rollEl, this.posEl),
       card(null,
         h('div', {class: 'bar-row'}, this.detailEl, h('span', {class: 'grow'}), h('div', {class: 'est'}, this.estBig), this.startBtn),
         this.estSub, this.why,
@@ -259,7 +278,7 @@ App.pages.retarget = {
   show(arg) {
     if (arg && arg.piece) {
       this.f.piece = arg.piece; this.f.nameEdited = false; this.userWrist = false;
-      if (arg.side) { this.f.side = arg.side; this.sideSeg.set(arg.side); }
+      if (arg.side) { this.f.side = arg.side; this.paintSide(); }
       this.onLibrary();
     }
   },
@@ -284,17 +303,38 @@ App.pages.retarget = {
     this.rl = roll(p.notes, {cursor: this.cursor});
     clear(this.rollEl).append(this.rl);
     if (f.wrist === 'human' && !p.human_wrist) f.wrist = 'fixed';
+    if (f.side === 'both' && !p.duet) f.side = 'right';
+    this.paintSide();
     this.paintWrist();
     this.loadPositions();
   },
+  paintSide() {
+    // a part of a two-hand piece (Library › Duets) can be retargeted for both hands at once: melody on the right, accompaniment on the left
+    const f = this.f, duet = this.p && this.p.duet;
+    clear(this.sideEl).append(seg([['right', 'Right hand'], ['left', 'Left hand'],
+      ['both', 'Both hands', !duet, duet ? 'Melody on the right hand, accompaniment on the left: two runs, one click' : 'For two-hand pieces (Library › Duets)']],
+      f.side, v => { f.side = v; this.paintWrist(); this.loadPositions(); }));
+  },
   paintWrist() {
     const f = this.f, p = this.p;
+    this.wristEl.hidden = f.side === 'both';          // both hands play on the real hands: wrist fixed
     clear(this.wristEl).append(seg([['fixed', 'Wrist fixed'], ['plan', 'Wrist moves'], ...(p && p.human_wrist ? [['human', 'Like the pianist']] : [])],
       f.wrist, v => { f.wrist = v; this.userWrist = true; if (v !== 'fixed' && f.detail === 'reuse') f.detail = 'standard'; this.paintPos(); this.paintDetail(); this.refresh(); }));
   },
   async loadPositions() {
     const f = this.f, key = f.piece + '|' + f.side;
     this.posKey = key;
+    if (f.side === 'both' && this.p && this.p.duet) {
+      const parts = ['right', 'left'].map(s => ({side: s, piece: `assets/duets/${this.p.duet}_${s}.mid`}));
+      const rs = await Promise.all(parts.map(x => act(() => api('/api/positions?piece=' + encodeURIComponent(x.piece) + '&side=' + x.side))));
+      if (this.posKey !== key) return;
+      this.both = parts.map((x, i) => Object.assign(x, {positions: (rs[i] && rs[i].positions) || [], why: (rs[i] && rs[i].why) || ''}));
+      for (const x of this.both) x.position = x.positions[0] || null;
+      f.wrist = 'fixed';
+      if (f.detail === 'reuse' && !this.both.every(x => x.position && x.position.reuse_from)) f.detail = 'standard';
+      this.paintPos(); this.paintDetail(); this.refresh();
+      return;
+    }
     const r = await act(() => api('/api/positions?piece=' + encodeURIComponent(f.piece) + '&side=' + f.side)) || {positions: [], why: ''};
     if (this.posKey !== key) return;
     this.positions = r;
@@ -307,6 +347,17 @@ App.pages.retarget = {
   paintPos() {
     const f = this.f, ps = (this.positions && this.positions.positions) || [];
     clear(this.posEl);
+    if (f.side === 'both') {
+      for (const x of this.both || []) {
+        const label = h('b', {text: x.side === 'right' ? 'Right hand, melody: ' : 'Left hand, accompaniment: '});
+        if (!x.positions.length) { this.posEl.append(h('div', {}, label, x.why || 'no place where a fixed hand reaches every key')); continue; }
+        const sel = x.positions.length > 1 ? h('select', {onchange: () => { x.position = x.positions[+sel.value]; this.paintDetail(); this.refresh(); }},
+          x.positions.map((o, i) => h('option', {value: i, text: o.text + (o.proven ? '' : ' · simulation only')}))) : null;
+        if (sel) sel.value = String(Math.max(0, x.positions.indexOf(x.position)));
+        this.posEl.append(h('div', {style: {marginTop: '4px'}}, label, sel || x.position.text + (x.position.proven ? '' : ' · simulation only')));
+      }
+      return;
+    }
     if (f.wrist !== 'fixed') return this.posEl.append(ps.length ? 'A moving wrist needs an arm: simulation only.' : 'More than five fingers apart: the wrist has to move. Simulation only, needs an arm.');
     if (!ps.length) return;
     const text = o => o.text + (o.proven ? '' : ' · simulation only');
@@ -318,7 +369,7 @@ App.pages.retarget = {
   },
   paintDetail() {
     const f = this.f, D = App.lib.detail, moving = f.wrist !== 'fixed';
-    const canReuse = !moving && f.position && f.position.reuse_from;
+    const canReuse = f.side === 'both' ? (this.both || []).every(x => x.position && x.position.reuse_from) : !moving && f.position && f.position.reuse_from;
     clear(this.detailEl).append(seg([['reuse', 'Reuse', !canReuse, 'No search: what the search learned on Ode to Joy, per finger'], ['draft', 'Draft', false, '24 tries × 3 rounds'],
       ['standard', 'Standard', false, '48 × 6: every optimised plan in this repo'], ['fine', 'Fine', false, '96 × 8'], ['custom', 'Custom', false, 'your numbers, under More']],
       f.detail, v => { f.detail = v; this.paintDetail(); this.refresh(); }));
@@ -335,9 +386,16 @@ App.pages.retarget = {
     if (f.nameEdited && f.name) r.name = f.name;
     return r;
   },
+  reqs() {
+    // 'Both hands': the same settings for each part, each at its own place; the server names them (<piece>_right_... / _left_...)
+    if (this.f.side !== 'both') return [this.req()];
+    return (this.both || []).map(x => { const r = Object.assign(this.req(), {piece: x.piece, side: x.side, position: x.position, pair: this.p.duet}); delete r.name; return r; });
+  },
   refresh() {
     clearTimeout(this.rt);
     this.rt = setTimeout(async () => {
+      if (this.f.side === 'both') return this.refreshBoth();
+      this.nameIn.disabled = false;
       const e = await act(() => api('/api/estimate', this.req()));
       if (!e) return;
       this.estBig.textContent = '≈ ' + dur(e.seconds);
@@ -350,12 +408,40 @@ App.pages.retarget = {
       this.startBtn.disabled = !e.ok || !App.state.env.mujoco;
     }, 120);
   },
+  async refreshBoth() {
+    const rs = this.reqs(), key = this.posKey;
+    const es = rs.length === 2 ? await Promise.all(rs.map(r => act(() => api('/api/estimate', r)))) : [];
+    if (this.posKey !== key || this.f.side !== 'both') return;
+    clear(this.why);
+    const ok = es.length === 2 && es.every(e => e && e.ok);
+    const secs = es.reduce((a, e) => a + ((e && e.seconds) || 0), 0);
+    this.estBig.textContent = es.length === 2 ? '≈ ' + dur(secs) : '–';
+    this.estSub.textContent = 'Two runs, one after the other: the right hand (melody), then the left hand (accompaniment). Then ▶ Play both hands.';
+    const bad = !App.state.env.mujoco ? 'MuJoCo is not installed here: start the studio with ./wq gui.' : es.length < 2 ? 'Both parts need a place for a fixed hand.' :
+      es.map((e, i) => e && !e.ok ? (i ? 'Left hand: ' : 'Right hand: ') + e.why : '').filter(Boolean).join(' · ');
+    if (bad) this.why.append(h('div', {class: 'banner warn', style: {marginTop: '8px'}, text: bad}));
+    this.nameIn.value = es.map(e => (e && e.name) || '?').join(' + '); this.nameIn.disabled = true;
+    this.cmd.textContent = es.map(e => (e && e.command) || '').join('\n\n');
+    this.startBtn.disabled = !ok || !App.state.env.mujoco;
+  },
   async start() {
-    const r = await act(() => api('/api/retarget', this.req()));
-    if (r) { this.f.nameEdited = false; this.refresh(); }
+    for (const r of this.reqs()) {                // queued in order: the optimiser runs one job at a time
+      const res = await act(() => api('/api/retarget', r));
+      if (!res) break;
+    }
+    this.f.nameEdited = false; this.refresh();
+  },
+  playButton(j, jobs) {
+    // a run started by 'Both hands': once its partner is done too, play the two together
+    const m = j.meta, mate = m.pair && jobs.find(o => o !== j && o.state === 'done' && o.meta.pair && o.meta.pair.stem === m.pair.stem && o.meta.pair.side !== m.pair.side);
+    const right = mate && (m.pair.side === 'right' ? m.plan : mate.meta.plan), left = mate && (m.pair.side === 'right' ? mate.meta.plan : m.plan);
+    const d = mate && (App.lib.duets || []).find(d => d.a === right && d.b === left);
+    if (d) return h('span', {class: 'row tight'}, h('button', {class: 'pill', text: '▶ Play', onclick: () => show('play', {plan: m.plan})}),
+      h('button', {class: 'pill primary', text: '▶ Play both hands', onclick: () => show('play', {pair: d.id})}));
+    return h('button', {class: 'pill primary', text: '▶ Play', onclick: () => show('play', {plan: m.plan})});
   },
   update() {
-    const jobs = App.state.jobs.filter(j => j.kind === 'retarget').slice(0, 5);
+    const jobs = App.state.jobs.filter(j => j.kind === 'retarget').slice(0, 6);
     const sig = jobs.map(j => j.id + j.state + j.phase + Math.round((j.progress || 0) * 200) + (j.stopping ? 's' : '') + (planById(j.meta.plan) ? 'p' : '')).join();
     if (sig === this.sig) return;
     this.sig = sig;
@@ -371,8 +457,33 @@ App.pages.retarget = {
         progressBar(j),
         h('span', {class: 'row tight'}, h('a', {text: 'Log', onclick: () => openLog(j.id)}),
           live ? h('button', {class: 'pill', text: j.stopping ? 'Stopping …' : 'Stop', disabled: j.stopping, onclick: () => act(() => api('/api/stop', {id: j.id}))})
-            : j.state === 'done' && planById(m.plan) && planById(m.plan).playable ? h('button', {class: 'pill primary', text: '▶ Play', onclick: () => show('play', {plan: m.plan})}) : null)));
+            : j.state === 'done' && planById(m.plan) && planById(m.plan).playable ? this.playButton(j, jobs) : null)));
     }
+    const shown = jobs.find(j => j.meta.windows && j.meta.windows.length);
+    if (shown) c.append(searchChart(shown));
     this.runs.append(c);
   },
 };
+
+// the SBTO search as it runs: the cost of every step before (grey) and after (blue) its tries, and the score it moved
+function searchChart(j) {
+  const m = j.meta, ws = m.windows, total = Math.max(ws.length, (m.estimate && m.estimate.windows) || 0);
+  const cv = h('canvas', {class: 'cost'});
+  const top = Math.max(...ws.map(w => w[1])), ly = c => Math.log10(1 + c) / Math.log10(1 + top);
+  requestAnimationFrame(() => {
+    if (!cv.isConnected) return;
+    const [g, W, H] = fitCanvas(cv), bw = W / total;
+    for (let i = 0; i < ws.length; i++) {
+      g.fillStyle = '#cfd9e3'; g.fillRect(i * bw + 0.5, H - (H - 4) * ly(ws[i][1]), Math.max(1, bw - 1), (H - 4) * ly(ws[i][1]));
+      g.fillStyle = '#0a84ff'; g.fillRect(i * bw + bw * 0.2, H - (H - 4) * ly(ws[i][2]), Math.max(1, bw * 0.6), (H - 4) * ly(ws[i][2]));
+    }
+    g.fillStyle = '#c6d3df'; g.fillRect(0, H - 1, W, 1);
+  });
+  const before = (m.start || m.baseline || {}).train, after = (m.result || {}).train;
+  const sum = k => ws.reduce((s, w) => s + w[k], 0).toFixed(1);
+  return h('div', {style: {marginTop: '10px'}},
+    h('div', {class: 'row'}, h('b', {text: 'SBTO search', style: {fontSize: '13.5px'}}), h('span', {class: 'grow'}),
+      h('span', {class: 'subtle small', text: `${ws.length} of ${total} steps · cost ${sum(1)} → ${sum(2)}` +
+        (before && after ? ` · notes ${before[0][0]} → ${after[0][0]}/${m.n_notes}` : before ? ` · notes before ${before[0][0]}/${m.n_notes}` : '')})),
+    cv, h('div', {class: 'legend'}, h('span', {}, h('i', {style: {background: '#cfd9e3'}}), 'cost before the step\'s tries'), h('span', {}, h('i', {style: {background: '#0a84ff'}}), 'after')));
+}

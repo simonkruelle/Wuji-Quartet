@@ -1,7 +1,7 @@
 // Wuji Quartet Studio: shell (header, sidebar, status bar, log drawer, dialogs) and the link to the server.
 'use strict';
 
-const NAV = [['library', 'Library'], ['retarget', 'Retarget'], ['play', 'Play'], ['camera', 'Camera'], ['settings', 'Settings']];
+const NAV = [['library', 'Library'], ['view', '3D view'], ['retarget', 'Retarget'], ['hands', 'Hands'], ['play', 'Play'], ['camera', 'Camera'], ['settings', 'Settings']];
 const PARENT = {};
 const FINGERS = ['thumb', 'index', 'middle', 'ring', 'pinky'];
 const FCOL = ['#ff9f0a', '#34c759', '#0a84ff', '#af52de', '#ff375f'];
@@ -167,16 +167,22 @@ function targetSeg() {
   return el;
 }
 function handBusy() { return ((App.state && App.state.jobs) || []).find(j => j.group === 'hand' && (j.state === 'running' || j.state === 'queued')); }
-// Is the real hand there? The server pings it from the robot computer every few seconds; jobs on the hand report what they found.
-function linkOf(id) { return (App.state && App.state.link && App.state.link[id]) || {state: 'unknown', text: 'not checked yet'}; }
-function linkSigOf() { return Object.entries((App.state && App.state.link) || {}).map(([k, v]) => k + v.state + v.text + (v.found ? v.found.joints : '')).join('|'); }
+// Are the real hands there? The server pings both (right .111, left .110) from the robot computer every few seconds; jobs on a hand
+// report what they found (serial number, firmware, joints). The Hands page shows each hand; the band and the menus say it in one line.
+function linkOf(id) { return (App.state && App.state.link && App.state.link[id]) || {state: 'unknown', text: 'not checked yet', hands: {}}; }
+function linkSigOf() { return Object.entries((App.state && App.state.link) || {}).map(([k, v]) => k + v.state + v.text + JSON.stringify(v.hands || {})).join('|'); }
 function linkKind(l) { return l.state === 'ok' ? 'ok' : (l.state === 'no_hand' || l.state === 'down') ? 'bad' : 'unknown'; }
+const handsUp = l => ['right', 'left'].filter(s => l.hands && l.hands[s] && l.hands[s].up);
 function linkHead(l) {
-  return {ok: 'Hand connected', bad: l.state === 'down' ? 'Robot computer not reachable' : 'Hand not found', unknown: l.checking ? 'Checking the hand …' : 'Hand not checked yet'}[linkKind(l)];
+  const up = handsUp(l);
+  return {ok: up.length === 2 ? 'Both hands connected' : up.length ? (up[0] === 'right' ? 'Right' : 'Left') + ' hand connected' : 'Hand connected',
+    bad: l.state === 'down' ? 'Robot computer not reachable' : 'No hand found', unknown: l.checking ? 'Checking the hands …' : 'Hands not checked yet'}[linkKind(l)];
 }
 function linkDetail(l) {
-  const f = l.found;
-  return (l.state === 'unknown' ? '' : l.text) + (l.state === 'ok' && f && f.joints != null ? ` · ${f.joints} of 20 joints online` : '');
+  if (l.state === 'unknown') return '';
+  if (l.state === 'down' || !l.hands) return l.text;
+  return ['right', 'left'].map(s => { const x = l.hands[s] || {};
+    return s + ' ' + (x.up ? (x.joints != null ? x.joints + '/20 joints' : 'answers') : x.up === false ? (x.wifi ? 'only over Wi-Fi' : 'no answer') : 'not checked'); }).join(' · ');
 }
 function checkHand(id) {
   id = id || App.target;
@@ -210,7 +216,8 @@ function show(key, arg) {
 }
 function paintHeader() {
   const t = targetInfo(), sel = $('#handsel'), ts = (App.state && App.state.targets) || [];
-  const mark = x => !x.real ? '' : {ok: ' · connected', bad: ' · ' + linkHead(linkOf(x.id)).toLowerCase(), unknown: ''}[linkKind(linkOf(x.id))];
+  const mark = x => { const l = linkOf(x.id), up = handsUp(l), k = linkKind(l);
+    return !x.real || k === 'unknown' ? '' : k === 'bad' ? ' · ' + linkHead(l).toLowerCase() : ' · ' + (up.length === 2 ? 'both hands' : up.length ? up[0] + ' only' : 'connected'); };
   const sig = ts.map(x => x.id + x.label + x.ok + mark(x)).join();
   if (sel.dataset.sig !== sig) {
     sel.dataset.sig = sig; clear(sel);
@@ -236,13 +243,14 @@ function paintLinkBar(t, busy) {
   const kind = moving ? 'moving' : linkKind(l);
   const head = moving ? 'Real hand moving' : linkHead(l);
   const detail = moving ? (busy.phase || '') : [linkDetail(l), l.time ? 'checked ' + ago(l.time) : ''].filter(Boolean).join(' · ');
-  const sig = [kind, head, detail, t.label, l.checking].join('|');
+  const sig = [kind, head, detail, t.label, l.checking, App.page].join('|');
   if (bar.dataset.sig === sig) return;
   bar.dataset.sig = sig;
   bar.className = kind;
-  clear(bar).append(h('b', {text: (kind === 'bad' ? '✕ ' : '● ') + head}), h('span', {text: ' · ' + t.label + (detail ? ' · ' + detail : '')}), h('span', {class: 'grow'}),
-    !moving ? h('a', {text: l.checking ? 'checking …' : 'Check now', title: 'Reads only, never moves the hand', onclick: () => checkHand(t.id)}) : null,
-    h('span', {class: 'tail', text: 'real hand: commands move it'}));
+  clear(bar).append(...[h('b', {text: (kind === 'bad' ? '✕ ' : '● ') + head}), h('span', {text: ' · ' + t.label + (detail ? ' · ' + detail : '')}), h('span', {class: 'grow'}),
+    !moving && h('a', {text: l.checking ? 'checking …' : 'Check now', title: 'Reads only, never moves the hand', onclick: () => checkHand(t.id)}),
+    App.page !== 'hands' && h('a', {text: 'Hands ›', title: 'Both hands: connect, check, first motion', onclick: () => show('hands')}),
+    h('span', {class: 'tail', text: 'real hand: commands move it'})].filter(Boolean));
 }
 function paintStatus() {
   const s = App.state; if (!s) return;
@@ -253,11 +261,11 @@ function paintStatus() {
   else if (s.hand.state === 'not_confirmed') set('#st-hand', 'bad', 'Switch-off NOT confirmed');
   else if (t.real) {
     const l = linkOf(t.id), k = linkKind(l), off = s.hand.state === 'confirmed' ? ' · off, confirmed ' + ago(s.hand.time) : '';
-    set('#st-hand', k === 'unknown' ? '' : k, (k === 'ok' ? 'Connected' : linkHead(l)) + off);
+    set('#st-hand', k === 'unknown' ? '' : k, linkHead(l) + off);
   }
   else {                                       // the fake hand is chosen: still say whether the real one is there
     const b = (s.targets || []).find(x => x.id === 'board'), l = b && linkOf('board'), k = l && linkKind(l);
-    set('#st-hand', '', 'Fake hand' + (k === 'ok' ? ' · real hand connected' : k === 'bad' ? ' · real hand: ' + linkHead(l).toLowerCase() : ''));
+    set('#st-hand', '', 'Fake hand' + (k === 'ok' ? ' · real: ' + linkHead(l).toLowerCase() : k === 'bad' ? ' · real hand: ' + linkHead(l).toLowerCase() : ''));
   }
   const comp = s.jobs.filter(j => j.group === 'compute' && (j.state === 'running' || j.state === 'queued'));
   const run = comp.find(j => j.state === 'running');
@@ -333,6 +341,11 @@ async function loadLibrary() {
     App.lib = await api('/api/library');
     for (const p of Object.values(App.pages)) if (p.el && p.onLibrary) p.onLibrary();
   } catch (e) { flash(e.message, true); }
+}
+// a pair of plans for two hands, named by its plans (several pairs of one piece must be told apart): 'Korobeiniki · melody_right_cem_s0 + accomp_left_cem_s0'
+function duetLabel(d) {
+  const stem = d.title.toLowerCase().replace(/[^a-z0-9]+/g, '_') + '_', short = id => { const n = id.split('/').pop(); return n.startsWith(stem) ? n.slice(stem.length) : n; };
+  return `${d.title} · ${short(d.a)} + ${short(d.b)}` + (d.same_side ? ' · two right hands' : '') + (d.gentle ? '' : ' · fast strokes') + (d.shared ? '' : ' · this computer');
 }
 const planById = id => ((App.lib && App.lib.plans) || []).find(p => p.id === id);
 const pieceById = id => ((App.lib && App.lib.pieces) || []).find(p => p.id === id);

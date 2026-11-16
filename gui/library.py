@@ -75,6 +75,15 @@ def piece_notes(piece_id, part=None):
     return [[round(n["on"] - t0, 4), round(n["off"] - t0, 4), int(n["pitch"])] for n in notes]
 
 
+def _duet_title(stem):
+    """A two-hand piece's title: from the .json beside its right part when it has one (scripts/split_tune.py writes it)."""
+    try:
+        with open(os.path.join(REPO, f"assets/duets/{stem}_right.json")) as fh:
+            return json.load(fh).get("title") or _pretty(stem)
+    except (OSError, ValueError):
+        return _pretty(stem)
+
+
 def _pretty(stem):
     """'saints_D' -> 'When the Saints Go Marching In, in D major'."""
     m = re.match(r"^(.*?)(?:_([A-G]))?$", stem)
@@ -175,8 +184,15 @@ def pieces(with_notes=False):
         for part in ("right", "left"):
             f = f"assets/duets/{stem}_{part}.mid"
             if os.path.exists(os.path.join(REPO, f)):
-                p = _piece(f, title=f"{_pretty(stem)}, {'melody' if part == 'right' else 'accompaniment'}", origin="score", group="two", file=f,
-                           duet=stem, part=part, duet_title=_pretty(stem))
+                side_json = os.path.join(REPO, f[:-4] + ".json")      # a tune split across two hands (scripts/split_tune.py) says its role
+                try:
+                    with open(side_json) as fh:
+                        sj = json.load(fh)
+                except (OSError, ValueError):
+                    sj = {}
+                role = sj.get("role") or ("melody" if part == "right" else "accompaniment")
+                p = _piece(f, title=f"{sj.get('title') or _pretty(stem)}, {role}", origin="score", group="two", file=f,
+                           duet=stem, part=part, duet_title=sj.get("title") or _pretty(stem), version=sj.get("version"))
                 if p:
                     out.append(p)
     used = {}
@@ -347,6 +363,7 @@ def _load_plan(rel):
         length_s=round(float(Z["t"][-1]), 2), pre_roll=float(g("pre_roll", 1.5)), piece_t0=float(g("piece_t0", 0.0)),
         mount=dict(x=round(x, 4), z=round(z, 4), theta=round(th, 2), dy=round(dy, 4)), center=int(g("center", 76)),
         press_x=[round(float(v), 4) for v in Z["press_x"]] if "press_x" in has else None,
+        press_d=[round(float(v), 4) for v in Z["press_d"]] if "press_d" in has else None,      # press target per finger, m below the key top (sbto_piano.py --press-d)
         stroke_ms=round(float(g("stroke_s", 0.03)) * 1000), real_limits=bool(g("real_limits", False)),
         start_hover=bool(g("start_hover", False)), gain=float(g("gain", 5.0)), fing=fing,
         level=(abs(th) < 0.5 and abs(z - 0.06) < 0.005), has_params=("P" in has and "lead" in has), joints=int(Z["q"].shape[1]),
@@ -452,7 +469,7 @@ def duets():
                     v = own
                 if not (a["shared"] and b["shared"]) and (a["name"] in shared_names and not a["shared"] or b["name"] in shared_names and not b["shared"]):
                     continue
-                out.append(dict(id=f"{a['id']}+{b['id']}", title=_pretty(stem), a=a["id"], b=b["id"], sides=[a["side"], b["side"]],
+                out.append(dict(id=f"{a['id']}+{b['id']}", title=_duet_title(stem), a=a["id"], b=b["id"], sides=[a["side"], b["side"]],
                                 same_side=a["side"] == b["side"], shared=a["shared"] and b["shared"],
                                 video=v if v and os.path.exists(os.path.join(REPO, v)) else None, gentle=a.get("stroke_ms", 0) >= 60))
     out.sort(key=lambda d: (not d["shared"], not d["video"], not d["gentle"], d["same_side"], d["title"]))

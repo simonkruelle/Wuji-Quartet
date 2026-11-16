@@ -265,3 +265,46 @@ h2.pt { font-size: 21px; margin: 0; letter-spacing: -.01em; }
 .ctrl-col { display: flex; flex-direction: column; gap: 10px; }
 .handsel { max-width: 240px; }
 .pane .seg button { padding: 4px 10px; }
+
+/* Human → Robot: the pianist's recorded hands, the SBTO search and the robot on one clock */
+canvas.scene3d { width: 100%; height: 470px; display: block; cursor: grab; touch-action: none; }
+canvas.scene3d:active { cursor: grabbing; }
+canvas.tchart { width: 100%; height: 132px; display: block; cursor: pointer; }
+canvas.tchart.short { height: 40px; }
+.viewmsg { background: #12161c; color: #b9c7d4; border-radius: 6px; height: 470px; display: grid; place-items: center; font-size: 14px; }
+.viewpick { max-width: 460px; font-weight: 600; }
+.handlbl { font-weight: 600; font-size: 13px; margin: 10px 0 2px; }
+.handinfo + .handinfo { margin-top: 12px; padding-top: 10px; border-top: 1px solid #eef4f9; }
+.fingkeys { display: grid; grid-template-columns: repeat(auto-fill, minmax(130px, 1fr)); gap: 6px 12px; margin-top: 8px; font-size: 13px; color: var(--subtle); }
+.fingkeys i { display: inline-block; width: 11px; height: 11px; border-radius: 3px; margin-right: 5px; vertical-align: -1px; }
+.fingkeys b { color: var(--text); font-weight: 600; }
+.hflow { display: flex; align-items: stretch; gap: 8px; flex-wrap: wrap; margin: 0 0 12px; }
+.hflow .arrow { color: #a9bccd; font-size: 18px; align-self: center; }
+.hstep { display: flex; align-items: center; gap: 9px; padding: 7px 14px 7px 8px; border-radius: 8px; background: #fff; border: 1px solid var(--border); flex: 1; min-width: 150px; }
+.hstep i { font-style: normal; width: 24px; height: 24px; border-radius: 50%; background: var(--track); color: #51606d; display: grid; place-items: center; font-size: 12.5px; font-weight: 700; flex: none; }
+.hstep b { display: block; font-size: 14px; }
+.hstep span { display: block; color: var(--subtle); font-size: 12px; }
+.hstep.human i { background: #f39c4a; color: #fff; }
+.hstep.sbto { border-color: var(--blue); background: #f4f9ff; }
+.hstep.sbto i { background: var(--blue); color: #fff; }
+.hstep.robot i { background: #24313d; color: #fff; }
+.kpi .arrow { color: var(--subtle); font-weight: 400; }
+
+/* Play: where the hand goes (gui/static/startpose.js) */
+.posebox > summary { font-size: 13.5px; margin-top: 10px; }
+.posebox > div { margin-top: 8px; }
+.posepane { min-width: 0; }
+svg.posefig { width: 100%; max-height: 330px; display: block; margin: 4px auto 8px; background: #f3f7fb; border-radius: 6px; }
+svg.posefig .kname { font-size: 6.5px; fill: #8a99a7; font-family: var(--mono, monospace); }
+svg.posefig .kname.on { fill: #1d1d1f; font-weight: 700; }
+svg.posefig .front { stroke: #51606d; stroke-width: 1; }
+svg.posefig .handshape { fill: #24313d; fill-opacity: .08; stroke: #24313d; stroke-opacity: .35; stroke-width: .8; stroke-linejoin: round; }
+svg.posefig .axis { stroke: #f39c4a; stroke-width: .8; stroke-dasharray: 3 2; }
+svg.posefig .flange { fill: #f39c4a; stroke: #fff; stroke-width: 1.2; }
+svg.posefig .flabel { font-size: 7px; fill: #a35f00; font-weight: 700; }
+svg.posefig .dim { stroke: #8a99a7; stroke-width: .7; fill: none; }
+svg.posefig .dimt { font-size: 7px; fill: #51606d; }
+svg.posefig .tip { stroke: #fff; stroke-width: 1; }
+svg.posefig .tipl { font-size: 5.5px; fill: #fff; font-weight: 700; pointer-events: none; }
+.poseline { font-size: 13px; margin-top: 4px; }
+.poseline b { font-weight: 600; }

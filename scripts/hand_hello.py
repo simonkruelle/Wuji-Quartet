@@ -40,6 +40,7 @@ with hw.Session(mode="mit", kp=A.kp, kd=A.kd, effort=A.effort, dry_run=A.dry_run
         hold(0.5, q0)
     except KeyboardInterrupt: print("\ninterrupted: disabling")
     S = list(s.states)
+print("hand switched off: confirmed" if getattr(s, "off_confirmed", False) else "!!! hand switched off: NOT CONFIRMED, run scripts/hand_off.py", flush=True)
 if k0 is not None and len(S) > k0 + 10:
     Q = np.array([x[1] for x in S[k0:]]); E = np.abs(np.array([x[3] for x in S[k0:]])); others = np.delete(np.arange(20), J)
     print(f"{NAMES[J // 4]} joint {J % 4}: asked to travel {np.degrees(abs(tgt - q0[J])):.1f} deg, measured {np.degrees(np.nanmax(Q[:, J]) - np.nanmin(Q[:, J])):.1f} deg, peak current {np.nanmax(E[:, J]):.2f} A")
