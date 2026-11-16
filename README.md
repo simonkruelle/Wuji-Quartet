@@ -4,15 +4,15 @@
 
 <br><br>
 
+![Status](https://img.shields.io/badge/status-two%20real%20hands%20on%20a%20real%20piano-2ea44f)
+![Hand](https://img.shields.io/badge/Wuji%20Hand%202.2-left%20%2B%20right-e8b856)
 ![MuJoCo](https://img.shields.io/badge/MuJoCo-3.17-1f6feb)
-![Hand](https://img.shields.io/badge/Wuji%20Hand-2.2-e8b856)
 ![Python](https://img.shields.io/badge/Python-3.13-3776AB?logo=python&logoColor=white)
 ![Docker](https://img.shields.io/badge/Docker-amd64%20%7C%20arm64-2496ED?logo=docker&logoColor=white)
-![Status](https://img.shields.io/badge/status-simulation%20only-8a8f9c)
 
-**Give it a MIDI file. Get a finger plan a Wuji Hand 2 can play.**
+**A MIDI file in. Two robot hands play it on a real piano, and teach it to your fingers.**
 <br>
-The plan is optimised in simulation on five slightly different pianos at once, so it survives a mount that is a millimetre off.
+The finger plan is found in simulation, rehearsed on five slightly different pianos at once, and played at 1,000 commands per second.
 
 <sub>Leukerbad Hackathon · Sat 14 Nov 10:00 to Mon 16 Nov 17:00, 2026 · Simon, Henry, Sima, Sebas</sub>
 
@@ -20,17 +20,100 @@ The plan is optimised in simulation on five slightly different pianos at once, s
 
 <br>
 
-| **76 / 80** notes | **82 / 86** notes | **17 to 21 ms** | **15 to 19 min** |
+| **2 hands · 40 joints** | **5 pieces** | **about 20 s** | **62 / 62** |
 |:--:|:--:|:--:|:--:|
-| Mozart K.265 theme, hand alone | Für Elise opening, moving wrist | timing of 90 % of the notes it hits | to optimise one piece on 10 CPU cores |
+| on an acoustic upright piano | played with both real hands on 15 Nov | per hand, from a new tune to a plan (8 to 17 min with a full search) | notes of Ode to Joy in simulation, 0 wrong, on all ten test setups |
 
-> **The numbers on this page are simulation.** On 14 and 15 Nov the real right hand played Ode to Joy, Jingle Bells and When the Saints at full speed and 1.0 A. No keyboard recording has confirmed the notes yet. **Two hands: simulation only**, the second hand arrives on 15 Nov. What we measured is in [docs/RUNBOOK.md](docs/RUNBOOK.md).
+<p align="center">
+  <a href="docs/media/real_ode_two_hands.mp4"><img src="docs/media/real_two_hands.gif" width="720" alt="Two Wuji Hand 2 on an upright piano, seen from above, playing Ode to Joy with both hands"></a>
+  <br>
+  <sub>15 Nov 2026. Both real hands play Ode to Joy: melody right, accompaniment left. The wrists stay where they are; every finger motion comes from the plan. Click for the video with sound.</sub>
+</p>
+
+## Three things it does
+
+<table>
+  <tr>
+    <th width="33%">1 · Retarget</th>
+    <th width="33%">2 · Play</th>
+    <th width="33%">3 · Teach</th>
+  </tr>
+  <tr>
+    <td>Any MIDI file becomes a finger plan. No teleoperation, no demonstration on the robot, no training run.</td>
+    <td>One or two real hands play it at full speed, in step, on a real piano.</td>
+    <td>The robot hand rests on your hand and presses your fingers through the piece, phrase by phrase.</td>
+  </tr>
+  <tr>
+    <td><strong>about 20 s</strong> per hand</td>
+    <td><strong>5 pieces</strong> with both hands</td>
+    <td><strong>down to 0.3 A</strong> finger current in a lesson; 1.0 A when it plays alone</td>
+  </tr>
+</table>
+
+- **Why a piano:** it grades dexterity by itself. Every note is right or wrong, early or late.
+- **Why it is fast:** what the search learned on one piece (how each finger strikes a key) carries over to the next.
+- **Why teach:** the plan that moves the robot's fingers can move yours.
+
+## Teach: the robot shows your fingers the piece
+
+<table>
+  <tr>
+    <td width="50%" align="center"><a href="docs/media/real_teach.mp4"><img src="docs/media/real_teach.gif" width="420" alt="The robot hand lies on a learner's hand and presses the learner's fingers onto the keys"></a></td>
+    <td width="50%" align="center"><a href="docs/media/real_teach_ode.mp4"><img src="docs/media/real_teach_ode.gif" width="420" alt="Sebas at the piano with his hand under the robot hand"></a></td>
+  </tr>
+  <tr>
+    <td>The robot hand lies on the learner's hand and plays the tune through their fingers.</td>
+    <td>Sebas takes a lesson: Ode to Joy, 16 Nov.</td>
+  </tr>
+</table>
+
+<table>
+  <tr>
+    <th width="25%">1</th>
+    <th width="25%">2</th>
+    <th width="25%">3</th>
+    <th width="25%">4</th>
+  </tr>
+  <tr>
+    <td>Lay your hand on the keys, relaxed, under the robot hand.</td>
+    <td>Pick a phrase, the speed and the number of rounds.</td>
+    <td>The robot presses your fingers onto the right keys at the right time.</td>
+    <td>Pause, then again. Slide your hand out sideways whenever you like.</td>
+  </tr>
+</table>
+
+| You set | Range |
+|---|---|
+| Phrase | the piece is cut into up to eight phrases: one of them, or all |
+| Speed | 50, 75 or 100 % |
+| Rounds | 1 to 10, with 2 to 20 s of pause in between |
+| Fingers | all five, or only the ones you practise |
+| Force | the finger current limit, 0.3 to 1.5 A |
+| On screen | notes fall onto a keyboard in step with the hand, one colour per finger |
+| Stop | the red button in the top bar: the hand goes limp and confirms it |
+
+> **Run on the real hand, 16 Nov:** Ode to Joy, three rounds per lesson. The current limit went down step by step from 1.0 A to 0.3 A, and Sebas took a lesson with his hand under it. **Not measured yet:** whether someone plays better after a lesson.
+
+In the studio: Play › Teach.
+
+## Any song
+
+| Source | What it is |
+|---|---|
+| Ours | Ode to Joy, Jingle Bells, When the Saints, Korobeiniki, Pachelbel's Canon, Mozart K.265, Für Elise |
+| 14 Christmas songs | public domain or CC0, verse 1 ([list](assets/songs/README.md)) |
+| 153 piano performances | the FürElise dataset: cut an excerpt, simplify it for one hand |
+| Your own MIDI file | also a whole band: the studio leaves out the drums and finds the tune |
+
+- **One hand reaches five neighbouring keys**, plus black keys in between. A wider tune is fitted into them: every step between two notes stays exact inside a phrase.
+- **Two hands share a tune** over ten keys: `scripts/split_tune.py`.
+- Imported songs stay on your computer (`assets/library/` is not in git).
 
 ## The studio
 
 <p align="center"><img src="docs/studio/library.png" width="880" alt="The studio's library: pieces on the left, the selected piece with its notes and its plans on the right"></p>
 
-**Pick a piece → listen → retarget → play, in one window.** `python gui/app.py` opens it in the browser; `--tailscale` makes it reachable from your other devices.
+**Pick a piece → listen → retarget → play or teach, in one browser window.** `python gui/app.py`
 
 <table>
   <tr>
@@ -39,169 +122,160 @@ The plan is optimised in simulation on five slightly different pianos at once, s
   </tr>
   <tr>
     <td><strong>Retarget</strong>: Reuse, Draft, Standard or Fine. The time comes before you start.</td>
-    <td><strong>Play</strong>: one hand, two hands, or Teach (a phrase, slowly, several times).</td>
+    <td><strong>Play</strong>: one hand, two hands, or Teach.</td>
   </tr>
 </table>
 
 | Page | |
 |---|---|
-| Library | our 17 pieces, 14 Christmas songs, the 153 performances of the FürElise dataset and your own MIDI files: cut a part, simplify it for one hand, with chords of two or three keys if you like (plays on the real hand without an arm), then retarget it |
-| Retarget | the search; tries, rounds and wrist knots under More |
+| Library | pieces, songs, the 153 performances, your own MIDI files |
+| 3D view | every plan in simulation; for K.265 the recorded pianist's hands on the same keyboard |
+| Retarget | the search, one hand or both, with a time estimate |
+| Hands | both real hands: connected, firmware, first motion, where each hand has to sit for which song |
 | Play | one hand · two hands · Teach. Stop is always in the top bar |
-| Camera | the hand follows your hand in front of the webcam (Sebas's tracking) |
+| Camera | the hand follows your hand in front of a webcam (Sebas's tracking); not yet run on the real hand from the studio |
 | Settings | which hand, the robot computer, defaults |
 
-> **Tested on 15 Nov in a browser with the fake hand, and Play on the real right hand through the robot computer.** A green band at the top means the real hand answers, red means it does not. Two hands, Teach and Camera have not moved the real hand yet, and the camera page has not seen a live webcam. Details: [docs/STUDIO.md](docs/STUDIO.md).
+Guide: [docs/STUDIO.md](docs/STUDIO.md).
 
-## Watch it play
+## How it works: SBTO
 
-Click a clip for the video with sound. The sound is synthesised from the keys the simulation pressed, wrong notes included.
+**Guess a motion, try noisy copies of it in a simulator, keep the best, move the guess toward them. Repeat.** No gradients, nothing learned, no demonstration on the robot.
 
-<table>
-  <tr>
-    <th width="50%">Für Elise, opening</th>
-    <th width="50%">Mozart K.265 theme ("Twinkle, twinkle")</th>
-  </tr>
-  <tr>
-    <td align="center"><a href="docs/media/furelise_plan.mp4"><img src="docs/media/furelise_plan.gif" width="430" alt="Simulated hand playing the opening of Für Elise"></a></td>
-    <td align="center"><a href="docs/media/k265_fixed.mp4"><img src="docs/media/k265_fixed.gif" width="430" alt="Simulated hand playing the Mozart K.265 theme with a fixed wrist"></a></td>
-  </tr>
-  <tr>
-    <td>Wrist moves, 27 hand shifts in 25 s. <strong>82 / 86</strong> notes. Needs an arm.</td>
-    <td>Wrist bolted in place. <strong>76 / 80</strong> notes. <strong>The plan for the real hand.</strong></td>
-  </tr>
-</table>
-
-<p align="center">
-  <a href="docs/media/ode_level.mp4"><img src="docs/media/ode_level.gif" width="640" alt="Simulated hand playing Ode to Joy with a fixed, level wrist"></a>
-  <br>
-  <strong>Ode to Joy</strong>: five keys, one finger each, the hand never moves. <strong>62 / 62</strong> notes, 0 wrong, on all ten test setups. Level hand, wrist further back, fingers nearly straight. The piece for the first test on the tripod.
-</p>
-
-<p align="center">
-  <a href="docs/media/ode_duet.mp4"><img src="docs/media/ode_duet.gif" width="640" alt="Two simulated hands playing Ode to Joy: melody and accompaniment"></a>
-  <br>
-  <strong>Two hands</strong>, both fixed: the right hand plays the melody, a left hand the accompaniment two octaves below. <strong>62 / 62</strong> and <strong>127 / 127</strong> notes, 0 wrong. Also ready: Jingle Bells, <a href="docs/media/korobeiniki_duet.mp4">Korobeiniki speeding up from 120 to 200 bpm</a> and <a href="docs/media/canon_duet.mp4">Pachelbel's Canon</a>. Setup: <a href="docs/RUNBOOK.md#two-hands">runbook, Two hands</a>.
-</p>
-
-Third clip, K.265 with the wrist following a human pianist: [docs/media/k265_human.mp4](docs/media/k265_human.mp4) (75 / 80).
-
-## The hand
-
-<p align="center"><img src="docs/hand.png" width="880" alt="Wuji Hand 2.2: 20 joints, 1 kHz control, 800 g, 12 V"></p>
-
-## How it works
+This is **SBTO**, sampling-based trajectory optimisation, developed at the [ATARI Lab](https://www.ce.cit.tum.de/en/aipd/) of TU Munich (Applied and Theoretical Aspects of Robot Intelligence, Prof. Majid Khadiv), where Simon writes his master's thesis. Paper: [DynaRetarget](https://arxiv.org/abs/2602.06827) · code: [Atarilab/sbto](https://github.com/Atarilab/sbto).
 
 <p align="center"><img src="docs/pipeline.png" width="880" alt="Pipeline: notes, fingering, first plan, optimise, plan file"></p>
 
-The optimiser is sampling-based trajectory optimisation in the style of SBTO: it tries 48 variations of the next half second of music, keeps the best 8, and repeats 6 times. For every note it tunes **when** to press, **how deep**, and small **sideways and forward** corrections. Every variation is played on five simulated setups, and the average decides.
+One round, for the next half second of music:
+
+| | Step | On the piano |
+|:--:|---|---|
+| 1 | A guess with a spread | five numbers per note: **when** the key goes down, **when** it comes up, **how deep**, and a small shift **sideways** and **forward**. The first guess comes from the notes and the finger geometry |
+| 2 | Draw 48 tries | random copies of the guess, inside that spread (63 in dense passages) |
+| 3 | Simulate each | MuJoCo plays every try on five pianos: softer and stiffer finger servos, the mount up to 2 mm and 1.5° off |
+| 4 | Score each | one number: notes missed, notes early or late, wrong keys. The average over the five pianos counts |
+| 5 | Keep the 8 best | the guess moves to their average, the spread narrows toward theirs |
+
+**↺ Six rounds.** Then the best try for that half second is kept, and the search moves on to the next.
+
+| | SBTO in Simon's thesis | The piano version here |
+|---|---|---|
+| A try is | joint commands a quarter second apart for a robot arm and hand, 26 per step | five numbers per note |
+| Tries per round · kept | 256 · 32 | 48 · 8 |
+| Time window | grows from the first quarter second to the whole clip | slides along the piece, half a second at a time |
+| Score | the object moves as in the human's recording, and the hand holds it | the right keys go down at the right time |
+
+- **Reuse:** a new tune takes the per-finger stroke settings the search found on Ode to Joy. No search, about 20 s.
+- **Out comes one plan:** 20 joint angles per hand, 1,000 times a second. The hand plays it without feedback.
+- `scripts/sbto_piano.py` is our own piano version, written for this weekend. It contains none of the lab's code.
 
 <table>
   <tr>
+    <td width="50%"><img src="docs/hand.png" alt="Wuji Hand 2.2: 20 joints, 1 kHz control, 800 g, 12 V"></td>
     <td width="50%"><img src="docs/setup.png" alt="Mount: flange 6 cm above the white keys, 12 cm in front of the keys, level"></td>
-    <td width="50%"><img src="docs/fingering.png" alt="Fingering: thumb B4 C5, index D5, middle E5, ring F5, pinky G5 A5"></td>
+  </tr>
+  <tr>
+    <td>Wuji Hand 2.2: 20 joints, 1 kHz.</td>
+    <td>The hand sits level, 6 cm above the white keys.</td>
   </tr>
 </table>
 
-## Results in simulation
+## The piano is the start
 
-Notes hit, before and after optimisation. "Setups" vary servo stiffness and mount position; the unseen ones were never shown to the optimiser.
+**The search does not know what a piano is.** It needs three things: what a human did, a simulator, and a score.
+
+| Swap | For | And the same search gives |
+|---|---|---|
+| the notes | a recording of a human's hands and the object they hold | a robot arm and hand that move the object the way the person did: the lab's [DynaRetarget](https://arxiv.org/abs/2602.06827) and Simon's thesis |
+| the keyboard | strings, valves, drum pads | the same two hands on another instrument |
+| the score | "the right string", "the right grip" | any task a simulator can grade |
+
+Human motion in, robot motion out. Built here: the piano. In the end: any instrument.
+
+## On the real hands
+
+Click a picture for the video with sound.
+
+<table>
+  <tr>
+    <th width="50%">Ode to Joy, both hands</th>
+    <th width="50%">Jingle Bells, both hands</th>
+  </tr>
+  <tr>
+    <td align="center"><a href="docs/media/real_ode_two_hands.mp4"><img src="docs/media/real_ode_two_hands.jpg" alt="Both real hands playing Ode to Joy: melody right, accompaniment left; seen from above"></a></td>
+    <td align="center"><a href="docs/media/real_jingle_two_hands.mp4"><img src="docs/media/real_jingle_two_hands.jpg" alt="Both real hands playing Jingle Bells; seen from above"></a></td>
+  </tr>
+</table>
+
+More: [a lesson, close](docs/media/real_teach.mp4) · [Sebas's lesson](docs/media/real_teach_ode.mp4)
+
+| When | What |
+|---|---|
+| 14 Nov | first motion: one joint, 9°. Ode to Joy in the air |
+| 14 to 15 Nov | right hand: Ode to Joy, Jingle Bells, When the Saints (with F♯), full speed, 1.0 A |
+| 15 Nov, afternoon | the studio drives the hand. Korobeiniki, 120 → 200 bpm |
+| 15 Nov, 18:42 | the left hand answers: two hands |
+| 15 Nov, 20:52 to 23:51 | both hands, from the studio: Korobeiniki, Runaway, Ode to Joy, Jingle Bells, Fly Me to the Moon (with G♯ and C♯) |
+| 16 Nov, 00:03 | Teach: lessons on Ode to Joy |
+
+| Measured | Result | From |
+|---|---|---|
+| Timing | fingers follow the command 23 ms late, the same on every note and on both hands | the hands' own logs, two runs with both hands |
+| Notes | 93 of 97 sound at the planned note name | the sound of one phone video. In that run the hands stood one octave too high |
+| Not measured | a note-by-note score | no MIDI keyboard was connected |
+
+Every run ends only after the line `hand switched off: confirmed`. Current limit: 1.5 A at most, 1.0 A in every piece above.
+
+## In simulation
+
+Notes hit, before → after the search. The unseen setups were never shown to it.
 
 | Piece | Wrist | Our best guess of the setup | 5 training setups | 5 unseen setups | Wrong notes |
 |---|---|:--:|:--:|:--:|:--:|
-| Ode to Joy, 62 notes, level mount | fixed | 0 → **62** | 0 to 62 → 62 | 0 to 33 → 62 | 0 |
-| Ode to Joy, 62 notes, first mount | fixed | 62 → **61** | 0 to 62 → 30 to 62 | 11 to 62 → 28 to 62 | 0 |
-| K.265 theme, 80 notes | fixed | 69 → **76** | 4 to 69 → 47 to 76 | 14 to 65 → 40 to 74 | 1 |
-| Für Elise opening, 86 notes | planned from the notes | 72 → **82** | 47 to 75 → 81 to 83 | 5 to 69 → 60 to 83 | 8 |
-| K.265 theme, 80 notes | follows a human pianist | 58 → **75** | 38 to 62 → 70 to 75 | 13 to 60 → 56 to 74 | 4 |
+| Ode to Joy, 62 notes | fixed, level | 0 → **62** | 0 to 62 → 62 | 0 to 33 → 62 | 0 |
+| K.265 theme, 80 notes | fixed, first mount | 69 → **76** | 4 to 69 → 47 to 76 | 14 to 65 → 40 to 74 | 1 |
+| Für Elise opening, 86 notes | moves, planned from the notes | 72 → **82** | 47 to 75 → 81 to 83 | 5 to 69 → 60 to 83 | 8 |
+| K.265 theme, 80 notes | moves, follows a human pianist | 58 → **75** | 38 to 62 → 70 to 75 | 13 to 60 → 56 to 74 | 4 |
 
-- The worst unseen setup still loses half the notes. Calibrating on the real piano stays necessary.
-- The fixed-wrist run was trained on a wide range (mount ±2 mm, stiffness 2.5 to 10 times the model's default), the other two on a narrow one (±1 mm, 3.5 to 7 times).
-- Source: `plans/*/report.json`.
+Two hands in one simulation, 0 wrong notes: Ode to Joy 62 + 127, Jingle Bells 51 + 123, Korobeiniki 78 + 123, Pachelbel's Canon 26 + 26.
 
----
+<table>
+  <tr>
+    <th width="50%">Two hands, Ode to Joy</th>
+    <th width="50%">Für Elise, opening</th>
+  </tr>
+  <tr>
+    <td align="center"><a href="docs/media/ode_duet.mp4"><img src="docs/media/ode_duet.gif" width="430" alt="Two simulated hands playing Ode to Joy: melody and accompaniment"></a></td>
+    <td align="center"><a href="docs/media/furelise_plan.mp4"><img src="docs/media/furelise_plan.gif" width="430" alt="Simulated hand playing the opening of Für Elise"></a></td>
+  </tr>
+  <tr>
+    <td>Melody right, accompaniment left, both wrists fixed.</td>
+    <td>The wrist moves: 27 hand shifts in 25 s. Needs an arm.</td>
+  </tr>
+</table>
 
-# Weekend plan
+More clips, with sound: [Ode to Joy, one hand](docs/media/ode_level.mp4) · [Korobeiniki](docs/media/korobeiniki_duet.mp4) · [Jingle Bells](docs/media/jingle_two_hands.mp4) · [Pachelbel's Canon](docs/media/canon_duet.mp4) · [When the Saints](docs/media/saints_dmajor.mp4) · [K.265](docs/media/k265_fixed.mp4) · [the recorded pianist and the robot in one picture](docs/media/k265_pianist_robot_overlay.mp4) · [and side by side](docs/media/k265_pianist_and_robot.mp4). The sound is synthesised from the keys the simulation pressed, wrong notes included.
 
-## Next actions
+## Next
 
-Owners are a proposal. Edit this table when things change.
+Not built yet.
 
-| # | Action | Owner | Status |
-|:--:|---|---|:--:|
-| 1 | Push the simulation code to its own GitHub repo | Simon | ✅ this repo |
-| 2 | Set up the environment on every machine | everyone | ☐ done when `./wq check` passes ([Set up](#set-up)) |
-| 3 | Check that we have the right cables | Sebas, Simon | ☐ [checklist](#cable-checklist) |
-| 4 | Ask Pedro about the piano | Sima | ☐ [questions](#questions-for-pedro) |
-| 5 | Agree how we frame the problem and how we present it (once all four are here) | Sima leads | ☐ [starting points](#framing-to-decide-together) |
-| 6 | Check into the hotel | Henry, Simon | ☐ |
+| Step | Why |
+|---|---|
+| Arms move the wrists | the whole keyboard instead of five keys per hand. In simulation the Für Elise opening already plays with a moving wrist: 82 / 86 |
+| The lesson listens | a keyboard's MIDI output scores the learner and picks the next phrase. `scripts/score_midi.py` exists; it is not connected to Teach |
+| Loud and soft | every stroke is equally loud today |
+| A score on the real piano | a MIDI keyboard under the hands, so every run is graded note by note |
+| Another instrument | the same search with a new simulator model and a new score |
 
 ## Team
 
-| Who | Role | First task |
-|---|---|---|
-| **Simon** | team lead, simulation and optimisation | re-optimise as soon as stiffness and mount are measured |
-| **Henry** | compute (remote machine with an RTX 5090) | reproduce the three reference runs: `bash scripts/run_sbto_all.sh` |
-| **Sima** | pitch, story, team management | the piano (Pedro), the framing, the demo video |
-| **Sebas** | the real hand, sim-to-real. Limited time: also on another team | first power-on and the stiffness test ([runbook](docs/RUNBOOK.md) step 1) |
-
-Sebas's time is the scarce resource. Everything before the hand moves (board, Docker, network, mount) should be ready when he sits down.
-
-The optimiser runs on CPU cores today, not on the GPU. Henry's machine helps through its cores. Moving the simulation onto the GPU is a possible task, not a given.
-
-## Milestones
-
-| | Milestone | Done when |
-|:--:|---|---|
-| M1 | Everyone can run the code | `./wq check` passes on every machine |
-| M2 | Robot computer ready | RDK X5 boots, `sudo bash scripts/rdk_setup.sh` passes, `hand_info.py` shows 20 of 20 joints ([guide](docs/RDK_X5_SETUP.md), all from a Mac terminal) |
-| M3 | Hand moves in the air | stiffness measured ([runbook](docs/RUNBOOK.md) step 1). **Biggest open risk** |
-| M4 | Hand over the piano | bracket built, mount measured |
-| M5 | First correct note | key calibration done |
-| M6 | K.265 theme on the real piano | scored by the piano's MIDI output |
-| M7 | Demo and pitch | Mon 16 Nov, 17:00 |
-| stretch | Für Elise opening | needs a moving wrist: an arm or a linear axis |
-
-## Cable checklist
-
-| ☐ | Item | For | Note |
-|:--:|---|---|---|
-| ☐ | Power adapter 12 V / 20 A | hand | in the Wuji box |
-| ☐ | Mains cable for it | hand | the boxed one has a **Chinese plug**: bring a travel adapter |
-| ☐ | XT30 extension cable, 2 m | hand | in the Wuji box |
-| ☐ | Ethernet cable, shielded Cat5e, 2 m | hand ↔ robot computer | in the Wuji box |
-| ☐ | Adapter mount and adapter flange | hand ↔ bracket | in the Wuji box |
-| ☐ | USB-C power supply, **5 V / 5 A** | RDK X5 | a laptop USB port is not enough |
-| ☐ | microSD card, 32 GB, and a card reader | RDK X5 | 16 GB is the official minimum |
-| ☐ | USB-C to Ethernet adapter | Mac ↔ RDK X5 (first login), or Mac ↔ hand | one is enough |
-| ☐ | USB cable to the piano, usually USB-A to USB-B | piano ↔ RDK X5 | carries MIDI, so the piano scores the hand |
-| ☐ | Swiss plug adapters and a power strip | everything | Swiss sockets take the flat two-pin Europlug, not German Schuko plugs |
-| ☐ | Optional: micro-USB cable | RDK X5 serial console | the way in if the network login fails |
-| ☐ | Optional: small Ethernet switch and two more cables | all | if the venue Wi-Fi blocks laptop-to-board traffic |
-| ☐ | Optional: HDMI monitor and USB keyboard | RDK X5 | only for the desktop image |
-
-<p align="center"><img src="docs/wiring.png" width="880" alt="Wiring diagram"></p>
-
-## Questions for Pedro
-
-1. Is there a digital piano or keyboard with **full-size keys**? 88 keys are not needed: K.265 uses B4 to A5, Für Elise C4 to E6.
-2. Does it have **USB-MIDI** (a square "USB to host" socket)? Without it we score by ear.
-3. Can we keep it at our table all weekend?
-4. Can we clamp a bracket to its stand or to the table? The hand must sit rigidly 6 cm above the keys and 12 cm in front of them.
-5. Model name, so we can look up key travel and key weight.
-6. If it is an acoustic piano instead: heavier keys, no MIDI. Possible, but tell us early.
-
-## Framing, to decide together
-
-Starting points for the discussion, not decisions.
-
-| Angle | One line | What we can show today |
-|---|---|---|
-| Speed | A new piece in minutes of compute, with no teleoperation and no hand-tuning | sim: 15 to 19 min per piece |
-| Robustness | The hand rehearses on five virtual pianos, so a real one that is slightly different does not surprise it | sim: unseen setups 14 to 65 → 40 to 74 notes |
-| Measurability | A piano is a dexterity test that grades itself: every note is logged over MIDI | scoring script ready, untested on hardware |
-
-The claim we cannot make yet: that any of this works on the real hand.
+| Who | Role |
+|---|---|
+| **Simon** | team lead, simulation and optimisation. Master's thesis at the ATARI Lab, TU Munich |
+| **Henry** | compute |
+| **Sima** | pitch, story, team management |
+| **Sebas** | the real hand, sim-to-real, webcam tracking |
 
 ---
 
@@ -253,20 +327,17 @@ python scripts/view_theme.py plans/k265_fixed
 
 ## Optimise
 
-The three reference runs, exactly as they were made (15 to 19 min each on 10 cores):
-
 ```bash
+# any single-line melody, wrist fixed
+./wq sim python scripts/sbto_piano.py --piece my_tune.mid --wrist fixed --out out/my_tune --workers 10
+
+# the three reference runs, exactly as they were made (15 to 19 min each on 10 cores)
 ./wq sim python scripts/sbto_piano.py --piece k265     --wrist fixed --out out/sbto_k265_fixed    --workers 10
 ./wq sim python scripts/sbto_piano.py --piece furelise --wrist plan  --out out/sbto_furelise_plan --workers 10
 ./wq sim python scripts/sbto_piano.py --piece k265     --wrist human --out out/sbto_k265_human    --workers 10
 ```
 
-For the real setup, with measured stiffness `G` and mount:
-
-```bash
-./wq sim python scripts/sbto_piano.py --piece k265 --wrist fixed --gain G \
-    --mount 0.22,0.10,25,-0.0235 --out out/sbto_hw --workers 10
-```
+<details><summary>Flags</summary>
 
 | Flag | Meaning | Default |
 |---|---|---|
@@ -282,33 +353,62 @@ For the real setup, with measured stiffness `G` and mount:
 
 New runs land in `out/` (not tracked). Move a run to `plans/` to share it.
 
+</details>
+
 ## On the real hand
 
 1. **[docs/RDK_X5_SETUP.md](docs/RDK_X5_SETUP.md)**: board out of the box, Docker, network, hand answers. All from a Mac terminal, no screen on the board.
-2. **[docs/RUNBOOK.md](docs/RUNBOOK.md)**: stiffness test, mount, key calibration, play.
+2. **[docs/RUNBOOK.md](docs/RUNBOOK.md)**: safety, mount, key calibration, play, [two hands](docs/RUNBOOK.md#two-hands).
 
-Two facts that save an hour: the hand has the fixed address **192.168.1.111** (right) or **.110** (left) and no DHCP, and the RDK X5 ships on **192.168.127.10**. They cannot see each other until `bash scripts/hand_net.sh` has run.
+Two facts that save an hour: the hand has the fixed address **192.168.1.111** (right) or **.110** (left) and no DHCP, and the RDK X5 ships on **192.168.127.10**. They cannot see each other until `bash scripts/hand_net.sh` has run. The board has one Ethernet port: the second hand goes through a USB-Ethernet adapter in a USB-A port (`scripts/hand_adapter.sh`).
+
+<details><summary>Cables and wiring</summary>
+
+| Item | For | Note |
+|---|---|---|
+| Power adapter 12 V / 20 A | hand | in the Wuji box |
+| Mains cable for it | hand | the boxed one has a **Chinese plug**: bring a travel adapter |
+| XT30 extension cable, 2 m | hand | in the Wuji box |
+| Ethernet cable, shielded Cat5e, 2 m | hand ↔ robot computer | in the Wuji box |
+| Adapter mount and adapter flange | hand ↔ bracket | in the Wuji box |
+| USB-C power supply, **5 V / 5 A** | RDK X5 | a laptop USB port is not enough |
+| microSD card, 32 GB, and a card reader | RDK X5 | 16 GB is the official minimum |
+| USB-Ethernet adapter, in a USB-A port | second hand ↔ RDK X5 | the board's USB-C data port does not work for it |
+| USB-C to Ethernet adapter | Mac ↔ RDK X5 (first login), or Mac ↔ hand | one is enough |
+| USB cable to the piano, usually USB-A to USB-B | piano ↔ RDK X5 | carries MIDI, so the piano scores the hand (digital pianos only) |
+| Optional: micro-USB cable | RDK X5 serial console | the way in if the network login fails |
+
+<p align="center"><img src="docs/wiring.png" width="880" alt="Wiring diagram"></p>
+
+</details>
 
 ## Plans in this repo
 
-| Folder | Piece | Wrist | Notes hit in sim | Plays on the hand alone |
-|---|---|---|:--:|:--:|
-| [`plans/ode_level_stroke90_s0`](plans/ode_level_stroke90_s0) | Ode to Joy, 62 notes | fixed and level, five keys C5 to G5, 90 ms key strokes | 62 / 62, 0 wrong | **yes, try this first; [duet notes](assets/ode_to_joy/README.md)** |
-| [`plans/jingle_level_bpm120_s0`](plans/jingle_level_bpm120_s0) | Jingle Bells chorus, 51 notes, 120 bpm | same mount and keys as Ode to Joy; stroke parameters taken over from the Ode plan, no new optimisation | 51 / 51, 0 wrong | played on the hand 15 Nov, full speed, 1.0 A |
-| [`plans/saints_dmajor_bpm120_s0`](plans/saints_dmajor_bpm120_s0) | When the Saints Go Marching In, 32 notes, D major | **black-key position**: fixed and level, keys D5 E5 F♯5 G5 A5, the middle finger plays F♯; mount 6 cm above the keys, 11 cm in front, 3 cm right of E5 | 32 / 32, 0 wrong | played on the hand 15 Nov, twice, full speed, 1.0 A; [video](docs/media/saints_dmajor.mp4) |
-| [`plans/ode_dmajor_bpm108_s0`](plans/ode_dmajor_bpm108_s0) | Ode to Joy in D major (Beethoven's key), 62 notes | black-key position | 62 / 62, 0 wrong | not yet played on the hand |
-| [`plans/jingle_dmajor_bpm120_s0`](plans/jingle_dmajor_bpm120_s0) | Jingle Bells chorus in D major, 51 notes | black-key position | 51 / 51, 0 wrong | not yet played on the hand |
-| [`plans/ode_accomp_left_s0`](plans/ode_accomp_left_s0) · [`_right_`](plans/ode_accomp_right_s0) | **Two hands:** accompaniment for Ode to Joy, 127 notes, for a left hand · for a second right hand | fixed and level, five keys C3 to G3, mirrored mount for the left hand | 127 / 127, 0 wrong; with `ode_level_stroke90_s0` in one simulation: all notes of both | no second hand yet; [video](docs/media/ode_duet.mp4), [setup](docs/RUNBOOK.md#two-hands) |
-| [`plans/jingle_accomp_left_s0`](plans/jingle_accomp_left_s0) · [`_right_`](plans/jingle_accomp_right_s0) | **Two hands:** accompaniment for Jingle Bells, 123 notes | same position as the Ode accompaniment | 123 / 123, 0 wrong | no second hand yet |
-| [`plans/korobeiniki_melody_right_s0`](plans/korobeiniki_melody_right_s0) | **Two hands:** Korobeiniki, first phrase four times, 120 → 200 bpm, 78 notes | fixed and level, keys D5 to A5 (one key right of the Ode position) | 78 / 78, 0 wrong | not yet played on the hand; [video](docs/media/korobeiniki_duet.mp4) |
-| [`plans/korobeiniki_accomp_left_s0`](plans/korobeiniki_accomp_left_s0) · [`_right_`](plans/korobeiniki_accomp_right_s0) | **Two hands:** accompaniment for Korobeiniki, 123 notes | keys D3 to A3 | 123 / 123, 0 wrong | no second hand yet |
-| [`plans/canon_melody_right_s0`](plans/canon_melody_right_s0) + [`plans/canon_bass_left_s0`](plans/canon_bass_left_s0) | **Two hands:** Pachelbel's Canon in C, simplified, 72 bpm, 26 + 26 notes | each thumb reaches one key beyond the five-finger position; right hand centred on C5, left hand on G3 | 26 / 26 and 26 / 26, 0 wrong; optimised | no second hand yet; [video](docs/media/canon_duet.mp4) |
-| [`plans/ode_level_s0`](plans/ode_level_s0) | Ode to Joy, 62 notes | same, strokes as fast as the joints allow | 62 / 62, 0 wrong | in the air only: jerky on the real hand |
+<details><summary>All plans, with what each has done on the real hand</summary>
+
+| Folder | Piece | Wrist | Notes hit in sim | On the real hand |
+|---|---|---|:--:|---|
+| [`plans/ode_level_stroke90_s0`](plans/ode_level_stroke90_s0) | Ode to Joy, 62 notes | fixed and level, five keys C5 to G5, 90 ms key strokes | 62 / 62, 0 wrong | **played, 15 Nov, many times. Try this first; [duet notes](assets/ode_to_joy/README.md)** |
+| [`plans/jingle_level_bpm120_s0`](plans/jingle_level_bpm120_s0) | Jingle Bells chorus, 51 notes, 120 bpm | same mount and keys as Ode to Joy; stroke parameters taken over from the Ode plan, no new optimisation | 51 / 51, 0 wrong | played 15 Nov, full speed, 1.0 A |
+| [`plans/saints_dmajor_bpm120_s0`](plans/saints_dmajor_bpm120_s0) | When the Saints Go Marching In, 32 notes, D major | **black-key position**: fixed and level, keys D5 E5 F♯5 G5 A5, the middle finger plays F♯; mount 6 cm above the keys, 11 cm in front, 3 cm right of E5 | 32 / 32, 0 wrong | played 15 Nov, twice, full speed, 1.0 A; [video](docs/media/saints_dmajor.mp4) |
+| [`plans/ode_dmajor_bpm108_s0`](plans/ode_dmajor_bpm108_s0) | Ode to Joy in D major (Beethoven's key), 62 notes | black-key position | 62 / 62, 0 wrong | not yet |
+| [`plans/jingle_dmajor_bpm120_s0`](plans/jingle_dmajor_bpm120_s0) | Jingle Bells chorus in D major, 51 notes | black-key position | 51 / 51, 0 wrong | not yet |
+| [`plans/korobeiniki_melody_right_s0`](plans/korobeiniki_melody_right_s0) + [`plans/korobeiniki_accomp_left_s0`](plans/korobeiniki_accomp_left_s0) | **Two hands:** Korobeiniki, first phrase four times, 120 → 200 bpm, 78 + 123 notes | fixed and level, keys D5 to A5 and D3 to A3 (one key right of the Ode position) | 78 / 78 and 123 / 123, 0 wrong | **played with both hands, 15 Nov, twice**; the melody alone before that; [video](docs/media/korobeiniki_duet.mp4) |
+| [`plans/korobeiniki_melody_right_cem_s0`](plans/korobeiniki_melody_right_cem_s0) + [`plans/korobeiniki_accomp_left_cem_s0`](plans/korobeiniki_accomp_left_cem_s0) | the same piece, with its own search (9 min per hand) | same | 78 / 78 and 123 / 123, 0 wrong | not yet |
+| [`plans/ode_accomp_left_s0`](plans/ode_accomp_left_s0) · [`_right_`](plans/ode_accomp_right_s0) | **Two hands:** accompaniment for Ode to Joy, 127 notes, for a left hand · for a second right hand | fixed and level, five keys C3 to G3, mirrored mount for the left hand | 127 / 127, 0 wrong; with `ode_level_stroke90_s0` in one simulation: all notes of both | the piece was played with both hands on 15 Nov, from a pair the studio made from the same MIDI files; [video](docs/media/ode_duet.mp4), [setup](docs/RUNBOOK.md#two-hands) |
+| [`plans/jingle_accomp_left_s0`](plans/jingle_accomp_left_s0) · [`_right_`](plans/jingle_accomp_right_s0) | **Two hands:** accompaniment for Jingle Bells, 123 notes | same position as the Ode accompaniment | 123 / 123, 0 wrong | as for Ode to Joy |
+| [`plans/korobeiniki_accomp_right_s0`](plans/korobeiniki_accomp_right_s0) | Korobeiniki accompaniment for a second right hand | keys D3 to A3 | 123 / 123, 0 wrong | not yet: our second hand is a left hand |
+| [`plans/canon_melody_right_s0`](plans/canon_melody_right_s0) + [`plans/canon_bass_left_s0`](plans/canon_bass_left_s0) | **Two hands:** Pachelbel's Canon in C, simplified, 72 bpm, 26 + 26 notes | each thumb reaches one key beyond the five-finger position; right hand centred on C5, left hand on G3 | 26 / 26 and 26 / 26, 0 wrong; optimised | not yet; [video](docs/media/canon_duet.mp4) |
+| [`plans/ode_level_s0`](plans/ode_level_s0) | Ode to Joy, 62 notes | same as the first row, strokes as fast as the joints allow | 62 / 62, 0 wrong | jerky when it plays alone; used for the Teach lessons on 16 Nov |
 | [`plans/k265_fixed`](plans/k265_fixed) | K.265 theme | fixed, first mount | 76 / 80, 1 wrong | not yet: on the real hand the thumb cannot reach from this mount |
-| [`plans/ode_fixed`](plans/ode_fixed) | Ode to Joy, 62 notes | fixed, first mount | 61 / 62, 0 wrong | in the air only (played 14 Nov); same thumb problem |
-| [`plans/baseline_k265_gain5`](plans/baseline_k265_gain5) | K.265 theme | fixed, not optimised | 72 / 80, 0 wrong | yes; used by the stiffness and calibration steps |
+| [`plans/ode_fixed`](plans/ode_fixed) | Ode to Joy, 62 notes | fixed, first mount | 61 / 62, 0 wrong | in the air only (14 Nov); same thumb problem |
+| [`plans/baseline_k265_gain5`](plans/baseline_k265_gain5) | K.265 theme | fixed, not optimised | 72 / 80, 0 wrong | used by the stiffness and calibration steps |
 | [`plans/furelise_plan`](plans/furelise_plan) | Für Elise opening | planned, 27 shifts | 82 / 86, 8 wrong | no, needs an arm |
 | [`plans/k265_human`](plans/k265_human) | K.265 theme | follows the pianist | 75 / 80, 4 wrong | no, needs an arm |
+
+Runaway and Fly Me to the Moon were played from plans in `out/`. Their MIDI files are someone else's arrangement of a song under copyright and stay out of git.
+
+</details>
 
 <details><summary>What is in a plan folder</summary>
 
@@ -330,51 +430,59 @@ Joint order everywhere is Wuji's: thumb 0 to 3, index 4 to 7, middle 8 to 11, ri
 <pre>
 Wuji-Quartet/
 ├── <a href="wq">wq</a>                      Docker helper: build · sim · hand · shell · check · gui
-├── <a href="gui/">gui/</a>                    the studio: <a href="gui/app.py">app.py</a> (server) · jobs · library · planner · static/ (the pages). Guide: <a href="docs/STUDIO.md">docs/STUDIO.md</a>
+├── <a href="gui/">gui/</a>                    the studio: <a href="gui/app.py">app.py</a> (server) · jobs · library · planner · simplify · startpose · static/ (the pages). Guide: <a href="docs/STUDIO.md">docs/STUDIO.md</a>
 ├── <a href="Dockerfile">Dockerfile</a> · <a href="requirements.txt">requirements.txt</a>   one image for PCs (amd64) and the RDK X5 (arm64), versions pinned
 ├── <a href="scripts/">scripts/</a>
 │   ├── <a href="scripts/sbto_piano.py">sbto_piano.py</a>       the optimiser: notes → fingering → plan → 5-setup search → plan folder
 │   ├── <a href="scripts/piano_core.py">piano_core.py</a>       88-key piano + hand scene, finger IK, trajectory, simulation, scoring
-│   ├── <a href="scripts/make_theme.py">make_theme.py</a>       fast plan without optimisation (30 s), takes the key calibration
-│   ├── <a href="scripts/render_theme.py">render_theme.py</a> · <a href="scripts/view_theme.py">view_theme.py</a>    video with sound · interactive viewer
-│   ├── <a href="scripts/play_on_hand.py">play_on_hand.py</a>     1 kHz playback on the hand, MIDI capture and score, --dry-run
+│   ├── <a href="scripts/play_on_hand.py">play_on_hand.py</a>     1 kHz playback on the hand, logs every real run, --dry-run
 │   ├── <a href="scripts/play_duet.py">play_duet.py</a> · <a href="scripts/hand_off.py">hand_off.py</a>    two hands in step · switch every hand off and confirm it
 │   ├── <a href="scripts/make_melody.py">make_melody.py</a> · <a href="scripts/make_duet.py">make_duet.py</a>   five-finger tunes for one hand · for two hands
-│   ├── <a href="scripts/render_duet.py">render_duet.py</a>      two plans in one simulation: score, hand-to-hand contacts, video
+│   ├── <a href="scripts/split_tune.py">split_tune.py</a>       one tune shared between two hands: ten keys, fills in the rests, black keys
+│   ├── <a href="scripts/render_theme.py">render_theme.py</a> · <a href="scripts/view_theme.py">view_theme.py</a>    video with sound · interactive viewer
+│   ├── <a href="scripts/render_duet.py">render_duet.py</a>      two plans in one simulation: score, hand-to-hand contacts, video (--present: 1080p with piano sound)
+│   ├── <a href="scripts/render_human_robot.py">render_human_robot.py</a>   presentation video: the recorded pianist and the robot plan made from it, with sound
+│   ├── <a href="scripts/plan_view.py">plan_view.py</a>        one plan simulated once for the studio's 3D view
+│   ├── <a href="scripts/make_theme.py">make_theme.py</a>       fast plan without optimisation (30 s), takes the key calibration
+│   ├── <a href="scripts/sweep_pose.py">sweep_pose.py</a> · <a href="scripts/sweep_mount.py">sweep_mount.py</a>   where the hand should sit: by finger posture · by notes hit
 │   ├── <a href="scripts/sysid_step.py">sysid_step.py</a> · <a href="scripts/calibrate_keys.py">calibrate_keys.py</a>   real stiffness · right key and depth
-│   ├── <a href="scripts/hand_info.py">hand_info.py</a> · <a href="scripts/hand_net.sh">hand_net.sh</a>     read-only hand check · network to the hand
+│   ├── <a href="scripts/hand_info.py">hand_info.py</a> · <a href="scripts/hand_hello.py">hand_hello.py</a>   read-only hand check · first motion: one joint, 9°
+│   ├── <a href="scripts/hand_net.sh">hand_net.sh</a> · <a href="scripts/hand_adapter.sh">hand_adapter.sh</a>   network to the hand · to the second hand
 │   ├── <a href="scripts/rdk_setup.sh">rdk_setup.sh</a>        one-time setup of the RDK X5: Docker with the fixes its kernel needs
-│   ├── <a href="scripts/wuji_hw.py">wuji_hw.py</a>          SDK session, fake hand, raw MIDI input
+│   ├── <a href="scripts/wuji_hw.py">wuji_hw.py</a>          SDK session, current limit, confirmed switch-off, fake hand
 │   ├── <a href="scripts/teleop.py">teleop.py</a>           Sebas's webcam teleop (needs his handlib module, not in this repo)
 │   ├── <a href="scripts/camera_track.py">camera_track.py</a> · <a href="scripts/hand_follow.py">hand_follow.py</a>   the same tracking as two halves: camera → joint targets · targets → hand
-│   ├── <a href="scripts/sweep_mount.py">sweep_mount.py</a>      mount search (108 mounts) · <a href="scripts/score_midi.py">score_midi.py</a> recorded MIDI vs plan
-│   └── <a href="scripts/run_sbto_all.sh">run_sbto_all.sh</a>     the three reference runs in a row
+│   └── <a href="scripts/score_midi.py">score_midi.py</a> · <a href="scripts/run_sbto_all.sh">run_sbto_all.sh</a>   recorded MIDI vs plan · the three reference runs in a row
 ├── <a href="plans/">plans/</a>                  finished plans (see above)
 ├── <a href="hardware/">hardware/</a>               printable tripod bracket for the hand (STL + the script that makes it)
 ├── <a href="results/">results/</a>                mount sweeps, front and back approach
 ├── <a href="assets/">assets/</a>
-│   ├── wuji-description/   Hand 2.1 and 2.2: MuJoCo model, URDF, right-hand meshes, Hand 2.2 left-hand meshes, flange drawings
+│   ├── wuji-description/   Hand 2.1 and 2.2: MuJoCo model, URDF, meshes, flange drawings
 │   ├── melodies/ · duets/  tunes for one hand · one MIDI file per hand for two hands
 │   ├── songs/              14 Christmas songs, verse 1, tune as part 1 (public domain / CC0; <a href="assets/songs/README.md">list</a>)
-│   ├── furelise/15/        K.265 MIDI and the pianist's wrist path
+│   ├── furelise/           the MIDI of all 153 performances; for K.265 also the pianist's wrist path and hands
 │   ├── fur_elise_beethoven/   Für Elise MIDI
 │   └── ode_to_joy/         Ode to Joy MIDI, left-hand chords for a duet
-└── <a href="docs/">docs/</a>                   <a href="docs/RDK_X5_SETUP.md">RDK_X5_SETUP.md</a> · <a href="docs/RUNBOOK.md">RUNBOOK.md</a> · pictures (<a href="docs/make_figures.py">make_figures.py</a>) · media/
+└── <a href="docs/">docs/</a>                   <a href="docs/STUDIO.md">STUDIO.md</a> · <a href="docs/RUNBOOK.md">RUNBOOK.md</a> · <a href="docs/RDK_X5_SETUP.md">RDK_X5_SETUP.md</a> · pictures (<a href="docs/make_figures.py">make_figures.py</a>) · media/
 </pre>
 
 <details><summary>Known limits</summary>
 
 | Limit | Detail |
 |---|---|
-| Left hand | simulation only: the left model is an exact mirror of the right one; no real left hand has confirmed it |
-| One line per hand | each hand plays its tune, plus up to two chord notes (one key per finger); a piece for two hands is two plans |
-| Fixed wrist reaches five neighbouring keys | six with the thumb's stretch; a wider song is simplified for one hand in the studio, or needs `--wrist plan` (a moving wrist, so an arm) |
+| No score on the real piano | no MIDI keyboard was connected; the real results are logs, videos and ears |
+| Teaching | run on the real hand with a person's hand under it; no test yet of what a learner gains |
+| Fixed wrist reaches five neighbouring keys | six with the thumb's stretch; a wider song is simplified in the studio, or needs `--wrist plan` (a moving wrist, so an arm) |
 | Moving wrist is an ideal arm | three stiff sliding axes stand in for the arm; no real arm model |
+| One line per hand | each hand plays its tune, plus up to two chord notes (one key per finger); a piece for two hands is two plans |
+| Two hands side by side | thumbs on neighbouring keys touch: those plans move each hand 6 mm outward |
+| Loudness | every stroke is equally loud |
+| Left hand | its model is an exact mirror of the right one; its real joint stops are not measured |
+| Robot computer | 12 to 15 % of the 1 kHz commands leave late on every real run; the rhythm stays (see timing above) |
+| Piano model | generic key weight and travel (RoboPianist's constants), not our piano |
+| Stiffness | all plans assume servos 5 times stiffer than the model's shipped default |
 | Für Elise "wrong" notes | about half of the 8 are the right key, 50 to 70 ms off |
 | K.265 ending | the last three-note turn (100 ms per note) never plays |
-| Piano model | generic key weight and travel (RoboPianist's constants), not our piano |
-| Stiffness | all plans assume servos 5 times stiffer than the model's shipped default; at the shipped value only 27 of 80 notes play |
-| Collision shapes | Wuji's own: one convex shape per hand part |
 | MuJoCo 4.0 | not used: nothing here is deformable; pinned to 3.17 |
 
 </details>
@@ -384,8 +492,9 @@ Wuji-Quartet/
 | What | Size | Get it |
 |---|---|---|
 | The pianists' motion capture | 50 GB for all 153 pieces (median 278 MB each); K.265 is 590 MB | `python scripts/furelise_peek.py assets/furelise` fetches K.265. Only needed to recompute a wrist path; K.265's is already in `assets/furelise/15/wrist_u.npz` |
-| Left-hand meshes, USD files, full-hand STEP files | 400 MB | `git clone --depth 1 https://github.com/wuji-technology/wuji-description` |
+| USD files, full-hand STEP files | 400 MB | `git clone --depth 1 https://github.com/wuji-technology/wuji-description` |
 | MediaPipe hand model for the camera page | 8 MB | the button on the Camera page, or `python scripts/camera_track.py --fetch-model` |
+| Runaway, Fly Me to the Moon | | import your own MIDI file in the studio: Library › + Import a MIDI file |
 
 </details>
 
@@ -394,14 +503,15 @@ Wuji-Quartet/
 | Part | From | Licence |
 |---|---|---|
 | Hand model in `assets/wuji-description` | [wuji-technology/wuji-description](https://github.com/wuji-technology/wuji-description), cloned 10 Nov 2026, subset | MIT, © 2025 Wuji Technology ([LICENSE](assets/wuji-description/LICENSE)) |
-| K.265 MIDI and wrist path in `assets/furelise/15`; the MIDI of all 153 performances in `assets/furelise/midi` | [FürElise dataset](https://huggingface.co/datasets/rcwang/for_elise) ([paper](https://arxiv.org/abs/2410.05791)) | CC BY-NC 4.0: **non-commercial use only** |
+| K.265 MIDI, wrist path and hands in `assets/furelise/15`; the MIDI of all 153 performances in `assets/furelise/midi` | [FürElise dataset](https://huggingface.co/datasets/rcwang/for_elise) ([paper](https://arxiv.org/abs/2410.05791)) | CC BY-NC 4.0: **non-commercial use only** |
 | `assets/fur_elise_beethoven/fur_elise.mid` | [Mutopia Project](https://www.mutopiaproject.org/) | public domain |
 | `assets/songs/` (14 Christmas songs) | Wikimedia Commons settings by Rabanus Flavus; Open Hymnal Project ([list with links](assets/songs/README.md)) | CC0 or public domain; every melody is public domain |
+| The search method, SBTO | [ATARI Lab](https://www.ce.cit.tum.de/en/aipd/), TU Munich: [DynaRetarget](https://arxiv.org/abs/2602.06827) (Dhédin, Taouil, Omar, Yu, Tao, Dai, Khadiv) · [Atarilab/sbto](https://github.com/Atarilab/sbto) | the method only; none of their code is in this repo |
 | Piano key model | constants from [RoboPianist](https://github.com/google-research/robopianist) | Apache 2.0 |
 | Hand control | [wuji-sdk](https://github.com/wuji-technology/wuji-sdk) · [Wuji Hand 2 docs](https://docs.wuji.tech/docs/en/wuji-hand/latest/) | |
 | Hand tracking in the camera page | [MediaPipe Hand Landmarker](https://ai.google.dev/edge/mediapipe/solutions/vision/hand_landmarker), downloaded on first use | Apache 2.0 |
-| Our code | this repo | no licence chosen yet; private |
+| Our code | this repo | no licence chosen yet |
 
 </details>
 
-<div align="center"><sub>Updated 15 Nov 2026 · every result number comes from <code>plans/*/report.json</code></sub></div>
+<div align="center"><sub>Updated 16 Nov 2026 · simulation numbers come from <code>plans/*/report.json</code>, real-hand runs from the studio's run log and the hands' own logs</sub></div>
