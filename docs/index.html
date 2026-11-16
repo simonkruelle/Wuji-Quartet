@@ -1,0 +1,115 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Wuji Quartet</title>
+<meta name="description" content="Two robot hands play the piano, and teach it to your fingers. Videos with sound.">
+<style>
+  :root { --bg: #f5f5f7; --card: #ffffff; --ink: #1d1d1f; --ink2: #5e6168; --rule: #d9dadf; --gold: #9a6f00; }
+  @media (prefers-color-scheme: dark) {
+    :root { --bg: #111214; --card: #1c1d20; --ink: #f2f2f4; --ink2: #9a9da4; --rule: #303237; --gold: #e8b856; }
+  }
+  * { box-sizing: border-box; }
+  body { margin: 0; background: var(--bg); color: var(--ink); font: 17px/1.5 -apple-system, BlinkMacSystemFont, "Segoe UI", Inter, Helvetica, Arial, sans-serif; }
+  main { max-width: 1120px; margin: 0 auto; padding: 56px 16px 72px; }
+  .eyebrow { color: var(--gold); font-weight: 600; font-size: 15px; margin: 0 0 10px; }
+  h1 { font-size: clamp(38px, 7vw, 72px); line-height: 1.03; letter-spacing: -0.03em; margin: 0 0 14px; text-wrap: balance; }
+  .lead { font-size: clamp(19px, 2.3vw, 24px); line-height: 1.4; color: var(--ink2); max-width: 44ch; margin: 0 0 28px; }
+  h2 { font-size: clamp(26px, 3.6vw, 38px); line-height: 1.1; letter-spacing: -0.02em; margin: 64px 0 6px; }
+  .sub { color: var(--ink2); margin: 0 0 20px; max-width: 62ch; }
+  .grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(min(100%, 420px), 1fr)); gap: 16px; }
+  figure { margin: 0; background: var(--card); border-radius: 18px; overflow: hidden; }
+  video { display: block; width: 100%; aspect-ratio: 16 / 9; background: #000; }
+  .hero video { aspect-ratio: 2 / 1; }
+  figcaption { padding: 14px 18px 16px; }
+  figcaption b { display: block; font-size: 17px; }
+  figcaption span { color: var(--ink2); font-size: 15px; line-height: 1.4; display: block; }
+  footer { margin-top: 64px; padding-top: 18px; border-top: 1px solid var(--rule); color: var(--ink2); font-size: 15px; line-height: 1.7; }
+  a { color: var(--gold); }
+</style>
+</head>
+<body>
+<main>
+
+  <p class="eyebrow">Wuji Quartet · Leukerbad Hackathon, 14 to 16 Nov 2026</p>
+  <h1>Two robot hands play the piano, and teach it to your fingers.</h1>
+  <p class="lead">A MIDI file in. The finger plan is found in simulation and played on a real piano. Every video here has sound.</p>
+
+  <figure class="hero" id="ode">
+    <video controls playsinline preload="metadata" poster="media/real_ode_two_hands.jpg" src="media/real_ode_two_hands.mp4"></video>
+    <figcaption><b>Ode to Joy, both real hands</b><span>15 Nov. Melody right, accompaniment left. The wrists stay where they are; every finger motion comes from the plan.</span></figcaption>
+  </figure>
+
+  <h2 id="teach">Teach</h2>
+  <p class="sub">The robot hand lies on your hand and presses your fingers through the piece, phrase by phrase.</p>
+  <div class="grid">
+    <figure id="lesson">
+      <video controls playsinline preload="metadata" src="media/real_teach.mp4"></video>
+      <figcaption><b>A lesson, close</b><span>The robot hand plays the tune through the learner's fingers.</span></figcaption>
+    </figure>
+    <figure id="lesson-sebas">
+      <video controls playsinline preload="metadata" src="media/real_teach_ode.mp4"></video>
+      <figcaption><b>Sebas takes a lesson</b><span>Ode to Joy, 16 Nov.</span></figcaption>
+    </figure>
+  </div>
+
+  <h2 id="real">On the real hands</h2>
+  <p class="sub">Two Wuji Hand 2 on an upright piano, full speed.</p>
+  <div class="grid">
+    <figure id="jingle">
+      <video controls playsinline preload="metadata" poster="media/real_jingle_two_hands.jpg" src="media/real_jingle_two_hands.mp4"></video>
+      <figcaption><b>Jingle Bells, both real hands</b><span>15 Nov.</span></figcaption>
+    </figure>
+    <figure id="ode-again">
+      <video controls playsinline preload="metadata" poster="media/real_ode_two_hands.jpg" src="media/real_ode_two_hands.mp4"></video>
+      <figcaption><b>Ode to Joy, both real hands</b><span>15 Nov.</span></figcaption>
+    </figure>
+  </div>
+
+  <h2 id="sim">In simulation</h2>
+  <p class="sub">Where every plan is found and rehearsed. The sound is synthesised from the keys the simulation pressed, wrong notes included.</p>
+  <div class="grid">
+    <figure>
+      <video controls playsinline preload="metadata" src="media/k265_pianist_robot_overlay.mp4"></video>
+      <figcaption><b>The recorded pianist and the robot</b><span>Mozart K.265. The pianist's hands, see-through, over the robot plan made from their notes and wrist path.</span></figcaption>
+    </figure>
+    <figure>
+      <video controls playsinline preload="metadata" src="media/korobeiniki_duet.mp4"></video>
+      <figcaption><b>Korobeiniki, two hands</b><span>120 → 200 bpm. 78 + 123 notes, 0 wrong.</span></figcaption>
+    </figure>
+    <figure>
+      <video controls playsinline preload="metadata" src="media/ode_duet.mp4"></video>
+      <figcaption><b>Ode to Joy, two hands</b><span>62 + 127 notes, 0 wrong.</span></figcaption>
+    </figure>
+    <figure>
+      <video controls playsinline preload="metadata" src="media/jingle_two_hands.mp4"></video>
+      <figcaption><b>Jingle Bells, two hands</b><span>51 + 123 notes, 0 wrong.</span></figcaption>
+    </figure>
+    <figure>
+      <video controls playsinline preload="metadata" src="media/canon_duet.mp4"></video>
+      <figcaption><b>Pachelbel's Canon, two hands</b><span>Simplified, 72 bpm. 26 + 26 notes, 0 wrong.</span></figcaption>
+    </figure>
+    <figure>
+      <video controls playsinline preload="metadata" src="media/saints_dmajor.mp4"></video>
+      <figcaption><b>When the Saints, with a black key</b><span>D major: the middle finger plays F♯. 32 / 32 notes.</span></figcaption>
+    </figure>
+    <figure>
+      <video controls playsinline preload="metadata" src="media/furelise_plan.mp4"></video>
+      <figcaption><b>Für Elise, opening</b><span>The wrist moves: 27 hand shifts in 25 s. 82 / 86 notes. Needs an arm.</span></figcaption>
+    </figure>
+    <figure>
+      <video controls playsinline preload="metadata" src="media/k265_pianist_and_robot.mp4"></video>
+      <figcaption><b>Pianist and robot, side by side</b><span>Mozart K.265, real time, then slow motion.</span></figcaption>
+    </figure>
+  </div>
+
+  <footer>
+    Code, results and how it works: <a href="https://github.com/simonkruelle/Wuji-Quartet">github.com/simonkruelle/Wuji-Quartet</a><br>
+    Search method: SBTO, developed at the <a href="https://www.ce.cit.tum.de/en/aipd/">ATARI Lab</a>, TU Munich.<br>
+    Simon, Henry, Sima, Sebas.
+  </footer>
+
+</main>
+</body>
+</html>
