@@ -6,7 +6,7 @@ Before you start: [RDK_X5_SETUP.md](RDK_X5_SETUP.md) is done and `./wq hand pyth
 
 Commands are written for the RDK X5. With a native install (Mac, Linux laptop) drop the `./wq hand` prefix.
 
-Prefer buttons? `python gui/app.py` opens the studio: the same scripts behind Play, Teach and Stop ([STUDIO.md](STUDIO.md)). It has been tested with the fake hand only, so the first real runs belong in a terminal, as below.
+Prefer buttons? `python gui/app.py` opens the studio: the same scripts behind Play, Teach and Stop ([STUDIO.md](STUDIO.md)). Since 15 Nov it drives the real hands: one hand, two hands and Teach.
 
 | Step | Goal | Hand is | Time |
 |---|---|---|---|
@@ -61,7 +61,7 @@ Prefer buttons? `python gui/app.py` opens the studio: the same scripts behind Pl
 
 ## Two hands
 
-**Prepared 15 Nov in simulation only. No second hand has been connected yet, and two real hands have never run together.**
+**Played with both real hands on 15 Nov (right hand + left hand, from the studio): Korobeiniki, Ode to Joy and Jingle Bells from this table, plus Runaway and Fly Me to the Moon. Pachelbel's Canon has not been played yet.**
 
 Each hand stays in one place and plays five neighbouring white keys. Hand 1 is our right hand with the plan it already plays. Hand 2 plays the accompaniment; its plan exists for a **left hand** and for a **second right hand**.
 
@@ -69,10 +69,10 @@ Each hand stays in one place and plays five neighbouring white keys. Hand 1 is o
 |---|---|---|---|---|
 | Ode to Joy, 108 bpm, 36 s | `plans/ode_level_stroke90_s0` | `plans/ode_accomp_left_s0` | `plans/ode_accomp_right_s0` | 62 / 62 and 127 / 127 notes, 0 wrong |
 | Jingle Bells, 120 bpm, 32 s | `plans/jingle_level_bpm120_s0` | `plans/jingle_accomp_left_s0` | `plans/jingle_accomp_right_s0` | 51 / 51 and 123 / 123, 0 wrong |
-| Korobeiniki, 120 → 200 bpm, 25 s | `plans/korobeiniki_melody_right_s0` | `plans/korobeiniki_accomp_left_s0` | `plans/korobeiniki_accomp_right_s0` | 78 / 78 and 123 / 123, 0 wrong |
+| Korobeiniki, 120 → 200 bpm, 25 s | `plans/korobeiniki_melody_right_cem_s0` (searched); fallback `plans/korobeiniki_melody_right_s0` | `plans/korobeiniki_accomp_left_cem_s0` (searched); fallback `plans/korobeiniki_accomp_left_s0` | `plans/korobeiniki_accomp_right_s0` | 78 / 78 and 123 / 123, 0 wrong, hands never touch (also with servos half as stiff) |
 | Pachelbel's Canon in C, simplified, 72 bpm, 43 s | `plans/canon_melody_right_s0` | `plans/canon_bass_left_s0` | none: the bass needs the thumb on the high side | 26 / 26 and 26 / 26, 0 wrong |
 
-Every plan in the table also plays all its notes on all ten simulated setups (mount off by 2 mm, softer and stiffer servos). For the first three pieces nothing new was optimised: every new plan reuses the stroke settings of the Ode plan. The two Canon parts were optimised (4 minutes each): before that, the thumbs missed notes on the soft, 2 mm too high setup. Videos: [ode_duet.mp4](media/ode_duet.mp4), [korobeiniki_duet.mp4](media/korobeiniki_duet.mp4), [canon_duet.mp4](media/canon_duet.mp4).
+Every plan in the table also plays all its notes on all ten simulated setups (mount off by 2 mm, softer and stiffer servos). For the first three pieces nothing new was optimised: every new plan reuses the stroke settings of the Ode plan. The two Canon parts were optimised (4 minutes each): before that, the thumbs missed notes on the soft, 2 mm too high setup. Videos: [ode_duet.mp4](media/ode_duet.mp4), [korobeiniki_duet.mp4](media/korobeiniki_duet.mp4), [canon_duet.mp4](media/canon_duet.mp4), [jingle_two_hands.mp4](media/jingle_two_hands.mp4) (1080p, piano sound: `render_duet.py <plan A> <plan B> --present`).
 
 **Order to try them: Ode to Joy first** (hand 1's plan has already run on the real hand), then Korobeiniki (the fast one), the Canon last: it is the only piece where a finger leaves the five-finger position.
 
@@ -100,6 +100,17 @@ python scripts/calibrate_keys.py plans/ode_accomp_left_s0/theme_q_1khz.npz --man
 python scripts/play_duet.py plans/ode_level_stroke90_s0 plans/ode_accomp_left_s0 --dry-run              # no hardware: checks the timing
 python scripts/play_duet.py plans/ode_level_stroke90_s0 plans/ode_accomp_left_s0 --tempo 0.5 --effort 0.5
 python scripts/play_duet.py plans/ode_level_stroke90_s0 plans/ode_accomp_left_s0 --effort 1.0
+```
+
+**Korobeiniki with two hands** (15 Nov evening). Hand 1 moves one white key to the right of the Ode spot (flange centre over F5); hand 2, the left hand, sits over F3, 32.9 cm to the left. Both parts were searched for this piece (SBTO, 48 tries x 6 rounds, 9 min each, starting from the Ode parameters): all notes on all ten setups, as before the search; the timing on the worst setup improved from 23-25 ms to 19-20 ms; the fingers move up to 10-15 % faster (peak 13.8 rad/s; Ode peaks at 11.0). If the searched pair looks jerky on the hand, play the fallback pair (`plans/korobeiniki_melody_right_s0` + `plans/korobeiniki_accomp_left_s0`). A dry run of both parts at once on the RDK X5 kept time (2 and 4 of 26 900 commands late) but used no SDK; real runs with one hand send 12-15 % late.
+
+```bash
+K="plans/korobeiniki_melody_right_cem_s0 plans/korobeiniki_accomp_left_cem_s0"
+python scripts/play_duet.py $K --dry-run                          # no hardware: checks the timing
+python scripts/play_duet.py $K --only b --tempo 0.5 --effort 0.5  # the left hand alone, in the AIR
+python scripts/play_duet.py $K --tempo 0.5 --effort 0.5           # both, in the AIR
+python scripts/play_duet.py $K --tempo 0.75 --effort 1.0          # over the keys, strap attached
+python scripts/play_duet.py $K --effort 1.0                       # full speed: eighth notes 150 ms apart
 ```
 
 - With two hands connected, every script picks the hand by the plan's side (left or right, read from the serial number: 4th character J = left, K = right). It refuses to guess: two right hands need `--sn` (`play_duet.py --sn-a ... --sn-b ...`).

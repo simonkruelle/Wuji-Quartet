@@ -5,7 +5,8 @@ Writes one MIDI file per hand (and one with both, for listening) into assets/due
   python scripts/make_duet.py jingle         # Jingle Bells chorus (Pierpont, 1857) with the same accompaniment figure
   python scripts/make_duet.py korobeiniki    # Korobeiniki (Russian folk tune, known from Tetris), first phrase, four times, faster each time;
                                              # D minor: melody D5..A5, accompaniment D3..A3 (both hands one key right of the C position)
-  python scripts/make_duet.py chopsticks     # Chopsticks (E. Allen, 1877), first strain: the hands sit next to each other, B3..F4 and G4..D5
+  python scripts/make_duet.py korobeiniki_full   # the same with the whole 8-bar theme each time (49 s); bar 5 a fourth lower so it fits D5..A5
+  python scripts/make_duet.py chopsticks    # Chopsticks (E. Allen, 1877), first strain: the hands sit next to each other, B3..F4 and G4..D5
   python scripts/make_duet.py canon          # Pachelbel's Canon (in C), ground bass + the first two melody lines; both thumbs reach one key further
 
 The second hand's part is the same notes whether a left or a second right hand plays it; only the fingers differ.
@@ -69,6 +70,26 @@ def korobeiniki():
             dict(right_five="74,76,77,79,81", center_right=77, low_keys=k))
 
 
+def korobeiniki_full():
+    """The whole 8-bar theme, four times, faster each time. Bars 6-8 lie on the same five keys at their own pitch; bar 5 would need
+    G5 Bb5 D6 C6 Bb5 and is played a fourth lower (D5 F5 A5 G5 F5): its own steps stay exact, only the step into bar 6 changes."""
+    _, sections, info = korobeiniki()
+    rh1, lh1 = sections[0][1], sections[0][2]                         # bars 1-4, as in korobeiniki()
+    s1, s2, s3, s4, s5 = 74, 76, 77, 79, 81
+    rh2 = [(R, .5), (s1, 1), (s3, .5), (s5, 1), (s4, .5), (s3, .5),   # bar 5 (a fourth lower)
+           (s5, 1.5), (s3, .5), (s5, 1), (s4, .5), (s3, .5),           # bar 6
+           (s2, 1), (s2, .5), (s3, .5), (s4, 1), (s5, 1),              # bar 7
+           (s3, 1), (s1, 1), (s1, 1), (R, 1)]                          # bar 8
+    k = info["low_keys"]                                              # D3 E3 F3 G3 A3
+    I = [(k[0], .5), (k[4], .5), (k[2], .5), (k[4], .5)] * 2          # D minor: D A F A (bar 5 too: its melody now spells D minor)
+    III = [(k[2], .5), (k[4], .5)] * 4                                # F major without its fifth: F A F A
+    V = [(k[1], .5), (k[4], .5), (k[3], .5), (k[4], .5)] * 2          # A7 without its third: E A G A
+    lh2 = I + III + V + I[:4] + [(k[2], 1), ((k[0], k[4]), 1)]
+    rh, lh = rh1 + rh2, lh1 + lh2
+    last = (rh[:-2] + [((s1, s3, s5), 2)], lh[:-4] + [(k[2], 1), ((k[0], k[2], k[4]), 2)])   # last time: both hands end on the full chord
+    return ("Korobeiniki, whole theme, two hands, faster each time", [(120, rh, lh), (150, rh, lh), (180, rh, lh), (200, last[0], last[1])], info)
+
+
 def chopsticks():
     lf, le, ld, lc = 65, 64, 62, 60; rg, ra, rb, rc = 67, 69, 71, 72
     A = [(lf, rg)] * 6 + [(le, rg)] * 6 + [(ld, rb)] * 6 + [(lc, rc)] * 3
@@ -88,7 +109,7 @@ def canon():
             dict(right_five="69,71,72,74,76", right_also="67:0", center_right=72, low_keys=[52, 53, 55, 57, 60], left_only=True))    # a left hand: its thumb takes C4
 
 
-PIECES = dict(ode=ode, jingle=jingle, korobeiniki=korobeiniki, chopsticks=chopsticks, canon=canon)
+PIECES = dict(ode=ode, jingle=jingle, korobeiniki=korobeiniki, korobeiniki_full=korobeiniki_full, chopsticks=chopsticks, canon=canon)
 if __name__ == "__main__":
     ap = argparse.ArgumentParser(); ap.add_argument("piece", choices=sorted(PIECES)); ap.add_argument("--tempo", type=float, default=1.0, help="scales every tempo, e.g. 0.8")
     ap.add_argument("--gate", type=float, default=0.8, help="sounding fraction of each note"); ap.add_argument("--out-dir", default=None); A = ap.parse_args()

@@ -1,0 +1,270 @@
+{
+ "piece": "assets/duets/korobeiniki_left.mid",
+ "title": "korobeiniki_left",
+ "wrist": "fixed",
+ "wrist_info": {},
+ "notes": 123,
+ "lead_ms": [
+  143.6,
+  141.1,
+  141.3,
+  135.2,
+  139.6
+ ],
+ "fingers": {
+  "thumb": 59,
+  "index": 16,
+  "middle": 16,
+  "ring": 16,
+  "pinky": 16
+ },
+ "dr": "wide",
+ "train_plants": [
+  {
+   "gain": 5.0
+  },
+  {
+   "gain": 2.5,
+   "dz": 0.002
+  },
+  {
+   "gain": 10.0,
+   "dz": -0.002
+  },
+  {
+   "gain": 5.0,
+   "dy": 0.002,
+   "dth": 1.5
+  },
+  {
+   "gain": 4.0,
+   "dy": -0.002,
+   "dth": -1.5
+  }
+ ],
+ "test_plants": [
+  {
+   "gain": 3.5,
+   "dz": -0.001,
+   "dy": 0.001
+  },
+  {
+   "gain": 7.0,
+   "dz": 0.001,
+   "dy": -0.001,
+   "dth": -1.0
+  },
+  {
+   "gain": 5.0,
+   "dz": 0.002,
+   "dy": -0.002
+  },
+  {
+   "gain": 3.0
+  },
+  {
+   "gain": 6.0,
+   "dth": 1.0,
+   "dz": -0.0015
+  }
+ ],
+ "baseline_train": [
+  {
+   "matched": 0,
+   "wrong": 0,
+   "f1": 0.0,
+   "timing_ms": {
+    "median": 0.0,
+    "p90_abs": 0.0
+   }
+  },
+  {
+   "matched": 0,
+   "wrong": 0,
+   "f1": 0.0,
+   "timing_ms": {
+    "median": 0.0,
+    "p90_abs": 0.0
+   }
+  },
+  {
+   "matched": 123,
+   "wrong": 0,
+   "f1": 1.0,
+   "timing_ms": {
+    "median": -33.99999999999892,
+    "p90_abs": 40.66666666666663
+   }
+  },
+  {
+   "matched": 123,
+   "wrong": 0,
+   "f1": 1.0,
+   "timing_ms": {
+    "median": -31.333333333332547,
+    "p90_abs": 45.999999999999375
+   }
+  },
+  {
+   "matched": 0,
+   "wrong": 0,
+   "f1": 0.0,
+   "timing_ms": {
+    "median": 0.0,
+    "p90_abs": 0.0
+   }
+  }
+ ],
+ "baseline_test": [
+  {
+   "matched": 32,
+   "wrong": 0,
+   "f1": 0.413,
+   "timing_ms": {
+    "median": -13.666666666666494,
+    "p90_abs": 15.333333333334132
+   }
+  },
+  {
+   "matched": 0,
+   "wrong": 0,
+   "f1": 0.0,
+   "timing_ms": {
+    "median": 0.0,
+    "p90_abs": 0.0
+   }
+  },
+  {
+   "matched": 0,
+   "wrong": 0,
+   "f1": 0.0,
+   "timing_ms": {
+    "median": 0.0,
+    "p90_abs": 0.0
+   }
+  },
+  {
+   "matched": 8,
+   "wrong": 0,
+   "f1": 0.122,
+   "timing_ms": {
+    "median": 9.999999999999787,
+    "p90_abs": 10.000000000001563
+   }
+  },
+  {
+   "matched": 123,
+   "wrong": 0,
+   "f1": 1.0,
+   "timing_ms": {
+    "median": -37.333333333332774,
+    "p90_abs": 48.00000000000004
+   }
+  }
+ ],
+ "cem_train": [
+  {
+   "matched": 123,
+   "wrong": 0,
+   "f1": 1.0,
+   "timing_ms": {
+    "median": -0.6666666666674814,
+    "p90_abs": 3.3333333333338544
+   }
+  },
+  {
+   "matched": 123,
+   "wrong": 0,
+   "f1": 1.0,
+   "timing_ms": {
+    "median": 17.999999999999794,
+    "p90_abs": 20.00000000000135
+   }
+  },
+  {
+   "matched": 123,
+   "wrong": 0,
+   "f1": 1.0,
+   "timing_ms": {
+    "median": -14.000000000000234,
+    "p90_abs": 17.3333333333332
+   }
+  },
+  {
+   "matched": 123,
+   "wrong": 0,
+   "f1": 1.0,
+   "timing_ms": {
+    "median": -9.999999999999787,
+    "p90_abs": 13.333333333331865
+   }
+  },
+  {
+   "matched": 123,
+   "wrong": 0,
+   "f1": 1.0,
+   "timing_ms": {
+    "median": 14.000000000001123,
+    "p90_abs": 17.99999999999997
+   }
+  }
+ ],
+ "cem_test": [
+  {
+   "matched": 123,
+   "wrong": 0,
+   "f1": 1.0,
+   "timing_ms": {
+    "median": 2.000000000000668,
+    "p90_abs": 4.6666666666652645
+   }
+  },
+  {
+   "matched": 123,
+   "wrong": 0,
+   "f1": 1.0,
+   "timing_ms": {
+    "median": 4.000000000001336,
+    "p90_abs": 7.19999999999885
+   }
+  },
+  {
+   "matched": 123,
+   "wrong": 0,
+   "f1": 1.0,
+   "timing_ms": {
+    "median": 4.666666666667041,
+    "p90_abs": 7.19999999999885
+   }
+  },
+  {
+   "matched": 123,
+   "wrong": 0,
+   "f1": 1.0,
+   "timing_ms": {
+    "median": 7.3333333333316375,
+    "p90_abs": 9.733333333333501
+   }
+  },
+  {
+   "matched": 123,
+   "wrong": 0,
+   "f1": 1.0,
+   "timing_ms": {
+    "median": -14.000000000000234,
+    "p90_abs": 17.3333333333332
+   }
+  }
+ ],
+ "cem": {
+  "samples": 48,
+  "elites": 8,
+  "iters": 6,
+  "commit_s": 0.5,
+  "windows": 48,
+  "knot_dt_s": null,
+  "seed": 0,
+  "workers": 10
+ },
+ "wall_s": 564
+}
