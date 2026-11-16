@@ -7,6 +7,7 @@ From the [FürElise dataset](https://huggingface.co/datasets/rcwang/for_elise) (
 | `15/midi.mid` | the recorded performance as MIDI, unchanged. We play the melody (notes from B4 up) of the first 35 seconds |
 | `15/wrist_u.npz` | derived by us: the pianist's right wrist position along the keyboard, one value per melody note |
 | `15/theme_analysis.json` | derived by us: which finger the pianist used for which note |
+| `15/hands.npz` | derived by us: both hands' 21 joints for the whole performance at 30 fps, moved onto the simulation's keyboard (int16 mm, 2.3 MB). The studio's 3D view shows them for every plan made from this piece. Other pieces: `python scripts/plan_view.py --hands <id> --motion <its motion.pkl>` |
 
 | `midi/<id>.mid` · `metadata.json` | the recorded MIDI of all 153 performances (5 MB), unchanged, and their composer, title and length. The studio lists them under Library › Pianists |
 
