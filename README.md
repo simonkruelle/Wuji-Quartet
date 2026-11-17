@@ -287,10 +287,10 @@ Not built yet.
 
 | Who | Role |
 |---|---|
-| **Simon** | the idea; simulation, optimisation and the studio software; the Wuji hands. Master's thesis at the ATARI Lab, TU Munich |
-| **Henry** | helped Sebas with the robot arms; team management and team spirit; the pitch deck with Sima |
-| **Sima** | presented the pitch; team management; the pitch deck with Henry |
-| **Sebas** | the two RobCo robot arms that hold the hands over the keys; sim-to-real; webcam tracking |
+| **Simon** | **Team lead.** Had the idea and brought the team together. Built the simulation, the optimiser and the studio, out of a master's thesis at the ATARI Lab, TU Munich. |
+| **Henry** | **All-rounder.** Helped Sebas with the robot arms, co-managed the team and kept spirits high. Made the pitch deck with Sima. |
+| **Sima** | **Pitch.** Presented, managed the team and made the pitch deck with Henry. |
+| **Sebas** | **Robot arms.** Drove the two RobCo arms that hold the hands over the keys. Sim-to-real and webcam tracking. |
 
 ---
 
