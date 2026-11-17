@@ -74,7 +74,7 @@ The finger plan is found in simulation, rehearsed on five slightly different pia
 <table>
   <tr>
     <td width="50%" align="center"><a href="https://simonkruelle.github.io/Wuji-Quartet/media/real_teach.mp4"><img src="docs/media/real_teach.gif" width="420" alt="The robot hand lies on a learner's hand and presses the learner's fingers onto the keys"></a></td>
-    <td width="50%" align="center"><a href="https://simonkruelle.github.io/Wuji-Quartet/media/real_teach_ode.mp4"><img src="docs/media/real_teach_ode.gif" width="420" alt="Sebas at the piano with his hand under the robot hand"></a></td>
+    <td width="50%" align="center"><a href="https://simonkruelle.github.io/Wuji-Quartet/media/real_teach_ode.mp4"><img src="docs/media/real_teach_ode.gif" width="420" alt="Sebas at the piano, a hand under the robot hand"></a></td>
   </tr>
   <tr>
     <td>The robot hand lies on the learner's hand and plays the tune through their fingers.</td>
@@ -107,7 +107,7 @@ The finger plan is found in simulation, rehearsed on five slightly different pia
 | On screen | notes fall onto a keyboard in step with the hand, one colour per finger |
 | Stop | the red button in the top bar: the hand goes limp and confirms it |
 
-> **Run on the real hand, 16 Nov:** Ode to Joy, three rounds per lesson. The current limit went down step by step from 1.0 A to 0.3 A, and Sebas took a lesson with his hand under it. **Not measured yet:** whether someone plays better after a lesson.
+> **Run on the real hand, 16 Nov:** Ode to Joy, three rounds per lesson. The current limit went down step by step from 1.0 A to 0.3 A, and Sebas took a lesson with a hand under it. **Not measured yet:** whether someone plays better after a lesson.
 
 In the studio: Play › Teach.
 
@@ -157,7 +157,7 @@ Guide: [docs/STUDIO.md](docs/STUDIO.md).
 
 **Guess a motion, try noisy copies of it in a simulator, keep the best, move the guess toward them. Repeat.** No gradients, nothing learned, no demonstration on the robot.
 
-This is **SBTO**, sampling-based trajectory optimisation, developed at the [ATARI Lab](https://www.ce.cit.tum.de/en/aipd/) of TU Munich (Applied and Theoretical Aspects of Robot Intelligence, Prof. Majid Khadiv), where Simon writes his master's thesis. Paper: [DynaRetarget](https://arxiv.org/abs/2602.06827) · code: [Atarilab/sbto](https://github.com/Atarilab/sbto).
+This is **SBTO**, sampling-based trajectory optimisation, developed at the [ATARI Lab](https://www.ce.cit.tum.de/en/aipd/) of TU Munich (Applied and Theoretical Aspects of Robot Intelligence, Prof. Majid Khadiv), where Simon is doing a master's thesis. Paper: [DynaRetarget](https://arxiv.org/abs/2602.06827) · code: [Atarilab/sbto](https://github.com/Atarilab/sbto).
 
 <p align="center"><img src="docs/pipeline.png" width="880" alt="Pipeline: notes, fingering, first plan, optimise, plan file"></p>
 
@@ -287,10 +287,10 @@ Not built yet.
 
 | Who | Role |
 |---|---|
-| **Simon** | **Idea and code.** Had the idea and brought the team together. Wrote the simulation, the optimiser and the studio, out of a master's thesis at the ATARI Lab, TU Munich. |
-| **Henry** | **Team and robot arms.** Managed the team and made the pitch deck with Sima, kept spirits high, and helped Sebas with the robot arms. |
-| **Sima** | **Team and pitch.** Managed the team and made the pitch deck with Henry, and presented the pitch. |
-| **Sebas** | **Robot arms.** Drove the two RobCo arms that hold the hands over the keys. Sim-to-real and webcam tracking. |
+| **Simon** | idea, simulation and optimisation, studio |
+| **Henry** | team management, robot arms, pitch deck |
+| **Sima** | team management, pitch deck, presentation |
+| **Sebas** | RobCo robot arms, sim-to-real, webcam tracking |
 
 ---
 
@@ -465,7 +465,7 @@ Wuji-Quartet/
 │   ├── <a href="scripts/hand_net.sh">hand_net.sh</a> · <a href="scripts/hand_adapter.sh">hand_adapter.sh</a>   network to the hand · to the second hand
 │   ├── <a href="scripts/rdk_setup.sh">rdk_setup.sh</a>        one-time setup of the RDK X5: Docker with the fixes its kernel needs
 │   ├── <a href="scripts/wuji_hw.py">wuji_hw.py</a>          SDK session, current limit, confirmed switch-off, fake hand
-│   ├── <a href="scripts/teleop.py">teleop.py</a>           Sebas's webcam teleop, standalone (needs his handlib module, not in this repo) · <a href="scripts/hand_features.py">hand_features.py</a> its angle maths
+│   ├── <a href="scripts/teleop.py">teleop.py</a>           Sebas's webcam teleop, standalone (needs the handlib module, not in this repo) · <a href="scripts/hand_features.py">hand_features.py</a> its angle maths
 │   ├── <a href="scripts/camera_track.py">camera_track.py</a> · <a href="scripts/hand_follow.py">hand_follow.py</a>   the same tracking as two halves: camera → joint targets · targets → hand
 │   └── <a href="scripts/score_midi.py">score_midi.py</a> · <a href="scripts/run_sbto_all.sh">run_sbto_all.sh</a>   recorded MIDI vs plan · the three reference runs in a row
 ├── <a href="plans/">plans/</a>                  finished plans (see above)
