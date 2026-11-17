@@ -2,14 +2,9 @@
 
 <img src="docs/banner.png" width="880" alt="Wuji Quartet: a 20-joint robot hand learns the piano">
 
-<br><br>
+<a href="https://claude.ai/artifact/BqkWh4L3P11TKhmxW5NCEM"><img src="docs/award.png" width="880" alt="Leukerbad Robotics Carnival '26 hackathon: category winner in Elderly and Rehabilitation, and 3rd place overall"></a>
 
-![Award](https://img.shields.io/badge/Leukerbad%20Robotics%20Carnival%20'26-category%20winner%20%C2%B7%203rd%20overall-d4a017)
-![Status](https://img.shields.io/badge/status-two%20real%20hands%20on%20a%20real%20piano-2ea44f)
-![Hand](https://img.shields.io/badge/Wuji%20Hand%202.2-left%20%2B%20right-e8b856)
-![MuJoCo](https://img.shields.io/badge/MuJoCo-3.17-1f6feb)
-![Python](https://img.shields.io/badge/Python-3.13-3776AB?logo=python&logoColor=white)
-![Docker](https://img.shields.io/badge/Docker-amd64%20%7C%20arm64-2496ED?logo=docker&logoColor=white)
+<br><br>
 
 **A MIDI file in. Two robot hands play it on a real piano, and teach it to your fingers.**
 <br>
@@ -17,17 +12,17 @@ The finger plan is found in simulation, rehearsed on five slightly different pia
 
 <br>
 
-<table>
-  <tr>
-    <td><img src="docs/media/leukerbad_robotics_carnival_26.jpg" width="120" alt="Leukerbad Robotics Carnival '26 logo: a human hand and a robot hand reaching toward each other above the Swiss Alps"></td>
-    <td align="left">
-      🏆 <strong>Category winner: Elderly and Rehabilitation</strong><br>
-      🥉 <strong>3rd place overall</strong><br>
-      🎤 <a href="https://claude.ai/artifact/BqkWh4L3P11TKhmxW5NCEM"><strong>The winning pitch deck ›</strong></a><br>
-      <sub>Leukerbad Robotics Carnival '26 · Hackathon, 14 to 16 Nov 2026<br>Simon, Henry, Sima, Sebas</sub>
-    </td>
-  </tr>
-</table>
+<a href="https://simonkruelle.github.io/Wuji-Quartet/"><img src="https://img.shields.io/badge/%E2%96%B6%20%20Watch%20the%20videos-with%20sound-e8b856?style=for-the-badge&labelColor=181a20" alt="Watch the videos with sound"></a>
+&nbsp;
+<a href="https://claude.ai/artifact/BqkWh4L3P11TKhmxW5NCEM"><img src="https://img.shields.io/badge/%F0%9F%8E%A4%20%20The%20winning-pitch%20deck-f5f2ea?style=for-the-badge&labelColor=181a20" alt="The winning pitch deck"></a>
+
+<br><br>
+
+![Status](https://img.shields.io/badge/status-two%20real%20hands%20on%20a%20real%20piano-2ea44f)
+![Hand](https://img.shields.io/badge/Wuji%20Hand%202.2-left%20%2B%20right-e8b856)
+![MuJoCo](https://img.shields.io/badge/MuJoCo-3.17-1f6feb)
+![Python](https://img.shields.io/badge/Python-3.13-3776AB?logo=python&logoColor=white)
+![Docker](https://img.shields.io/badge/Docker-amd64%20%7C%20arm64-2496ED?logo=docker&logoColor=white)
 
 </div>
 
@@ -42,8 +37,6 @@ The finger plan is found in simulation, rehearsed on five slightly different pia
   <br>
   <sub>15 Nov 2026. Both real hands play Ode to Joy: melody right, accompaniment left. The wrists stay where they are; every finger motion comes from the plan.</sub>
 </p>
-
-<p align="center"><strong><a href="https://simonkruelle.github.io/Wuji-Quartet/">▶ Watch every video with sound</a></strong> · or click any clip on this page</p>
 
 ## Three things it does
 
@@ -141,6 +134,12 @@ In the studio: Play › Teach.
     <td><strong>Play</strong>: one hand, two hands, or Teach.</td>
   </tr>
 </table>
+
+<p align="center">
+  <img src="docs/studio/view3d.png" width="880" alt="The studio's 3D view: the recorded pianist's hands, faint, and the simulated robot hand on one keyboard; below, the SBTO search per half second and the wrist path of pianist and robot">
+  <br>
+  <strong>3D view</strong>: the recorded pianist (faint) and the robot plan made from it, on one keyboard and one clock. Below: what the search changed in every half second, and how the robot's wrist follows the pianist's.
+</p>
 
 | Page | |
 |---|---|
@@ -479,7 +478,7 @@ Wuji-Quartet/
 │   ├── furelise/           the MIDI of all 153 performances; for K.265 also the pianist's wrist path and hands
 │   ├── fur_elise_beethoven/   Für Elise MIDI
 │   └── ode_to_joy/         Ode to Joy MIDI, left-hand chords for a duet
-└── <a href="docs/">docs/</a>                   <a href="docs/STUDIO.md">STUDIO.md</a> · <a href="docs/RUNBOOK.md">RUNBOOK.md</a> · <a href="docs/RDK_X5_SETUP.md">RDK_X5_SETUP.md</a> · pictures (<a href="docs/make_figures.py">make_figures.py</a>) · media/
+└── <a href="docs/">docs/</a>                   <a href="docs/STUDIO.md">STUDIO.md</a> · <a href="docs/RUNBOOK.md">RUNBOOK.md</a> · <a href="docs/RDK_X5_SETUP.md">RDK_X5_SETUP.md</a> · pictures (<a href="docs/make_figures.py">make_figures.py</a>) · logo and award banner (<a href="docs/make_brand.py">make_brand.py</a>) · media/
 </pre>
 
 <details><summary>Known limits</summary>
