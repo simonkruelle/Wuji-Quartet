@@ -287,10 +287,10 @@ Not built yet.
 
 | Who | Role |
 |---|---|
-| **Simon** | idea, simulation and optimisation, studio |
-| **Henry** | team management, robot arms, pitch deck |
-| **Sima** | team management, pitch deck, presentation |
-| **Sebas** | RobCo robot arms, sim-to-real, webcam tracking |
+| **Simon** · [@simonkruelle](https://github.com/simonkruelle) | idea, simulation and optimisation, studio |
+| **Henry** · [@henryhehl](https://github.com/henryhehl) | team management, robot arms, pitch deck |
+| **Sima** · [@simasmadi](https://github.com/simasmadi) | team management, pitch deck, presentation |
+| **Sebas** · [@sebastianserna30](https://github.com/sebastianserna30) | RobCo robot arms, sim-to-real, webcam tracking |
 
 ---
 
