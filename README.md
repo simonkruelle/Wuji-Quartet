@@ -4,6 +4,7 @@
 
 <br><br>
 
+![Award](https://img.shields.io/badge/Leukerbad%20Robotics%20Carnival%20'26-category%20winner%20%C2%B7%203rd%20overall-d4a017)
 ![Status](https://img.shields.io/badge/status-two%20real%20hands%20on%20a%20real%20piano-2ea44f)
 ![Hand](https://img.shields.io/badge/Wuji%20Hand%202.2-left%20%2B%20right-e8b856)
 ![MuJoCo](https://img.shields.io/badge/MuJoCo-3.17-1f6feb)
@@ -14,7 +15,18 @@
 <br>
 The finger plan is found in simulation, rehearsed on five slightly different pianos at once, and played at 1,000 commands per second.
 
-<sub>Leukerbad Hackathon · Sat 14 Nov 10:00 to Mon 16 Nov 17:00, 2026 · Simon, Henry, Sima, Sebas</sub>
+<br>
+
+<table>
+  <tr>
+    <td><img src="docs/media/leukerbad_robotics_carnival_26.jpg" width="120" alt="Leukerbad Robotics Carnival '26 logo: a human hand and a robot hand reaching toward each other above the Swiss Alps"></td>
+    <td align="left">
+      🏆 <strong>Category winner: Elderly and Rehabilitation</strong><br>
+      🥉 <strong>3rd place overall</strong><br>
+      <sub>Leukerbad Robotics Carnival '26 · Hackathon, 14 to 16 Nov 2026<br>Simon, Henry, Sima, Sebas</sub>
+    </td>
+  </tr>
+</table>
 
 </div>
 
@@ -55,6 +67,7 @@ The finger plan is found in simulation, rehearsed on five slightly different pia
 - **Why a piano:** it grades dexterity by itself. Every note is right or wrong, early or late.
 - **Why it is fast:** what the search learned on one piece (how each finger strikes a key) carries over to the next.
 - **Why teach:** the plan that moves the robot's fingers can move yours.
+- **Why care homes:** our pitch in the Elderly and Rehabilitation track. A robot that plays the songs residents know becomes familiar, and the same hand can guide a patient's hand.
 
 ## Teach: the robot shows your fingers the piece
 
@@ -510,10 +523,11 @@ Wuji-Quartet/
 | `assets/songs/` (14 Christmas songs) | Wikimedia Commons settings by Rabanus Flavus; Open Hymnal Project ([list with links](assets/songs/README.md)) | CC0 or public domain; every melody is public domain |
 | The search method, SBTO | [ATARI Lab](https://www.ce.cit.tum.de/en/aipd/), TU Munich: [DynaRetarget](https://arxiv.org/abs/2602.06827) (Dhédin, Taouil, Omar, Yu, Tao, Dai, Khadiv) · [Atarilab/sbto](https://github.com/Atarilab/sbto) | the method only; none of their code is in this repo |
 | Piano key model | constants from [RoboPianist](https://github.com/google-research/robopianist) | Apache 2.0 |
+| Leukerbad Robotics Carnival '26 logo in `docs/media` | the event's page, [luma.com/yo2pk18n](https://luma.com/yo2pk18n) | © the organisers; shown to name the event |
 | Hand control | [wuji-sdk](https://github.com/wuji-technology/wuji-sdk) · [Wuji Hand 2 docs](https://docs.wuji.tech/docs/en/wuji-hand/latest/) | |
 | Hand tracking in the camera page | [MediaPipe Hand Landmarker](https://ai.google.dev/edge/mediapipe/solutions/vision/hand_landmarker), downloaded on first use | Apache 2.0 |
 | Our code | this repo | no licence chosen yet |
 
 </details>
 
-<div align="center"><sub>Updated 16 Nov 2026 · simulation numbers come from <code>plans/*/report.json</code>, real-hand runs from the studio's run log and the hands' own logs</sub></div>
+<div align="center"><sub>Updated 17 Nov 2026 · simulation numbers come from <code>plans/*/report.json</code>, real-hand runs from the studio's run log and the hands' own logs</sub></div>
