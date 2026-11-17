@@ -287,9 +287,9 @@ Not built yet.
 
 | Who | Role |
 |---|---|
-| **Simon** | **Team lead.** Had the idea and brought the team together. Built the simulation, the optimiser and the studio, out of a master's thesis at the ATARI Lab, TU Munich. |
-| **Henry** | **All-rounder.** Helped Sebas with the robot arms, co-managed the team and kept spirits high. Made the pitch deck with Sima. |
-| **Sima** | **Pitch.** Presented, managed the team and made the pitch deck with Henry. |
+| **Simon** | **Idea and code.** Had the idea and brought the team together. Wrote the simulation, the optimiser and the studio, out of a master's thesis at the ATARI Lab, TU Munich. |
+| **Henry** | **Team and robot arms.** Managed the team and made the pitch deck with Sima, kept spirits high, and helped Sebas with the robot arms. |
+| **Sima** | **Team and pitch.** Managed the team and made the pitch deck with Henry, and presented the pitch. |
 | **Sebas** | **Robot arms.** Drove the two RobCo arms that hold the hands over the keys. Sim-to-real and webcam tracking. |
 
 ---
