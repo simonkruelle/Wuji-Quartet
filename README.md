@@ -23,6 +23,7 @@ The finger plan is found in simulation, rehearsed on five slightly different pia
     <td align="left">
       🏆 <strong>Category winner: Elderly and Rehabilitation</strong><br>
       🥉 <strong>3rd place overall</strong><br>
+      🎤 <a href="https://claude.ai/artifact/BqkWh4L3P11TKhmxW5NCEM"><strong>The winning pitch deck ›</strong></a><br>
       <sub>Leukerbad Robotics Carnival '26 · Hackathon, 14 to 16 Nov 2026<br>Simon, Henry, Sima, Sebas</sub>
     </td>
   </tr>
