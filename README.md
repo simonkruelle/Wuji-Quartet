@@ -287,10 +287,10 @@ Not built yet.
 
 | Who | Role |
 |---|---|
-| **Simon** | the idea and team lead. All the code: simulation, optimisation, the studio, driving the Wuji hands. Grew out of Simon's master's thesis at the ATARI Lab, TU Munich |
-| **Henry** | the RobCo arms, together with Sebas; the pitch deck, together with Sima |
-| **Sima** | presented the pitch, team management, the pitch deck |
-| **Sebas** | the real hand, sim-to-real, webcam tracking |
+| **Simon** | the idea; simulation, optimisation and the studio software; the Wuji hands. Master's thesis at the ATARI Lab, TU Munich |
+| **Henry** | helped Sebas with the robot arms; team management and team spirit; the pitch deck with Sima |
+| **Sima** | presented the pitch; team management; the pitch deck with Henry |
+| **Sebas** | the two RobCo robot arms that hold the hands over the keys; sim-to-real; webcam tracking |
 
 ---
 
