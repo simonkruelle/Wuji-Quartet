@@ -287,9 +287,9 @@ Not built yet.
 
 | Who | Role |
 |---|---|
-| **Simon** | team lead, simulation and optimisation. Master's thesis at the ATARI Lab, TU Munich |
-| **Henry** | compute |
-| **Sima** | pitch, story, team management |
+| **Simon** | the idea and team lead. All the code: simulation, optimisation, the studio, driving the Wuji hands. Grew out of Simon's master's thesis at the ATARI Lab, TU Munich |
+| **Henry** | the RobCo arms, together with Sebas; the pitch deck, together with Sima |
+| **Sima** | presented the pitch, team management, the pitch deck |
 | **Sebas** | the real hand, sim-to-real, webcam tracking |
 
 ---
